@@ -41,16 +41,16 @@
     </div>
     <ul class="ps-0 text-center">
       <li class="navbar-item py-3">
-        <a href="/#home" class="nav-link navbar-link">Home</a>
+        <a href="#home" class="nav-link navbar-link">Home</a>
       </li>
       <li class="navbar-item py-3">
-        <a href="/#about" class="nav-link navbar-link">About</a>
+        <a href="#about" class="nav-link navbar-link">About</a>
       </li>
       <li class="navbar-item py-3">
-        <a href="/#projects" class="nav-link navbar-link">Projects</a>
+        <a href="#projects" class="nav-link navbar-link">Projects</a>
       </li>
       <li class="navbar-item py-3">
-        <a href="/#contact" class="nav-link navbar-link">Contact</a>
+        <a href="#contact" class="nav-link navbar-link">Contact</a>
       </li>
     </ul>
   </div>

@@ -2,8 +2,8 @@
 $(document).ready(function () {
   // Slick
   $(".projects-items").slick({
-    prevArrow: '<button type="button" class="projects-items-prev slick-prev fs-3 border-0"><i class="fas fa-chevron-left fs-4"></i></button>',
-    nextArrow: '<button type="button" class="projects-items-next slick-next fs-3 border-0"><i class="fas fa-chevron-right fs-4"></i></button>',
+    prevArrow: '<button type="button" class="projects-items-prev slick-prev fs-3 border-0"><i class="fa-solid fa-chevron-left fs-4 text-dark"></i></button>',
+    nextArrow: '<button type="button" class="projects-items-next slick-next fs-3 border-0"><i class="fa-solid fa-chevron-right fs-4 text-dark"></i></button>',
     dots: true,
     slidesToShow: 3,
     slidesToScroll: 3,

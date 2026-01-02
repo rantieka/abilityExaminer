@@ -31,34 +31,35 @@ $(document).ready(function () {
   });
 
   // Active scroll
-  var globalVar = {};
+  function updateActiveState() {
+    var scrollPos = $(window).scrollTop();
+    var currentId = "";
+
+    $(".active-scroll").each(function () {
+      const sectionRowTop = $(this).offset().top - 200;
+      if (scrollPos > sectionRowTop) {
+        currentId = $(this).attr("id");
+      }
+    });
+
+    if (currentId) {
+      $(".navbar-link").removeClass("active");
+      $('.navbar-link[href="#' + currentId + '"]').addClass("active");
+
+      $(".page-item a").removeClass("active");
+      $('.page-item a[href="#' + currentId + '"]').addClass("active");
+
+      $(".active-scroll").removeClass("active");
+      $("#" + currentId).addClass("active");
+    }
+  }
 
   $(window).scroll(function () {
-    $(".active-scroll").each(function () {
-      const sectionRowTop = $(this).offset().top - 500;
-      if ($(window).scrollTop() > sectionRowTop) {
-        $(".active-scroll").removeClass("active");
-        globalVar.ActiveId = $(this).addClass("active").attr("id");
-      }
-    });
-
-    $(".navbar-link").each(function () {
-      const thisHref = $(this).attr("href");
-      if (thisHref === "#" + globalVar.ActiveId) {
-        $(".navbar-link").removeClass("active");
-        $(this).addClass("active");
-      }
-    });
-
-    $(".page-item").each(function () {
-      const thisChildren = $(this).children("a");
-      const thisChildrenHref = $(this).children("a").attr("href");
-      if (thisChildrenHref === "#" + globalVar.ActiveId) {
-        $(".page-item a").removeClass("active");
-        $(thisChildren).addClass("active");
-      }
-    });
+    updateActiveState();
   });
+
+  // Trigger on load
+  updateActiveState();
 
   // Page scroll
   $(".nav-scroll, .navbar-link, .page-item a").click(function (e) {

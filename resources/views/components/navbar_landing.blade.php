@@ -12,9 +12,9 @@
         <li class="navbar-item px-4">
           <a href="#about" class="nav-link navbar-link px-0">About</a>
         </li>
-        <li class="navbar-item px-4">
+        <!-- <li class="navbar-item px-4">
           <a href="#products" class="nav-link navbar-link px-0">Products</a>
-        </li>
+        </li> -->
         <li class="navbar-item px-4">
           <a href="#projects" class="nav-link navbar-link px-0">Projects</a>
         </li>
@@ -46,9 +46,9 @@
       <li class="navbar-item py-3">
         <a href="#about" class="nav-link navbar-link">About</a>
       </li>
-      <li class="navbar-item py-3">
+      <!-- <li class="navbar-item py-3">
         <a href="#projects" class="nav-link navbar-link">Projects</a>
-      </li>
+      </li> -->
       <li class="navbar-item py-3">
         <a href="#contact" class="nav-link navbar-link">Contact</a>
       </li>

@@ -11,7 +11,7 @@
     <!-- Scripts & Styles -->
     @vite(['resources/sass/app.scss','resources/sass/custom/landing.scss', 'resources/js/app.js'])
 </head>
-<body class="bg-light">
+<body>
     <!-- Navbar -->
     @include('components.navbar_landing')
 

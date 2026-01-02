@@ -25,9 +25,9 @@
         <div class="banner-content-text text-center text-lg-start" data-aos="fade-right" data-aos-duration="2000">
           <h1 class="banner-content-headline fw-bold mb-4">We're Provide Enterprise Digital Solution</h1>
           <p class="banner-content-desc mb-4">Nineod is one of best IT Company in Indonesia We're specializing in software solutions and managed services. Our goal is to help our clients to give a digital solution with enterprise quality using top-notch technologies.</p>
-          <a href="https://api.whatsapp.com/send?phone=+628112108020&text=Hello,%20i%20want%20to%20ask%20about%20website" class="btn-contact-us me-2 d-inline-block text-decoration-none btn-hover-yellow d-inline-flex rounded shadow-sm">
+          <!-- <a href="https://api.whatsapp.com/send?phone=+628112108020&text=Hello,%20i%20want%20to%20ask%20about%20website" class="btn-contact-us me-2 d-inline-block text-decoration-none btn-hover-yellow d-inline-flex rounded shadow-sm">
             <span class="m-auto">Contact Us</span>
-          </a>
+          </a> -->
         </div>
       </div>
       <div class="col-lg-6">
@@ -65,9 +65,9 @@
             <i class="fas fa-check-circle fs-3 me-3"></i>
             <span class="fs-5 ">Competitive Price</span>
           </div>
-          <div class="text-center text-sm-start w-100">
+          <!-- <div class="text-center text-sm-start w-100">
             <a href="https://api.whatsapp.com/send?phone=+628112108020&text=Hello,%20i%20want%20to%20ask%20about%20website" class="btn-contact-us me-2 d-inline-block text-decoration-none btn-hover-yellow d-inline-flex rounded shadow-sm"><span class="m-auto">Start Now</span></a>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -156,7 +156,7 @@
     </div>
   </div>
 </section>
-<section id="products" class="riungin active-scroll mb-3">
+<!-- <section id="products" class="riungin active-scroll mb-3">
   <div class="container">
     <div class="riungin-header text-center m-auto">
       <h1 class="riungin-header-title fw-bold" data-aos="fade-in" data-aos-duration="2000">Meet Our New Product — Riung.in</h1>
@@ -206,7 +206,7 @@
       </div>
     </div>
   </div>
-</section>
+</section> -->
 <section id="projects" class="projects active-scroll">
   <div class="projects-header">
     <div class="container">
@@ -415,7 +415,7 @@
       </div>
     </div>
   </div>
-  <div class="team py-5">
+  <!-- <div class="team py-5">
     <div class="container">
       <div class="team-header">
         <h1 class="fw-bold text-center" data-aos="fade-in" data-aos-duration="2000">Meet The Team</h1>
@@ -434,7 +434,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
 </section>
 <section id="contact" class="contact py-5 active-scroll">
   <div class="container">
@@ -491,7 +491,6 @@
             <button type="submit" class="btn-contact-submit w-100 rounded">Send</button>
           </div>
         </form>
-         <!-- Recaptcha placeholder -->
       </div>
     </div>
   </div>

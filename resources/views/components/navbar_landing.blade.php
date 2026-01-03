@@ -19,6 +19,9 @@
           <a href="#projects" class="nav-link navbar-link px-0">Projects</a>
         </li>
         <li class="navbar-item px-4">
+          <a href="{{ route('career.index') }}" class="nav-link navbar-link px-0">Career</a>
+        </li>
+        <li class="navbar-item px-4">
           <a href="#contact" class="nav-link navbar-link px-0">Contact</a>
         </li>
       </ul>

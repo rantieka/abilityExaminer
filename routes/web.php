@@ -13,3 +13,5 @@ Route::get('/test-bootstrap', function () {
 // Career
 Route::get('/career', [CareerController::class, 'index'])->name('career.index');
 Route::get('/career/{slug}', [CareerController::class, 'show'])->name('career.show');
+Route::post('/career/{slug}/apply', [CareerController::class, 'apply'])->name('career.apply');
+

@@ -31,6 +31,9 @@ class UsersTable
           ->sortable()
           ->toggleable(isToggledHiddenByDefault: true),
         ])
+        ->actions([
+          EditAction::make(),
+        ])
         ->filters([
           //
         ])

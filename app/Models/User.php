@@ -16,6 +16,17 @@ class User extends Authenticatable
    */
   use HasFactory, Notifiable, HasRoles;
 
+  public function canImpersonate()
+  {
+    // only super_admin can impersonate
+    return $this->hasRole('super_admin'); 
+  }
+  public function canBeImpersonated()
+  {
+    // only super_admin can be impersonated
+    return !$this->hasRole('super_admin');
+  }
+
   /**
    * The attributes that are mass assignable.
    *

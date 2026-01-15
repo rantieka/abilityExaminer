@@ -13,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class UserResource extends Resource
 {
@@ -21,6 +23,27 @@ class UserResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = Auth::user();
+
+        // super admin can see all users.
+        if ($user->hasRole('super_admin')) {
+            return $query;
+        }
+
+        // hr can see only users with role 'applicant'.
+        if ($user->hasRole(['hr', 'spv'])) {
+            return $query->whereHas('roles', function ($q) {
+                $q->where('name', 'applicant');
+            });
+        }
+
+        // default (if any other role login), only show their own.
+        return $query->where('id', $user->id);
+    }
 
     public static function form(Schema $schema): Schema
     {

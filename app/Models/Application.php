@@ -17,6 +17,12 @@ class Application extends Model
     'phone',
     'cv_path',
     'status',
+    'ai_score',
+    'ai_analysis',
+  ];
+
+  protected $casts = [
+    'ai_analysis' => 'array',
   ];
 
   public function jobVacancy(): BelongsTo

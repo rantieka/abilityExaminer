@@ -3,17 +3,17 @@
 namespace App\Filament\Resources\JobVacancies\Pages;
 
 use App\Filament\Resources\JobVacancies\JobVacancyResource;
-use Filament\Actions\CreateAction;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\ViewRecord;
 
-class ListJobVacancies extends ListRecords
+class ViewJobVacancy extends ViewRecord
 {
   protected static string $resource = JobVacancyResource::class;
 
   protected function getHeaderActions(): array
   {
     return [
-      CreateAction::make(),
+      // Tidak ada action untuk SPV - hanya view
+      // HR/Super Admin bisa punya action di sini jika perlu
     ];
   }
 }

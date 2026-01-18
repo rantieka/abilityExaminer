@@ -17,15 +17,24 @@ class JobVacancy extends Model
     'description',
     'qualifications',
     'status',
-    'is_published',
+    'is_published', 
+    'rejection_reason',  // ← Diperbaiki dari rejected_reason
+    'rejected_by',
+    'rejected_at',
   ];
 
   protected $casts = [
     'is_published' => 'boolean',
+    'rejected_at' => 'datetime',
   ];
 
   public function createdBy()
   {
     return $this->belongsTo(User::class, 'created_by');
+  }
+
+  public function rejectedBy()
+  {
+    return $this->belongsTo(User::class, 'rejected_by');
   }
 }

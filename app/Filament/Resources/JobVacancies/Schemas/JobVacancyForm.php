@@ -10,6 +10,8 @@ use Filament\Forms\Set as FormSet;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\RichEditor;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Section;
 
 class JobVacancyForm
 {
@@ -44,8 +46,27 @@ class JobVacancyForm
             ->default('pending')
             ->disabled()
             ->dehydrated()
-            ->visible(fn() => Auth::user()->hasRole(['hr', 'super_admin'])),
+            ->visible(fn() => Auth::user()->hasRole(['hr', 'super_admin', 'spv'])),
           // is_published is auto-set by Approve action, no need for manual toggle
+          
+          // Rejection Information
+          Section::make('Rejection Information')
+            ->schema([
+              Placeholder::make('rejection_reason')
+                ->label('Rejection Reason')
+                ->content(fn ($record) => $record?->rejection_reason ?? '-'),
+              
+              Placeholder::make('rejected_by')
+                ->label('Rejected By')
+                ->content(fn ($record) => $record?->rejectedBy?->name ?? '-'),
+              
+              Placeholder::make('rejected_at')
+                ->label('Rejected At')
+                ->content(fn ($record) => $record?->rejected_at?->format('d M Y, H:i') ?? '-'),
+            ])
+            ->visible(fn ($record) => $record?->status === 'rejected' && Auth::user()->hasRole(['hr', 'super_admin', 'spv']))
+            ->collapsible()
+            ->collapsed(false),
       ]);
   }
 }

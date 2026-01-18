@@ -23,11 +23,11 @@ class GroqService
    */
   public function chat(array $messages, float $temperature = 0.5)
   {
-    try {
+
       // Bypass SSL verification for local development (Windows/Laragon SSL cert issue)
       // TODO: Remove this in production - SSL should be verified on live servers
       $response = Http::withoutVerifying()
-        ->timeout(30)
+        ->timeout(60)
         ->withHeaders([
           'Authorization' => "Bearer {$this->apiKey}",
           'Content-Type' => 'application/json',
@@ -37,31 +37,37 @@ class GroqService
           'messages' => $messages,
           'temperature' => $temperature,
           'max_tokens' => 2048,
+          'response_format' => ['type' => 'json_object'], // Enforce JSON mode
         ]);
 
       if ($response->failed()) {
-        Log::error('Groq API Error', [
-          'status' => $response->status(),
-          'body' => $response->body(),
-        ]);
-        return null;
+        throw new \Exception('Groq API Error: ' . $response->status() . ' - ' . $response->body());
       }
 
       $data = $response->json();
       
       if (!isset($data['choices'][0]['message']['content'])) {
-        Log::error('Invalid Groq Response Structure', ['data' => $data]);
-        return null;
+        throw new \Exception('Invalid Groq Response Structure: ' . json_encode($data));
       }
 
-      return $data['choices'][0]['message']['content'];
+      // Decode JSON string to array
+      $content = $data['choices'][0]['message']['content'];
+      
+      // DEBUG: Log raw content to see if it's valid JSON
+      Log::info("Groq Content Raw: " . $content);
 
-    } catch (\Exception $e) {
-      Log::error('Groq Service Exception', [
-        'message' => $e->getMessage(),
-        'trace' => $e->getTraceAsString(),
-      ]);
-      return null;
-    }
+      // Robust Parsing: Extract JSON object from text if preamble exists
+      if (preg_match('/\{[\s\S]*\}/', $content, $matches)) {
+          $content = $matches[0];
+      }
+
+      $decoded = json_decode($content, true);
+
+      if (json_last_error() !== JSON_ERROR_NONE) {
+          throw new \Exception("JSON Decode Error: " . json_last_error_msg() . " | Content: " . $content);
+      }
+
+      return $decoded;
   }
+
 }

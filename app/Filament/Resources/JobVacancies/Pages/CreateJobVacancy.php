@@ -9,9 +9,12 @@ class CreateJobVacancy extends CreateRecord
 {
   protected static string $resource = JobVacancyResource::class;
 
-  protected function mutateFormDataBeforeCreate(array $data): array
-  {
+  protected function mutateFormDataBeforeCreate(array $data): array {
     $data['created_by'] = auth()->id();
     return $data;
+  }
+
+  protected function getCreatedNotificationTitle(): ?string {
+    return 'Job vacancy successfully created!';
   }
 }

@@ -18,14 +18,23 @@ class JobVacancy extends Model
     'qualifications',
     'status',
     'is_published', 
-    'rejection_reason',  // ← Diperbaiki dari rejected_reason
+    'rejection_reason',
     'rejected_by',
     'rejected_at',
+    'required_count',
+    'published_until',
+    'archived_at',
+    'is_fulltime',
+    'is_wfo',
   ];
 
   protected $casts = [
     'is_published' => 'boolean',
+    'is_fulltime' => 'boolean',
+    'is_wfo' => 'boolean',
     'rejected_at' => 'datetime',
+    'published_until' => 'date',
+    'archived_at' => 'datetime',
   ];
 
   public function createdBy()
@@ -36,5 +45,10 @@ class JobVacancy extends Model
   public function rejectedBy()
   {
     return $this->belongsTo(User::class, 'rejected_by');
+  }
+
+  public function questions()
+  {
+    return $this->hasMany(Question::class);
   }
 }

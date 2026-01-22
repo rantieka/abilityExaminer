@@ -1,9 +1,9 @@
 <div class="backdrop-navbar-mobile vh-100 w-100 position-fixed"></div>
-<nav class="navbar navbar-expand-lg navbar-wrap shadow-sm fixed-top" id="">
+<nav class="navbar navbar-expand-lg shadow-sm fixed-top bg-white" id="">
   <div class="container">
     <div class="d-flex justify-content-between w-100 align-items-center">
       <a class="navbar-brand" href="/">
-        <img src="{{ asset('images/new-logo-nineod.png') }}" alt="Logo" class="new-logo">
+        <img src="{{ asset('images/nineod-logo.png') }}" alt="Logo" class="new-logo">
       </a>
       <ul class="navbar-nav d-none d-lg-flex">
         <li class="navbar-item px-4">
@@ -19,7 +19,7 @@
           <a href="#projects" class="nav-link navbar-link px-0">Projects</a>
         </li>
         <li class="navbar-item px-4">
-          <a href="{{ route('career.index') }}" class="nav-link navbar-link px-0">Career</a>
+          <a href="{{ route('career.index') }}" class="nav-link navbar-link px-0 active">Careers</a>
         </li>
         <li class="navbar-item px-4">
           <a href="#contact" class="nav-link navbar-link px-0">Contact</a>

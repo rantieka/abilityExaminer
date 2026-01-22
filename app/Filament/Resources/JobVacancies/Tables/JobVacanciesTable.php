@@ -10,6 +10,10 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
+use App\Models\JobVacancy;
+use Filament\Actions\Action;
+use Filament\Tables\Filters\TernaryFilter;
+
 class JobVacanciesTable
 {
   public static function configure(Table $table): Table
@@ -20,13 +24,22 @@ class JobVacanciesTable
           ->label('No.')
           ->rowIndex(),
         TextColumn::make('title')
-          ->searchable(),
+          ->searchable()
+          ->description(fn (JobVacancy $record) => $record->is_fulltime ? 'Full Time' : 'Part Time'),
         TextColumn::make('slug')
-          ->searchable(),
+          ->searchable()
+          ->toggleable(isToggledHiddenByDefault: true),
         TextColumn::make('createdBy.name')
           ->label('Created By')
           ->sortable()
           ->searchable(),
+        TextColumn::make('required_count')
+          ->label('Quota')
+          ->sortable(),
+        TextColumn::make('published_until')
+          ->date('d M Y')
+          ->sortable()
+          ->placeholder('No Limit'),
         TextColumn::make('status')
           ->badge()
           ->color(fn (string $state): string => match ($state) {
@@ -59,15 +72,43 @@ class JobVacanciesTable
           ->dateTime()
           ->sortable()
           ->toggleable(isToggledHiddenByDefault: true),
+        TextColumn::make('archived_at')
+            ->label('Archived')
+            ->dateTime()
+            ->sortable()
+            ->toggleable(isToggledHiddenByDefault: true)
+            ->color('danger'),
     ])
     ->filters([
-        //
+      TernaryFilter::make('archived')
+        ->label('Archived Status')
+        ->placeholder('All Vacancies')
+        ->trueLabel('Archived Only')
+        ->falseLabel('Active Only')
+        ->queries(
+            true: fn ($query) => $query->whereNotNull('archived_at'),
+            false: fn ($query) => $query->whereNull('archived_at'),
+            blank: fn ($query) => $query,
+        )
+        ->default(false),
     ])
     ->recordActions([
-        ViewAction::make()
-          ->visible(fn () => auth()->user()->hasRole('spv')),
-        EditAction::make()
-          ->visible(fn () => auth()->user()->hasRole(['hr', 'super_admin'])),
+      ViewAction::make()
+        ->visible(fn () => auth()->user()->hasRole('spv')),
+      EditAction::make()
+        ->visible(fn () => auth()->user()->hasRole(['hr', 'super_admin', 'spv'])),
+      Action::make('archive')
+        ->icon('heroicon-o-archive-box')
+        ->color('danger')
+        ->requiresConfirmation()
+        ->visible(fn (JobVacancy $record) => $record->archived_at === null && auth()->user()->hasRole(['hr', 'super_admin', 'spv']))
+        ->action(fn (JobVacancy $record) => $record->update(['archived_at' => now()])),
+      Action::make('unarchive')
+        ->icon('heroicon-o-arrow-path')
+        ->color('success')
+        ->requiresConfirmation()
+        ->visible(fn (JobVacancy $record) => $record->archived_at !== null && auth()->user()->hasRole(['hr', 'super_admin', 'spv']))
+        ->action(fn (JobVacancy $record) => $record->update(['archived_at' => null])),
     ])
     ->toolbarActions([
       BulkActionGroup::make([

@@ -7,22 +7,22 @@
       </a>
       <ul class="navbar-nav d-none d-lg-flex">
         <li class="navbar-item px-4">
-          <a href="#home" class="nav-link navbar-link px-0">Home</a>
+          <a href="{{ Request::is('/') ? '#home' : url('/') }}" class="nav-link navbar-link px-0">Home</a>
         </li>
         <li class="navbar-item px-4">
-          <a href="#about" class="nav-link navbar-link px-0">About</a>
+          <a href="{{ Request::is('/') ? '#about' : url('/#about') }}" class="nav-link navbar-link px-0">About</a>
         </li>
         <!-- <li class="navbar-item px-4">
           <a href="#products" class="nav-link navbar-link px-0">Products</a>
         </li> -->
         <li class="navbar-item px-4">
-          <a href="#projects" class="nav-link navbar-link px-0">Projects</a>
+          <a href="{{ Request::is('/') ? '#projects' : url('/#projects') }}" class="nav-link navbar-link px-0">Projects</a>
         </li>
         <li class="navbar-item px-4">
           <a href="{{ route('career.index') }}" class="nav-link navbar-link px-0 active">Careers</a>
         </li>
         <li class="navbar-item px-4">
-          <a href="#contact" class="nav-link navbar-link px-0">Contact</a>
+          <a href="{{ Request::is('/') ? '#contact' : url('/#contact') }}" class="nav-link navbar-link px-0">Contact</a>
         </li>
       </ul>
       <div class="navbar-button d-flex align-items-center d-lg-none">
@@ -44,16 +44,16 @@
     </div>
     <ul class="ps-0 text-center">
       <li class="navbar-item py-3">
-        <a href="#home" class="nav-link navbar-link">Home</a>
+        <a href="{{ Request::is('/') ? '#home' : url('/') }}" class="nav-link navbar-link">Home</a>
       </li>
       <li class="navbar-item py-3">
-        <a href="#about" class="nav-link navbar-link">About</a>
+        <a href="{{ Request::is('/') ? '#about' : url('/#about') }}" class="nav-link navbar-link">About</a>
       </li>
       <!-- <li class="navbar-item py-3">
         <a href="#projects" class="nav-link navbar-link">Projects</a>
       </li> -->
       <li class="navbar-item py-3">
-        <a href="#contact" class="nav-link navbar-link">Contact</a>
+        <a href="{{ Request::is('/') ? '#contact' : url('/#contact') }}" class="nav-link navbar-link">Contact</a>
       </li>
     </ul>
   </div>

@@ -2,12 +2,28 @@
 
 @section('content')
 <!-- Hero Section -->
-<div class="py-4">
-  <div class="p-5 mb-4 rounded-3 position-relative" style="">
-    <div class="position-absolute top-0 start-0 w-100 h-100" style="background-color: rgba(33, 37, 41, 0.7);"></div>
-    <div class="container py-5 text-center position-relative text-white">
-      <h4 class="fw-bold">Careers</h4>
-      <p class="mb-0"><a href="{{ route('home') }}" class="text-white text-decoration-none">Home</a> / Careers</p>
+<div class="pt-5">
+  <div class="careers-jumbotron p-5 mb-4 rounded-3 position-relative overflow-hidden">
+    <!-- Geometric Pattern Background -->
+    <div class="geometric-pattern">
+      <!-- Animated Circles -->
+      <div class="geo-circle geo-circle-1"></div>
+      <div class="geo-circle geo-circle-2"></div>
+      <div class="geo-circle geo-circle-3"></div>
+      
+      <!-- Scattered Dots -->
+      <div class="geo-dots"></div>
+      
+      <!-- Gradient Lines -->
+      <div class="geo-line geo-line-1"></div>
+      <div class="geo-line geo-line-2"></div>
+    </div>
+    
+    <!-- Content -->
+    <div class="container py-5 text-center position-relative d-flex flex-column justify-content-center" style="min-height: 300px; z-index: 10;">
+      <h1 class="display-5 fw-bold mb-3 text-main">Careers</h1>
+      <p class="mb-0"><a href="{{ route('home') }}" class="text-main text-decoration-none">Home</a> 
+      <span class="text-subtle">/ Careers </span> </p>
     </div>
   </div>
 </div>
@@ -25,33 +41,29 @@
 <div class="container py-5">
   @if($jobsByDepartment->first()->isEmpty())
     <div class="text-center">
-      <h5>Tidak ada lowongan yang tersedia saat ini</h5>
-      <p>Silakan periksa kembali nanti atau hubungi kami untuk informasi lebih lanjut</p>
+      <i class="fa-solid fa-person-walking-luggage display-5 mb-3"></i>
+      <p>Tidak ada lowongan yang tersedia saat ini</p>
     </div>
   @else
     @foreach($jobsByDepartment as $department => $jobs)
       <div class="mb-5">
-        <h3 class="fw-bold mb-4 text-primary">
+        <h3 class="text-main fw-bold mb-4 text-center">
           <i class="fas fa-diagram-3"></i> {{ $department }}
         </h3>
-        <div class="row">
+        <div class="job-grid">
           @foreach($jobs as $job)
-            <div class="col-md-6 mb-4">
-              <div class="card h-100 shadow-sm border-0 hover-lift">
-                <div class="card-body">
-                  <h5 class="card-title fw-bold">{{ $job['title'] }}</h5>
-                  <div class="mb-3">
-                    <span class="badge bg-primary text-white">
-                      {{ $job->status }}
-                    </span>
-                  </div>
-                  <p class="card-text text-muted mb-3">
-                    {{ \Illuminate\Support\Str::limit($job['description'], 100) }}
-                  </p>
-                  <a href="{{ route('career.show', $job['slug']) }}" class="btn btn-primary">
-                    Lihat Detail & Apply
-                  </a>
+            <div class="job-card">
+              <h3 class="job-title">{{ $job['title'] }}</h3>
+              <p class="job-desc">
+                {{ \Illuminate\Support\Str::limit($job['description'], 120) }}
+              </p>
+              <div class="card-footer-custom">
+                <div class="location">
+                  <i class="fas fa-map-marker-alt"></i> Jakarta
                 </div>
+                <a href="{{ route('career.show', $job['slug']) }}" class="btn-apply">
+                  Lihat Detail
+                </a>
               </div>
             </div>
           @endforeach
@@ -61,14 +73,5 @@
   @endif
 </div>
 
-<style>
-  .hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .hover-lift:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
-  }
-</style>
+
 @endsection

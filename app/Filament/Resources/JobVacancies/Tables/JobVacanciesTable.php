@@ -61,6 +61,7 @@ class JobVacanciesTable
           ->formatStateUsing(fn ($state, $record) => 
             $record->status === 'rejected' ? ($state ?? '-') : '-'
           )
+          ->placeholder('-')
           ->wrap()
           ->searchable()
           ->toggleable(isToggledHiddenByDefault: false),

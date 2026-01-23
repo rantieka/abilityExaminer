@@ -15,7 +15,7 @@ class CareerController extends Controller
           ->where('is_published', true)
           ->latest()
           ->get();
-      $jobsByDepartment = collect(['All Positions' => $jobs]);
+      $jobsByDepartment = collect(['Available Positions' => $jobs]);
       return view('career.index', compact('jobsByDepartment'));
     }
 

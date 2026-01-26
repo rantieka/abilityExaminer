@@ -1265,15 +1265,28 @@ a,
   }
 
   .btn-apply {
-    background: #ffffff;
-    color: #FFB800;
-    font-weight: 600;
-    font-size: 13px;
-    padding: 8px 16px;
-    border-radius: 5px;
-    border: 1.5px solid #FFB800;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    text-transform: capitalize;
+    @extend .btn-apply;
   }
+}
+
+.btn-apply {
+  background: #FFB800;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: darken(#FFB800, 5%);
+    transform: translateX(3px);
+    color: #ffffff;
+  }
+}
+
+.careers-form small {
+  font-size: 11px;
 }

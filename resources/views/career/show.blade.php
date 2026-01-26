@@ -1,46 +1,74 @@
 @extends('layouts.landing')
 @section('content')
+<!-- Hero Section -->
+<div class="pt-5">
+  <div class="careers-jumbotron p-5 mb-4 rounded-3 position-relative overflow-hidden">
+    <!-- Geometric Pattern Background -->
+    <div class="geometric-pattern">
+      <!-- Animated Circles -->
+      <div class="geo-circle geo-circle-1"></div>
+      <div class="geo-circle geo-circle-2"></div>
+      <div class="geo-circle geo-circle-3"></div>
+
+      <!-- Scattered Dots -->
+      <div class="geo-dots"></div>
+
+      <!-- Gradient Lines -->
+      <div class="geo-line geo-line-1"></div>
+      <div class="geo-line geo-line-2"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="container py-5 text-center position-relative d-flex flex-column justify-content-center"
+      style="min-height: 300px; z-index: 10;">
+      <h1 class="display-5 fw-bold mb-3 text-main">{{ $job->title }}</h1>
+      <p class="mb-0"><a href="{{ route('home') }}" class="text-main text-decoration-none">Home</a>
+        <a href="{{ route('career.index') }}" class="text-main text-decoration-none">/ Careers </a>
+        <span class="text-subtle">/ {{ $job->title }} </span>
+      </p>
+    </div>
+  </div>
+</div>
 <div class="container py-5">
-  <h1 class="display-4 fw-bold mb-4">{{ $job->title }}</h1>
-  <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body">
-      <h3 class="fw-bold mb-3">Job Description</h3>
-      <div>{!! $job->description !!}</div>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="mb-4">
+        <h5 class="fw-bold mb-3">Description</h5>
+        <p>{!! $job->description !!}</p>
+      </div>
+      <div class="mb-4">
+        <h5 class="fw-bold mb-3">Qualifications</h5>
+        <p>{!! $job->qualifications !!}</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="careers-form mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3">Apply</h5>
+          <form action="{{ route('career.apply', $job->slug) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="mb-3">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="full_name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Phone</label>
+              <input type="tel" name="phone" class="form-control" maxlength="13" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Upload CV</label>
+              <input type="file" name="cv" class="form-control mb-2" accept=".pdf" required>
+              <small class="text-danger fst-italic">*Only PDF files are allowed</small>
+            </div>
+            <button type="submit" class="btn btn-apply">Send</button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body">
-      <h3 class="fw-bold mb-3">Qualifications</h3>
-      <div>{!! $job->qualifications !!}</div>
-    </div>
-  </div>
-  <div class="card shadow-sm border-0">
-    <div class="card-body">
-      <h3 class="fw-bold mb-3">Apply Now</h3>
-      <form action="{{ route('career.apply', $job->slug) }}" method="POST" enctype="multipart/form-data">
-        @csrf
-        <div class="mb-3">
-          <label class="form-label">Full Name</label>
-          <input type="text" name="full_name" class="form-control" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Email</label>
-          <input type="email" name="email" class="form-control" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Phone</label>
-          <input type="tel" name="phone" class="form-control">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Upload CV (PDF)</label>
-          <input type="file" name="cv" class="form-control" accept=".pdf" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-lg">Submit Application</button>
-      </form>
-    </div>
-  </div>
-  <a href="{{ route('career.index') }}" class="btn btn-outline-secondary mt-4">
-    ← Back to Job List
-  </a>
 </div>
 @endsection

@@ -19,10 +19,14 @@ class Application extends Model
     'status',
     'ai_score',
     'ai_analysis',
+    'test_score',
+    'part1_answers',
+    'part1_completed_at',
   ];
 
   protected $casts = [
     'ai_analysis' => 'array',
+    'part1_answers' => 'array',
   ];
 
   public function jobVacancy(): BelongsTo

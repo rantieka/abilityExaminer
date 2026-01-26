@@ -25,7 +25,7 @@ class ApplicationResource extends Resource
 {
     protected static ?string $model = Application::class;
 
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-inbox';
 
     protected static ?string $recordTitleAttribute = 'full_name';
 

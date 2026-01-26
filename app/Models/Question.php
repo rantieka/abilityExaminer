@@ -11,6 +11,8 @@ class Question extends Model
     'question_text',
     'options',
     'correct_answer',
+    'is_active',
+    'section',
   ];
 
   protected $casts = [

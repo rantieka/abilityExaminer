@@ -19,7 +19,7 @@ class JobVacancyResource extends Resource
 {
   protected static ?string $model = JobVacancy::class;
 
-  protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+  protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-briefcase';
 
   protected static ?string $recordTitleAttribute = 'title';
 
@@ -36,7 +36,7 @@ class JobVacancyResource extends Resource
   public static function getRelations(): array
   {
     return [
-      //
+      // RelationManagers\QuestionsRelationManager::class, // Deprecated, moved to dedicated resource
     ];
   }
 

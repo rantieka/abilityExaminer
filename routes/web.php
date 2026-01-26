@@ -23,5 +23,12 @@ Route::get('/test/login', [TestAuthController::class, 'index'])->name('test.logi
 Route::post('/test/login', [TestAuthController::class, 'authenticate'])->name('test.authenticate');
 
 // Protected Test Routes (Middleware check in Controller)
+Route::get('/test/{application}/welcome', [TestController::class, 'welcome'])->name('test.welcome');
+Route::post('/test/{application}/start', [TestController::class, 'startTest'])->name('test.start');
 Route::get('/test/{application}', [TestController::class, 'show'])->name('test.show');
+Route::post('/test/{application}/part1', [TestController::class, 'submitPart1'])->name('test.submitPart1');
+Route::get('/test/{application}/instruction', [TestController::class, 'instruction'])->name('test.instruction');
 Route::post('/test/{application}', [TestController::class, 'submit'])->name('test.submit');
+
+
+

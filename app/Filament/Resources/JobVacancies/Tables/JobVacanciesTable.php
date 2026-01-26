@@ -98,6 +98,13 @@ class JobVacanciesTable
         ->visible(fn () => auth()->user()->hasRole('spv')),
       EditAction::make()
         ->visible(fn () => auth()->user()->hasRole(['hr', 'super_admin', 'spv'])),
+      Action::make('questions')
+        ->label('Questions')
+        ->icon('heroicon-o-document-text')
+        ->color('info')
+        ->url(fn (JobVacancy $record) => \App\Filament\Resources\Questions\QuestionResource::getUrl('index', [
+            'job_id' => $record->id,
+        ])),
       Action::make('archive')
         ->icon('heroicon-o-archive-box')
         ->color('danger')

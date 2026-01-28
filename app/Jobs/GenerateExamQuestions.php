@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\JobVacancy;
 use App\Models\Question;
 use App\Services\GroqService;
+// use App\Services\OllamaService; // Fallback option
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,6 +26,7 @@ class GenerateExamQuestions // implements ShouldQueue (Temporary force sync)
   }
 
   public function handle(GroqService $groq): void
+  // public function handle(OllamaService $ai): void // Fallback
   {
     Log::info("Starting Advanced Exam Generation for: " . $this->jobVacancy->title);
 
@@ -129,6 +131,7 @@ class GenerateExamQuestions // implements ShouldQueue (Temporary force sync)
   }
 
   protected function generateBatch(GroqService $groq, string $prompt, string $sectionTag)
+  // protected function generateBatch(OllamaService $ai, string $prompt, string $sectionTag) // Fallback
   {
     try {
       $expectedCount = 20; // Both parts generate 20 questions

@@ -22,6 +22,9 @@ class Application extends Model
     'test_score',
     'part1_answers',
     'part1_completed_at',
+    'email_sent_at',
+    'email_type',
+    'rejection_reason',
   ];
 
   protected $casts = [

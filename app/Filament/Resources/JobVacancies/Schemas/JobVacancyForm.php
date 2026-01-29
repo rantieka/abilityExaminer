@@ -37,31 +37,35 @@ class JobVacancyForm
           ->disabled()
           ->dehydrated(),
         
-        Section::make('Job Details')
+        
+        \Filament\Schemas\Components\Grid::make(2)
+          ->columnSpanFull()
           ->schema([
-            TextInput::make('required_count')
-              ->label('Jumlah Kebutuhan')
-              ->numeric()
-              ->default(1)
-              ->minValue(1)
-              ->required(),
-            DatePicker::make('published_until')
-              ->label('Batas Publikasi')
-              ->native(false),
-            Toggle::make('is_fulltime')
-              ->label('Full Time')
-              ->default(true),
-            Toggle::make('is_wfo')
-              ->label('Work From Office (WFO)')
-              ->default(true),
-          ])->columns(2),
+            \Filament\Schemas\Components\Grid::make(2)
+              ->schema([
+                TextInput::make('required_count')
+                  ->label('Jumlah Kebutuhan')
+                  ->numeric()
+                  ->default(1)
+                  ->minValue(1)
+                  ->required(),
+                DatePicker::make('published_until')
+                  ->label('Batas Publikasi')
+                  ->native(false),
+                Toggle::make('is_fulltime')
+                  ->label('Full Time')
+                  ->default(true),
+                Toggle::make('is_wfo')
+                  ->label('Work From Office (WFO)')
+                  ->default(true),
+              ]),
 
-        // TextInput::make('created_by')
-        //   ->required()
-        //   ->numeric(),
-        Textarea::make('description')
-          ->required()
-          ->columnSpanFull(),
+            Textarea::make('description')
+              ->label('Description')
+              ->required()
+              ->rows(10),
+          ]),
+
         RichEditor::make('qualifications')
           ->columnSpanFull(),
         TextInput::make('status')

@@ -79,6 +79,11 @@ return [
             'transport' => 'array',
         ],
 
+        'preview' => [
+            'transport' => 'log',
+            'channel' => env('MAIL_LOG_CHANNEL'),
+        ],
+
         'failover' => [
             'transport' => 'failover',
             'mailers' => [

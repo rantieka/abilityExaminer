@@ -40,6 +40,18 @@
         <h5 class="fw-bold mb-3">Qualifications</h5>
         <p>{!! $job->qualifications !!}</p>
       </div>
+      <div class="mb-4">
+        @if($job->location || \App\Models\Setting::get('alamat_kantor'))
+          <h5 class="fw-bold mb-3">Office Location</h5>
+          <div class="mb-0">
+            @if($job->location)
+              {!! $job->location !!}
+            @else
+              {!! nl2br(e(\App\Models\Setting::get('alamat_kantor'))) !!}
+            @endif
+          </div>
+        @endif
+      </div>
     </div>
     <div class="col-md-4">
       <div class="careers-form mb-4">

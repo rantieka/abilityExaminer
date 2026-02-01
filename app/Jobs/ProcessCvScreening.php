@@ -18,6 +18,7 @@ class ProcessCvScreening implements ShouldQueue
 {
   use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+  // public $connection = 'database'; // REMOVED to avoid Fatal Error with Queueable trait
   public $tries = 3;
   public $backoff = [10, 30, 60];
 
@@ -26,6 +27,7 @@ class ProcessCvScreening implements ShouldQueue
   public function __construct(Application $application)
   {
       $this->application = $application;
+      $this->onConnection('database'); // Force this heavy job to use Database Queue
   }
 
   public function handle(GroqService $groq, Parser $parser): void

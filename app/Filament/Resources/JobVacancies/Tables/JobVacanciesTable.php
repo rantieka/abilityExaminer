@@ -105,6 +105,31 @@ class JobVacanciesTable
         ->url(fn (JobVacancy $record) => \App\Filament\Resources\Questions\QuestionResource::getUrl('index', [
             'job_id' => $record->id,
         ])),
+      Action::make('manage_publication')
+        ->label('Manage Publication')
+        ->icon('heroicon-o-calendar')
+        ->color('info')
+        ->visible(fn (JobVacancy $record) => $record->status === 'approved' && auth()->user()->hasRole(['hr', 'super_admin']))
+        ->form([
+            \Filament\Forms\Components\DatePicker::make('published_until')
+                ->label('Batas Publikasi')
+                ->required()
+                ->native(false)
+                ->default(fn (JobVacancy $record) => $record->published_until)
+                ->minDate(now()),
+        ])
+        ->fillForm(fn (JobVacancy $record) => ['published_until' => $record->published_until])
+        ->modalHeading('Manage Publication Date')
+        ->action(function (JobVacancy $record, array $data) {
+            $record->update([
+                'published_until' => $data['published_until'],
+            ]);
+            
+            \Filament\Notifications\Notification::make()
+                ->success()
+                ->title('Publication date updated!')
+                ->send();
+        }),
       Action::make('archive')
         ->icon('heroicon-o-archive-box')
         ->color('danger')

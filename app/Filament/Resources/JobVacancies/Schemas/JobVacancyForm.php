@@ -14,6 +14,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
 
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 
 class JobVacancyForm
 {
@@ -21,53 +22,110 @@ class JobVacancyForm
   {
     return $schema
       ->components([
-        TextInput::make('title')
-          ->required()
-          ->maxLength(255)
-          ->live(onBlur: true)
-          ->afterStateUpdated(function ($set, $state) {
-            if ($state) {
-              $set('slug', Str::slug($state));
-            }
-          }),
-        TextInput::make('slug')
-          ->required()
-          ->maxLength(255)
-          ->unique(ignoreRecord: true)
-          ->disabled()
-          ->dehydrated(),
-        
-        
-        \Filament\Schemas\Components\Grid::make(2)
+        // SECTION 1: POSISI
+        Section::make('Position')
           ->columnSpanFull()
+          ->columns(2)
           ->schema([
-            \Filament\Schemas\Components\Grid::make(2)
-              ->schema([
-                TextInput::make('required_count')
-                  ->label('Jumlah Kebutuhan')
-                  ->numeric()
-                  ->default(1)
-                  ->minValue(1)
-                  ->required(),
-                DatePicker::make('published_until')
-                  ->label('Batas Publikasi')
-                  ->native(false),
-                Toggle::make('is_fulltime')
-                  ->label('Full Time')
-                  ->default(true),
-                Toggle::make('is_wfo')
-                  ->label('Work From Office (WFO)')
-                  ->default(true),
-              ]),
-
-            Textarea::make('description')
-              ->label('Description')
+            TextInput::make('title')
               ->required()
-              ->rows(10),
+              ->maxLength(255)
+              ->live(onBlur: true)
+              ->afterStateUpdated(function ($set, $state) {
+                if ($state) {
+                  $set('slug', Str::slug($state));
+                }
+              }),
+            TextInput::make('slug')
+              ->required()
+              ->maxLength(255)
+              ->unique(ignoreRecord: true)
+              ->disabled()
+              ->dehydrated(),
           ]),
 
-        RichEditor::make('qualifications')
-          ->columnSpanFull(),
+        // SECTION 2: DETAIL PEKERJAAN
+        Section::make('Job Details')
+          ->columnSpanFull()
+          ->columns(2)
+          ->schema([
+            Select::make('department')
+              ->label('Department')
+              ->options(function () {
+                  $defaults = [
+                      'IT' => 'IT',
+                      'HR' => 'HR',
+                      'Finance' => 'Finance',
+                      'Operations' => 'Operations',
+                      'Sales' => 'Sales',
+                      'Marketing' => 'Marketing',
+                  ];
+                  
+                  $existing = \App\Models\JobVacancy::query()
+                      ->whereNotNull('department')
+                      ->distinct()
+                      ->pluck('department', 'department')
+                      ->toArray();
+
+                  return array_merge($defaults, $existing);
+              })
+              ->native(false)
+              ->preload()
+              ->required()
+              ->createOptionForm([
+                    TextInput::make('name')
+                        ->required(),
+              ])
+              ->createOptionUsing(function (array $data) {
+                  return $data['name'];
+              }),
+            RichEditor::make('location')
+              ->label('Office Location')
+              ->default(fn () => \App\Models\Setting::get('alamat_kantor'))
+              ->required()
+              ->columnSpanFull()
+              ->visible(fn () => Auth::user()->hasRole(['hr', 'super_admin'])),
+            Select::make('employment_type')
+              ->label('Employment Type')
+              ->options([
+                  'Full Time' => 'Full Time',
+                  'Part Time' => 'Part Time',
+                  'Contract' => 'Contract',
+                  'Internship' => 'Internship',
+              ])
+              ->required(),
+            Select::make('work_arrangement')
+              ->label('Work Arrangement')
+              ->options([
+                  'WFO' => 'WFO',
+                  'WFH' => 'WFH',
+                  'Hybrid' => 'Hybrid',
+              ])
+              ->required(),
+            TextInput::make('required_count')
+              ->label('Vacancies Needed')
+              ->numeric()
+              ->default(1)
+              ->minValue(1)
+              ->required(),
+            DatePicker::make('published_until')
+                  ->label('Publish Until')
+                  ->native(false)
+                  ->visible(false), // Hidden from form, managed via Approval/Action
+          ]),
+
+        // SECTION 3: DESKRIPSI & KUALIFIKASI
+        Section::make('Description & Qualifications')
+            ->columnSpanFull()
+            ->schema([
+                Textarea::make('description')
+                  ->label('Description')
+                  ->required()
+                  ->rows(10)
+                  ->columnSpanFull(),
+                RichEditor::make('qualifications')
+                  ->columnSpanFull(),
+            ]),
         TextInput::make('status')
           ->default('pending')
           ->disabled()

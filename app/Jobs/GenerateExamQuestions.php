@@ -28,7 +28,6 @@ class GenerateExamQuestions // implements ShouldQueue (Temporary force sync)
   public function handle(GroqService $groq): void
   // public function handle(OllamaService $ai): void // Fallback
   {
-    Log::info("Starting Advanced Exam Generation for: " . $this->jobVacancy->title);
 
     try {
       // Detect industry type

@@ -155,6 +155,7 @@ class ApplicationResource extends Resource
     return [
       'index' => ListApplications::route('/'),
       'create' => CreateApplication::route('/create'),
+      'view' => Pages\ViewApplication::route('/{record}'),
       'edit' => EditApplication::route('/{record}/edit'),
     ];
   }

@@ -23,13 +23,13 @@ class EditApplication extends EditRecord
       
       // Action: Send Acceptance Email
       Action::make('send_accepted_email')
-        ->label('Kirim Email Lolos')
+        ->label('Send Acceptance Email')
         ->icon('heroicon-o-check-circle')
         ->color('success')
         ->requiresConfirmation()
-        ->modalHeading('Kirim Email Penerimaan')
-        ->modalDescription(fn () => "Kirim email penerimaan ke {$this->record->full_name} ({$this->record->email})?")
-        ->modalSubmitActionLabel('Kirim Email')
+        ->modalHeading('Send Acceptance Email')
+        ->modalDescription(fn () => "Send acceptance email to {$this->record->full_name} ({$this->record->email})?")
+        ->modalSubmitActionLabel('Send Email')
         ->action(function () {
           try {
             Mail::to($this->record->email)->send(new ApplicationAccepted($this->record));
@@ -60,20 +60,20 @@ class EditApplication extends EditRecord
 
       // Action: Send Rejection Email
       Action::make('send_rejected_email')
-        ->label('Kirim Email Ditolak')
+        ->label('Send Rejection Email')
         ->icon('heroicon-o-x-circle')
         ->color('danger')
         ->form([
           Textarea::make('rejection_reason')
-            ->label('Alasan Penolakan (Opsional)')
-            ->placeholder('Contoh: Kualifikasi belum sesuai dengan kebutuhan posisi saat ini')
+            ->label('Rejection Reason (Optional)')
+            ->placeholder('Example: Qualifications do not meet current needs')
             ->rows(3)
             ->maxLength(500),
         ])
         ->requiresConfirmation()
-        ->modalHeading('Kirim Email Penolakan')
-        ->modalDescription(fn () => "Kirim email penolakan ke {$this->record->full_name} ({$this->record->email})?")
-        ->modalSubmitActionLabel('Kirim Email')
+        ->modalHeading('Send Rejection Email')
+        ->modalDescription(fn () => "Send rejection email to {$this->record->full_name} ({$this->record->email})?")
+        ->modalSubmitActionLabel('Send Email')
         ->action(function (array $data) {
           try {
             // Update rejection reason if provided
@@ -92,8 +92,8 @@ class EditApplication extends EditRecord
 
             Notification::make()
               ->success()
-              ->title('Email Terkirim')
-              ->body("Email penolakan berhasil dikirim ke {$this->record->full_name}")
+              ->title('Email Sent')
+              ->body("Rejection email successfully sent to {$this->record->full_name}")
               ->send();
               
             // Redirect to list after sending
@@ -101,12 +101,18 @@ class EditApplication extends EditRecord
           } catch (\Exception $e) {
             Notification::make()
               ->danger()
-              ->title('Gagal Mengirim Email')
+              ->title('Failed to Send Email')
               ->body($e->getMessage())
               ->send();
           }
         })
         ->visible(fn () => $this->record->status !== 'rejected'),
     ];
+  }
+
+  // Hide Save/Cancel buttons
+  protected function getFormActions(): array
+  {
+      return [];
   }
 }

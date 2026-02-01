@@ -24,14 +24,14 @@ class JobVacancy extends Model
     'required_count',
     'published_until',
     'archived_at',
-    'is_fulltime',
-    'is_wfo',
+    'employment_type',
+    'work_arrangement',
+    'department',
+    'location',
   ];
 
   protected $casts = [
     'is_published' => 'boolean',
-    'is_fulltime' => 'boolean',
-    'is_wfo' => 'boolean',
     'rejected_at' => 'datetime',
     'published_until' => 'date',
     'archived_at' => 'datetime',

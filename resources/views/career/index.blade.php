@@ -30,21 +30,11 @@
   </div>
 </div>
 
-<!-- Success Alert -->
-@if(session('success'))
-<div class="container">
-  <div class="alert alert-success alert-dismissible fade show" role="alert">
-    <strong>✅ Berhasil!</strong> {{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-</div>
-@endif
-
 <div class="container py-5">
   @if($jobsByDepartment->first()->isEmpty())
   <div class="text-center">
     <i class="fa-solid fa-person-walking-luggage display-5 mb-3"></i>
-    <p>Tidak ada lowongan yang tersedia saat ini</p>
+    <p>No job vacancies available at the moment.</p>
   </div>
   @else
   @foreach($jobsByDepartment as $department => $jobs)
@@ -63,7 +53,7 @@
         </p>
         <div class="card-footer-custom">
           <a href="{{ route('career.show', $job['slug']) }}" class="btn-apply">
-            Lihat Detail
+            View Details
           </a>
         </div>
       </div>

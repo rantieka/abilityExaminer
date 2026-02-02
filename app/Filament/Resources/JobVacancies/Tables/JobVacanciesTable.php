@@ -54,17 +54,6 @@ class JobVacanciesTable
           )
           ->searchable()
           ->sortable(),
-        TextColumn::make('rejection_reason')
-          ->label('Rejection Reason')
-          ->limit(50)
-          ->tooltip(fn ($record) => $record->rejection_reason)
-          ->formatStateUsing(fn ($state, $record) => 
-            $record->status === 'rejected' ? ($state ?? '-') : '-'
-          )
-          ->placeholder('-')
-          ->wrap()
-          ->searchable()
-          ->toggleable(isToggledHiddenByDefault: false),
         TextColumn::make('created_at')
           ->dateTime()
           ->sortable()
@@ -94,32 +83,48 @@ class JobVacanciesTable
         ->default(false),
     ])
     ->recordActions([
-      ViewAction::make()
-        ->visible(fn () => auth()->user()->hasRole('spv')),
+      // ViewAction::make()
+      //   ->extraAttributes(['style' => 'text-decoration: none !important'])
+      //   ->visible(fn () => auth()->user()->hasRole('spv')),
       EditAction::make()
-        ->visible(fn () => auth()->user()->hasRole(['hr', 'super_admin', 'spv'])),
+        ->extraAttributes(['style' => 'text-decoration: none !important'])
+        ->visible(function (JobVacancy $record) {
+            $user = auth()->user();
+            
+            if ($user->hasRole(['hr', 'super_admin'])) {
+                return true;
+            }
+            
+            if ($user->hasRole('spv')) {
+                return in_array($record->status, ['draft', 'pending']);
+            }
+            
+            return false;
+        }),
       Action::make('questions')
         ->label('Questions')
         ->icon('heroicon-o-document-text')
         ->color('info')
         ->url(fn (JobVacancy $record) => \App\Filament\Resources\Questions\QuestionResource::getUrl('index', [
             'job_id' => $record->id,
-        ])),
+        ]))
+        ->extraAttributes(['style' => 'text-decoration: none !important']),
       Action::make('manage_publication')
-        ->label('Manage Publication')
+        ->label('Publication')
         ->icon('heroicon-o-calendar')
         ->color('info')
         ->visible(fn (JobVacancy $record) => $record->status === 'approved' && auth()->user()->hasRole(['hr', 'super_admin']))
+        ->extraAttributes(['style' => 'text-decoration: none !important'])
         ->form([
             \Filament\Forms\Components\DatePicker::make('published_until')
-                ->label('Batas Publikasi')
+                ->label('Publication Date')
                 ->required()
                 ->native(false)
                 ->default(fn (JobVacancy $record) => $record->published_until)
                 ->minDate(now()),
         ])
         ->fillForm(fn (JobVacancy $record) => ['published_until' => $record->published_until])
-        ->modalHeading('Manage Publication Date')
+        ->modalHeading('Publication Date')
         ->action(function (JobVacancy $record, array $data) {
             $record->update([
                 'published_until' => $data['published_until'],
@@ -134,12 +139,14 @@ class JobVacanciesTable
         ->icon('heroicon-o-archive-box')
         ->color('danger')
         ->requiresConfirmation()
-        ->visible(fn (JobVacancy $record) => $record->archived_at === null && auth()->user()->hasRole(['hr', 'super_admin', 'spv']))
+        ->visible(fn (JobVacancy $record) => $record->archived_at === null && $record->status === 'approved' && auth()->user()->hasRole(['hr', 'super_admin', 'spv']))
+        ->extraAttributes(['style' => 'text-decoration: none !important'])
         ->action(fn (JobVacancy $record) => $record->update(['archived_at' => now()])),
       Action::make('unarchive')
         ->icon('heroicon-o-arrow-path')
         ->color('success')
         ->requiresConfirmation()
+        ->extraAttributes(['style' => 'text-decoration: none !important'])
         ->visible(fn (JobVacancy $record) => $record->archived_at !== null && auth()->user()->hasRole(['hr', 'super_admin', 'spv']))
         ->action(fn (JobVacancy $record) => $record->update(['archived_at' => null])),
     ])

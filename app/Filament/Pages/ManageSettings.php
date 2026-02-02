@@ -33,7 +33,7 @@ class ManageSettings extends Page implements HasSchemas
     public function mount(): void
     {
         $this->form->fill([
-            'alamat_kantor' => Setting::get('alamat_kantor'),
+            'office_address' => Setting::get('office_address'),
         ]);
     }
 
@@ -41,7 +41,7 @@ class ManageSettings extends Page implements HasSchemas
     {
         return $schema
             ->components([
-                Textarea::make('alamat_kantor')
+                Textarea::make('office_address')
                     ->label('Office Address')
                     ->helperText('Address to be displayed on job detail pages.')
                     ->rows(4)
@@ -54,7 +54,7 @@ class ManageSettings extends Page implements HasSchemas
     {
         $data = $this->form->getState();
         
-        Setting::set('alamat_kantor', $data['alamat_kantor']);
+        Setting::set('office_address', $data['office_address']);
 
         Notification::make() 
             ->title('Settings saved successfully')

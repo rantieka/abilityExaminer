@@ -41,13 +41,13 @@
         <p>{!! $job->qualifications !!}</p>
       </div>
       <div class="mb-4">
-        @if($job->location || \App\Models\Setting::get('alamat_kantor'))
+        @if($job->location || \App\Models\Setting::get('office_address'))
           <h5 class="fw-bold mb-3">Office Location</h5>
           <div class="mb-0">
             @if($job->location)
               {!! $job->location !!}
             @else
-              {!! nl2br(e(\App\Models\Setting::get('alamat_kantor'))) !!}
+              {!! nl2br(e(\App\Models\Setting::get('office_address'))) !!}
             @endif
           </div>
         @endif

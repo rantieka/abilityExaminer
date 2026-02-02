@@ -22,5 +22,48 @@
 
   <!-- Footer -->
   @include('components.footer_landing')
+
+  <!-- Toastify CSS & JS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  
+  <script>
+    // Toast Notification Logic
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(session('success'))
+            Toastify({
+                text: "{{ session('success') }}",
+                duration: 5000,
+                close: true,
+                gravity: "top", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, 
+                style: {
+                    background: "linear-gradient(to right, #10b981, #059669)",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                    borderRadius: "8px",
+                    fontWeight: "500",
+                },
+            }).showToast();
+        @endif
+
+        @if(session('error'))
+             Toastify({
+                text: "{{ session('error') }}",
+                duration: 5000,
+                close: true,
+                gravity: "top", 
+                position: "right", 
+                stopOnFocus: true, 
+                style: {
+                    background: "linear-gradient(to right, #ef4444, #dc2626)",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                    borderRadius: "8px",
+                    fontWeight: "500",
+                },
+            }).showToast();
+        @endif
+    });
+  </script>
 </body>
 </html>

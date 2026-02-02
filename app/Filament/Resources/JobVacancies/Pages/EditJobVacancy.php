@@ -113,7 +113,7 @@ class EditJobVacancy extends EditRecord
               \Filament\Notifications\Notification::make()
                 ->danger()
                 ->title('Your Job Vacancy Request was Rejected')
-                ->body("Reason: " . $data['rejection_reason'])
+                ->body("Job vacancy \"{$record->title}\" has been rejected.")
                 ->actions([
                     \Filament\Actions\Action::make('view')
                         ->button()
@@ -123,7 +123,7 @@ class EditJobVacancy extends EditRecord
                 ->sendToDatabase($record->createdBy);
           }
         })
-        ->successNotificationTitle('Job vacancy rejected!')
+        ->successNotification(null)
         ->after(fn () => redirect()->route('filament.admin.resources.job-vacancies.index')),
       DeleteAction::make(),
     ];

@@ -79,12 +79,7 @@ class JobVacancyForm
               ->createOptionUsing(function (array $data) {
                   return $data['name'];
               }),
-            RichEditor::make('location')
-              ->label('Office Location')
-              ->default(fn () => \App\Models\Setting::get('alamat_kantor'))
-              ->required()
-              ->columnSpanFull()
-              ->visible(fn () => Auth::user()->hasRole(['hr', 'super_admin'])),
+
             Select::make('employment_type')
               ->label('Employment Type')
               ->options([
@@ -111,7 +106,14 @@ class JobVacancyForm
             DatePicker::make('published_until')
                   ->label('Publish Until')
                   ->native(false)
-                  ->visible(false), // Hidden from form, managed via Approval/Action
+                  ->visible(fn () => Auth::user()->hasRole(['hr', 'super_admin']))
+                  ->required(fn ($get) => $get('status') === 'approved'),
+            RichEditor::make('location')
+              ->label('Office Location')
+              ->default(fn () => \App\Models\Setting::get('office_address'))
+              ->required()
+              ->columnSpanFull()
+              ->visible(fn () => Auth::user()->hasRole(['hr', 'super_admin'])),
           ]),
 
         // SECTION 3: DESKRIPSI & KUALIFIKASI
@@ -126,10 +128,17 @@ class JobVacancyForm
                 RichEditor::make('qualifications')
                   ->columnSpanFull(),
             ]),
-        TextInput::make('status')
-          ->default('pending')
-          ->disabled()
+        Select::make('status')
+          ->options([
+              'draft' => 'Draft',
+              'pending' => 'Pending Approval',
+              'approved' => 'Approved (Publish)',
+              'rejected' => 'Rejected',
+          ])
+          ->default(fn () => Auth::user()->hasRole(['hr', 'super_admin']) ? 'approved' : 'pending')
+          ->disabled(fn () => !Auth::user()->hasRole(['hr', 'super_admin'])) // SPV cannot change status directly
           ->dehydrated()
+          ->required()
           ->visible(fn() => Auth::user()->hasRole(['hr', 'super_admin', 'spv'])),
         // is_published is auto-set by Approve action, no need for manual toggle
         

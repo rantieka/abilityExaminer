@@ -24,7 +24,7 @@ class JobVacancyPolicy
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:JobVacancy');
+        return $authUser->hasRole(['hr', 'super_admin', 'spv']) || $authUser->can('Create:JobVacancy');
     }
 
     public function update(AuthUser $authUser, JobVacancy $jobVacancy): bool

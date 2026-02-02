@@ -13,6 +13,8 @@ class CareerController extends Controller
     {
       $jobs = JobVacancy::where('status', 'approved')
           ->where('is_published', true)
+          ->whereNull('archived_at')
+          ->where(fn($query) => $query->whereNull('published_until')->orWhere('published_until', '>=', now()))
           ->latest()
           ->get();
       $jobsByDepartment = collect(['Available Positions' => $jobs]);
@@ -24,6 +26,8 @@ class CareerController extends Controller
       $job = JobVacancy::where('slug', $slug)
           ->where('status', 'approved')
           ->where('is_published', true)
+          ->whereNull('archived_at')
+          ->where(fn($query) => $query->whereNull('published_until')->orWhere('published_until', '>=', now()))
           ->firstOrFail();
       return view('career.show', compact('job'));
     }

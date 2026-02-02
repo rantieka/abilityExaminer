@@ -28,6 +28,11 @@ class AdminPanelProvider extends PanelProvider
       ->default()
       ->id('admin')
       ->path('admin')
+      ->brandName('Nineod')
+      ->renderHook(
+          'panels::head.end',
+          fn (): string => '<style>.fi-simple-layout .fi-logo { display: none !important; }</style>'
+      )
       ->login()
       ->colors([
         'primary' => Color::Amber,

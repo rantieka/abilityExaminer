@@ -21,11 +21,13 @@ class ApplicationsTable
   {
     return $table
       ->poll('5s')
+      ->defaultSort('created_at', 'desc')
       ->columns([
         TextColumn::make('no')
           ->label('No.')
           ->rowIndex(),
         TextColumn::make('jobVacancy.title')
+          ->label('Job Position')
           ->searchable(),
         // TextColumn::make('user.name')
         //   ->searchable(),
@@ -53,8 +55,7 @@ class ApplicationsTable
             $state === 'accepted' => 'success',
             $state === 'rejected' => 'danger',
             $state === 'reviewed' => 'info',
-            $state === 'pending' && $record->ai_score === null => 'warning', // Scanning
-            $state === 'pending' => 'gray', // Pending Review
+            $state === 'pending' => 'warning', // Pending Review
             default => 'gray',
           })
           ->icon(fn (string $state, $record): ?string => match (true) {
@@ -80,25 +81,26 @@ class ApplicationsTable
             default => 'danger',
           })
           ->icon(fn ($state, $record) => ($record->status === 'pending' && $record->ai_score === null) ? 'heroicon-m-arrow-path' : null),
-        TextColumn::make('email_type')
-          ->label('Email Status')
-          ->badge()
-          ->formatStateUsing(fn ($state) => $state ? ucfirst($state) : 'Not Sent')
-          ->color(fn ($state) => match ($state) {
-            'accepted' => 'success',
-            'rejected' => 'danger',
-            default => 'gray',
-          })
-          ->toggleable(),
+        // TextColumn::make('email_type')
+        //   ->label('Email Status')
+        //   ->badge()
+        //   ->formatStateUsing(fn ($state) => $state ? ucfirst($state) : 'Not Sent')
+        //   ->color(fn ($state) => match ($state) {
+        //     'accepted' => 'success',
+        //     'rejected' => 'danger',
+        //     default => 'gray',
+        //   })
+        //   ->toggleable(),
         TextColumn::make('email_sent_at')
           ->label('Email Sent At')
           ->dateTime()
           ->sortable()
           ->toggleable(isToggledHiddenByDefault: true),
         TextColumn::make('created_at')
-          ->dateTime()
-          ->sortable()
-          ->toggleable(isToggledHiddenByDefault: true),
+          ->label('Apply Date')
+          // ->dateTime('d M Y, H:i')
+          ->dateTime('d M Y')
+          ->sortable(),
         TextColumn::make('updated_at')
           ->dateTime()
           ->sortable()
@@ -108,7 +110,7 @@ class ApplicationsTable
         //
       ])
       ->recordActions([
-        EditAction::make(),
+        // EditAction::make(),
       ])
       ->toolbarActions([
         BulkActionGroup::make([

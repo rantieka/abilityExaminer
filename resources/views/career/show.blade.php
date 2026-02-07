@@ -61,15 +61,15 @@
             @csrf
             <div class="mb-3">
               <label class="form-label">Full Name</label>
-              <input type="text" name="full_name" class="form-control" required>
+              <input type="text" name="full_name" class="form-control" value="{{ old('full_name') }}" required>
             </div>
             <div class="mb-3">
               <label class="form-label">Email</label>
-              <input type="email" name="email" class="form-control" required>
+              <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
             </div>
             <div class="mb-3">
               <label class="form-label">Phone</label>
-              <input type="tel" name="phone" class="form-control" maxlength="13" required>
+              <input type="tel" name="phone" class="form-control" maxlength="13" value="{{ old('phone') }}" required>
             </div>
             <div class="mb-3">
               <label class="form-label">Upload CV</label>

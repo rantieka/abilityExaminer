@@ -31,14 +31,13 @@ Route::get('/test/{application}/instruction', [TestController::class, 'instructi
 Route::post('/test/{application}', [TestController::class, 'submit'])->name('test.submit');
 
 // Email Preview Routes (Development Only)
-if (app()->environment('local')) {
-    Route::get('/email-preview/accepted/{application}', function ($id) {
-        $application = \App\Models\Application::findOrFail($id);
-        return new \App\Mail\ApplicationAccepted($application);
-    })->name('email.preview.accepted');
+// Email Preview Routes (Accessible in all envs for now)
+Route::get('/email-preview/accepted/{application}', function ($id) {
+    $application = \App\Models\Application::findOrFail($id);
+    return new \App\Mail\ApplicationAccepted($application);
+})->name('email.preview.accepted');
 
-    Route::get('/email-preview/rejected/{application}', function ($id) {
-        $application = \App\Models\Application::findOrFail($id);
-        return new \App\Mail\ApplicationRejected($application);
-    })->name('email.preview.rejected');
-}
+Route::get('/email-preview/rejected/{application}', function ($id) {
+    $application = \App\Models\Application::findOrFail($id);
+    return new \App\Mail\ApplicationRejected($application);
+})->name('email.preview.rejected');

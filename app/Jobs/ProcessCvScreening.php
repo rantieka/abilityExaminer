@@ -115,7 +115,7 @@ class ProcessCvScreening implements ShouldQueue
       $this->application->update([
         'ai_score' => $result['score'] ?? 0,
         'ai_analysis' => $result['analysis'] ?? [],
-        'status' => ($result['score'] >= 75) ? 'reviewed' : 'pending' // Auto status update if high score
+        'status' => 'pending'
       ]);
         
       Log::info("Screening Success. Score: " . ($result['score'] ?? 0));

@@ -31,7 +31,12 @@ class AdminPanelProvider extends PanelProvider
       ->brandName('Nineod')
       ->renderHook(
           'panels::head.end',
-          fn (): string => '<style>.fi-simple-layout .fi-logo { display: none !important; }</style>'
+          fn (): string => '
+            <style>
+                .fi-simple-layout .fi-logo { display: none !important; }
+                .force-no-underline { text-decoration: none !important; border: none !important; box-shadow: none !important; }
+            </style>
+            ' . app(\Illuminate\Foundation\Vite::class)('resources/sass/custom/filament.scss')
       )
       ->login()
       ->colors([

@@ -41,10 +41,7 @@ class EditApplication extends EditRecord
             Notification::make()
                   ->success()
                   ->title('Email Sent')
-                  ->body(new \Illuminate\Support\HtmlString(
-                      "Acceptance email successfully sent to {$this->record->full_name}.<br>" .
-                      "<a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>View Email (New Tab)</a>"
-                  ))
+                  ->body("Acceptance email successfully sent to {$this->record->full_name}.")
                   ->persistent()
                   ->send();
 
@@ -98,10 +95,7 @@ class EditApplication extends EditRecord
             Notification::make()
               ->success()
               ->title('Application Rejected')
-              ->body(new \Illuminate\Support\HtmlString(
-                  "Rejection email sent to {$this->record->full_name}.<br>" .
-                  "<a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>View Email (New Tab)</a>"
-              ))
+              ->body("Rejection email sent to {$this->record->full_name}.")
               ->persistent()
               ->send();
 

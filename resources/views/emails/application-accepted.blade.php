@@ -1,31 +1,31 @@
 <x-mail::message>
-# Selamat, {{ $application->full_name }}!
+# Congratulations, {{ $application->full_name }}!
 
-Kami dengan senang hati memberitahukan bahwa Anda **LOLOS** tahap screening CV untuk posisi **{{ $application->jobVacancy->title }}**.
+We are pleased to inform you that you have **PASSED** the CV screening stage for the position of **{{ $application->jobVacancy->title }}**.
 
-## Tahap Selanjutnya
+## Next Steps
 
-Anda diundang untuk mengikuti **Tes Online** sebagai tahap berikutnya dalam proses rekrutmen kami.
+You are invited to take an **Online Test** as the next stage of our recruitment process.
 
-### Informasi Penting:
-- **Posisi**: {{ $application->jobVacancy->title }}
-- **Durasi Tes**: Sekitar 30-45 menit
-- **Batas Waktu**: 7 hari sejak email ini diterima
+### Important Information:
+- **Position**: {{ $application->jobVacancy->title }}
+- **Test Duration**: Approximately 30-45 minutes
+- **Deadline**: 7 days from the receipt of this email
 
 <x-mail::button :url="url('/applications/' . $application->id . '/test')">
-Mulai Tes Sekarang
+Start Test Now
 </x-mail::button>
 
-## Petunjuk:
-1. Klik tombol di atas untuk memulai tes
-2. Pastikan koneksi internet Anda stabil
-3. Siapkan waktu yang cukup untuk menyelesaikan tes
-4. Tes hanya dapat dikerjakan satu kali
+## Instructions:
+1. Click the button above to start the test
+2. Ensure you have a stable internet connection
+3. Prepare sufficient time to complete the test
+4. The test can only be taken once
 
-Jika Anda memiliki pertanyaan, jangan ragu untuk menghubungi kami.
+If you have any questions, please do not hesitate to contact us.
 
-Terima kasih atas minat Anda untuk bergabung dengan tim kami!
+Thank you for your interest in joining our team!
 
-Salam,<br>
-**Tim HR {{ config('app.name') }}**
+Best regards,<br>
+**HR Team {{ config('app.name') }}**
 </x-mail::message>

@@ -44,13 +44,10 @@ class ViewApplication extends ViewRecord
                 
               $url = route('email.preview.accepted', $this->record->id);
               
-              Notification::make()
+                Notification::make()
                   ->success()
                   ->title('Email Sent')
-                  ->body(new \Illuminate\Support\HtmlString(
-                      "Acceptance email successfully sent to {$this->record->full_name}.<br>" .
-                      "<a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>View Email (New Tab)</a>"
-                  ))
+                  ->body("Acceptance email successfully sent to {$this->record->full_name}.")
                   ->persistent()
                   ->send();
 
@@ -108,10 +105,7 @@ class ViewApplication extends ViewRecord
               Notification::make()
                   ->success()
                   ->title('Application Rejected')
-                  ->body(new \Illuminate\Support\HtmlString(
-                      "Rejection email sent to {$this->record->full_name}.<br>" .
-                      "<a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>View Email (New Tab)</a>"
-                  ))
+                  ->body("Rejection email sent to {$this->record->full_name}.")
                   ->persistent()
                   ->send();
 

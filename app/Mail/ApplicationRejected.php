@@ -30,7 +30,7 @@ class ApplicationRejected extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Terima Kasih atas Lamaran Anda - ' . $this->application->jobVacancy->title,
+            subject: 'Update on Your Application - ' . $this->application->jobVacancy->title,
         );
     }
 

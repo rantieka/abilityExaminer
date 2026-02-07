@@ -118,18 +118,25 @@ class ApplicationsTable
           
           // Bulk Action: Send Acceptance Emails
           Action::make('bulk_send_accepted')
-            ->label('Kirim Email Lolos (Bulk)')
+            ->label('Send Acceptance Emails (Bulk)')
             ->icon('heroicon-o-check-circle')
             ->color('success')
             ->requiresConfirmation()
-            ->modalHeading('Kirim Email Penerimaan ke Banyak Kandidat')
-            ->modalDescription(fn (Collection $records) => "Kirim email penerimaan ke {$records->count()} kandidat?")
-            ->modalSubmitActionLabel('Kirim Semua Email')
+            ->modalHeading('Send Acceptance Emails to Selected Candidates')
+            ->modalDescription(fn (Collection $records) => "Send acceptance emails to {$records->count()} candidates?")
+            ->modalSubmitActionLabel('Send All Emails')
             ->action(function (Collection $records) {
               $successCount = 0;
               $failCount = 0;
+              $skippedCount = 0;
 
               foreach ($records as $record) {
+                // Skip if already processed
+                if (in_array($record->status, ['accepted', 'rejected'])) {
+                    $skippedCount++;
+                    continue;
+                }
+
                 try {
                   Mail::to($record->email)->send(new ApplicationAccepted($record));
                   
@@ -148,41 +155,56 @@ class ApplicationsTable
               if ($successCount > 0) {
                 Notification::make()
                   ->success()
-                  ->title('Email Terkirim')
-                  ->body("{$successCount} email penerimaan berhasil dikirim" . ($failCount > 0 ? ", {$failCount} gagal" : ""))
+                  ->title('Emails Sent')
+                  ->body("{$successCount} acceptance emails successfully sent" . 
+                        ($skippedCount > 0 ? ", {$skippedCount} skipped (already processed)" : "") . 
+                        ($failCount > 0 ? ", {$failCount} failed" : ""))
                   ->send();
+              } elseif ($skippedCount > 0 && $failCount === 0) {
+                  Notification::make()
+                    ->warning()
+                    ->title('No Emails Sent')
+                    ->body("All {$skippedCount} selected applications were already processed.")
+                    ->send();
               }
 
               if ($failCount > 0 && $successCount === 0) {
                 Notification::make()
                   ->danger()
-                  ->title('Gagal Mengirim Email')
-                  ->body("Semua {$failCount} email gagal dikirim")
+                  ->title('Failed to Send Emails')
+                  ->body("All {$failCount} emails failed to send")
                   ->send();
               }
             }),
 
           // Bulk Action: Send Rejection Emails
           Action::make('bulk_send_rejected')
-            ->label('Kirim Email Ditolak (Bulk)')
+            ->label('Send Rejection Emails (Bulk)')
             ->icon('heroicon-o-x-circle')
             ->color('danger')
             ->form([
               Textarea::make('rejection_reason')
-                ->label('Alasan Penolakan (Opsional)')
-                ->placeholder('Alasan ini akan dikirim ke semua kandidat yang dipilih')
+                ->label('Rejection Reason (Optional)')
+                ->placeholder('This reason will be sent to all selected candidates')
                 ->rows(3)
                 ->maxLength(500),
             ])
             ->requiresConfirmation()
-            ->modalHeading('Kirim Email Penolakan ke Banyak Kandidat')
-            ->modalDescription(fn (Collection $records) => "Kirim email penolakan ke {$records->count()} kandidat?")
-            ->modalSubmitActionLabel('Kirim Semua Email')
+            ->modalHeading('Send Rejection Emails to Selected Candidates')
+            ->modalDescription(fn (Collection $records) => "Send rejection emails to {$records->count()} candidates?")
+            ->modalSubmitActionLabel('Send All Emails')
             ->action(function (Collection $records, array $data) {
               $successCount = 0;
               $failCount = 0;
+              $skippedCount = 0;
 
               foreach ($records as $record) {
+                // Skip if already processed
+                if (in_array($record->status, ['accepted', 'rejected'])) {
+                    $skippedCount++;
+                    continue;
+                }
+
                 try {
                   // Update rejection reason if provided
                   if (!empty($data['rejection_reason'])) {
@@ -207,16 +229,24 @@ class ApplicationsTable
               if ($successCount > 0) {
                 Notification::make()
                   ->success()
-                  ->title('Email Terkirim')
-                  ->body("{$successCount} email penolakan berhasil dikirim" . ($failCount > 0 ? ", {$failCount} gagal" : ""))
+                  ->title('Emails Sent')
+                  ->body("{$successCount} rejection emails successfully sent" . 
+                        ($skippedCount > 0 ? ", {$skippedCount} skipped (already processed)" : "") . 
+                        ($failCount > 0 ? ", {$failCount} failed" : ""))
                   ->send();
+              } elseif ($skippedCount > 0 && $failCount === 0) {
+                  Notification::make()
+                    ->warning()
+                    ->title('No Emails Sent')
+                    ->body("All {$skippedCount} selected applications were already processed.")
+                    ->send();
               }
 
               if ($failCount > 0 && $successCount === 0) {
                 Notification::make()
                   ->danger()
-                  ->title('Gagal Mengirim Email')
-                  ->body("Semua {$failCount} email gagal dikirim")
+                  ->title('Failed to Send Emails')
+                  ->body("All {$failCount} emails failed to send")
                   ->send();
               }
             }),

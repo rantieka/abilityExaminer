@@ -26,11 +26,21 @@ class TestController extends Controller
     // Check if Part 1 is completed
     if ($application->part1_completed_at) {
       // Show Part 2 (Technical/Case Study)
+      if (!$application->part2_started_at) {
+          $application->update(['part2_started_at' => now()]);
+      }
+      
+      $timeLimit = 30 * 60; // 30 minutes in seconds;
+      $elapsed = now()->diffInSeconds($application->part2_started_at);
+      $remaining = max(0, $timeLimit - $elapsed);
+
+      Log::info("Part 2 Timer: Start=" . $application->part2_started_at . ", Now=" . now() . ", Elapsed=$elapsed, Remaining=$remaining");
+
       $questions = $jobVacancy->questions()
           ->where('is_active', true)
           ->where('section', 'technical')
           ->get();
-      return view('test.part2', compact('application', 'questions'));
+      return view('test.part2', compact('application', 'questions', 'remaining'));
     } else {
       // Check if user has seen welcome page (using session)
       if (!session('test_started_' . $application->id)) {
@@ -38,11 +48,21 @@ class TestController extends Controller
       }
       
       // Show Part 1 (Knowledge & Foundation)
+      if (!$application->part1_started_at) {
+          $application->update(['part1_started_at' => now()]);
+      }
+
+      $timeLimit = 30 * 60; // 30 minutes in seconds;
+      $elapsed = now()->diffInSeconds($application->part1_started_at);
+      $remaining = max(0, $timeLimit - $elapsed);
+      
+      Log::info("Part 1 Timer: Start=" . $application->part1_started_at . ", Now=" . now() . ", Elapsed=$elapsed, Remaining=$remaining");
+
       $questions = $jobVacancy->questions()
           ->where('is_active', true)
           ->where('section', 'knowledge')
           ->get();
-      return view('test.part1', compact('application', 'questions'));
+      return view('test.part1', compact('application', 'questions', 'remaining'));
     }
   }
 
@@ -67,6 +87,10 @@ class TestController extends Controller
 
     // Mark that user has started the test
     session(['test_started_' . $application->id => true]);
+    
+    if (!$application->part1_started_at) {
+        $application->update(['part1_started_at' => now()]);
+    }
     
     return redirect()->route('test.show', $application->id);
   }

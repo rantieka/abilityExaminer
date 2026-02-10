@@ -4,20 +4,8 @@
 <!-- Hero Section -->
 <div class="pt-5">
   <div class="careers-jumbotron p-5 mb-4 rounded-3 position-relative overflow-hidden">
-    <!-- Geometric Pattern Background -->
-    <div class="geometric-pattern">
-      <!-- Animated Circles -->
-      <div class="geo-circle geo-circle-1"></div>
-      <div class="geo-circle geo-circle-2"></div>
-      <div class="geo-circle geo-circle-3"></div>
-
-      <!-- Scattered Dots -->
-      <div class="geo-dots"></div>
-
-      <!-- Gradient Lines -->
-      <div class="geo-line geo-line-1"></div>
-      <div class="geo-line geo-line-2"></div>
-    </div>
+    <!-- Canvas Background -->
+    <canvas id="bg-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;"></canvas>
 
     <!-- Content -->
     <div class="container py-5 text-center position-relative d-flex flex-column justify-content-center"
@@ -63,6 +51,8 @@
   @endforeach
   @endif
 </div>
-
-
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/test-background.js'])
+@endpush

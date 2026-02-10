@@ -3,7 +3,7 @@
   <div class="container">
     <div class="d-flex justify-content-between w-100 align-items-center">
       <a class="navbar-brand" href="/">
-        <img src="{{ asset('images/nineod-logo.png') }}" alt="Logo" class="new-logo">
+        <img src="{{ asset('images/nineod-logo.png') }}" alt="Logo" class="new-logo" width="65" height="65" style="object-fit: contain;">
       </a>
       <ul class="navbar-nav d-none d-lg-flex">
         <li class="navbar-item px-4">

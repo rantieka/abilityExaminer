@@ -927,7 +927,8 @@ a,
 /* Careers Jumbotron Geometric Pattern */
 .careers-jumbotron {
   min-height: 400px;
-  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #f0f0f0 100%);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  /* Matched with Test Page */
   position: relative;
 }
 
@@ -1150,6 +1151,7 @@ a,
     margin-bottom: auto;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -1242,6 +1244,7 @@ a,
     flex-grow: 1;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

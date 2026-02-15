@@ -161,15 +161,18 @@ body {
 
 /* Custom Active State for Options */
 .btn-check:checked+.btn {
-  background-color: #f0fff4 !important;
-  /* Greenish tint for active */
-  border-color: #198754 !important;
-  color: #198754 !important;
+  background-color: #fff8e1 !important;
+  /* Soft Yellow */
+  border-color: #FFB800 !important;
+  /* Amber */
+  color: #000 !important;
+  box-shadow: 0 0 0 1px #FFB800;
 }
 
 .btn-check:checked+.btn .badge {
-  background-color: #198754 !important;
-  color: white !important;
+  background-color: #FFB800 !important;
+  /* Amber */
+  color: #ffffff !important;
 }
 
 .btn:hover {

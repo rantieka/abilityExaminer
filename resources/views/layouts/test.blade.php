@@ -18,6 +18,8 @@
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
     }
     #bg-canvas {
       position: fixed;
@@ -64,9 +66,11 @@
   </header>
 
   <!-- Main Content -->
-  @yield('content')
+  <main class="flex-grow-1">
+    @yield('content')
+  </main>
 
-  <footer class="text-center py-4 text-muted" style="position: relative; z-index: 10;">
+  <footer class="text-center py-4 text-muted mt-auto" style="position: relative; z-index: 10;">
     <small>&copy; 2026 </small>
   </footer>
 </body>

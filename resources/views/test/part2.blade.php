@@ -2,13 +2,13 @@
 
 @section('content')
 <div class="container py-3" id="test-container" data-app-id="{{ $application->id }}" data-part="part2" data-remaining="{{ $remaining ?? 0 }}">
-    @vite(['resources/js/test-logic.js'])
+    @vite(['resources/js/test-timer.js'])
     <div class="row justify-content-center">
     <div class="col-lg-8">
       <!-- Sticky Info & Timer -->
       <div class="sticky-top bg-white shadow-sm rounded-4 p-3 mb-4 d-flex justify-content-between align-items-center" style="top: 1rem; z-index: 1020; border: 1px solid rgba(0,0,0,0.05);">
         <div>
-           <span class="badge badge-yellow rounded-pill px-3 py-2">Part 2: Technical & Case Study</span>
+           <span class="badge badge-yellow rounded-pill px-3 py-2">Bagian 2: Technical & Case Study</span>
         </div>
         @if($questions->count() > 0)
           <div class="d-flex align-items-center text-danger">
@@ -37,7 +37,7 @@
                 </div>
                 <h4 class="fw-bold text-secondary">Belum ada soal teknis</h4>
                 <p class="text-muted mb-4">Silakan hubungi admin.</p>
-                <a href="{{ route('home') }}" class="btn btn-outline-primary rounded-pill px-4">Kembali ke Beranda</a>
+                <a href="{{ route('home') }}" class="btn btn-dark-grey mt-3 py-2 px-4">Kembali ke Beranda</a>
             </div>
           @else
             <div class="mb-5 pb-3 border-bottom">
@@ -73,8 +73,8 @@
             @endforeach
 
             <div class="d-flex justify-content-end mt-5 pt-4 border-top">
-              <button type="submit" class="btn btn-yellow" onclick="return confirm('Apakah Anda yakin ingin mengumpulkan semua jawaban? Tes akan selesai setelah ini.')">
-                Save
+              <button type="submit" class="btn btn-dark-grey py-2 px-4" onclick="return confirm('Apakah Anda yakin ingin mengumpulkan semua jawaban? Tes akan selesai setelah ini.')">
+                Selesai
               </button>
             </div>
             </form>

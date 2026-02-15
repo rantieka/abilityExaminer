@@ -1,45 +1,43 @@
 @extends('layouts.test')
 
 @section('content')
-<div class="container py-5 mt-5">
+<div class="container py-5">
   <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card shadow-lg border-0">
-        <div class="card-header bg-success text-white text-center py-4">
-          <h4 class="mb-0">🎉 Part 1 Selesai!</h4>
-        </div>
-        <div class="card-body p-5 text-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-4 p-md-5 text-center">
           <div class="mb-4">
-            <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+            <div class="bg-success-subtle text-success d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px;">
+              <i class="fa-solid fa-check fs-3"></i>
+            </div>
           </div>
-          
-          <h5 class="mb-3">Selamat! Anda telah menyelesaikan Part 1: Knowledge & Foundation</h5>
-          
-          <div class="alert alert-info text-start my-4">
-            <h6 class="alert-heading"><strong>📋 Instruksi Part 2:</strong></h6>
-            <ul class="mb-0">
-              <li><strong>Jenis Soal:</strong> Technical & Case Study</li>
-              <li><strong>Waktu:</strong> 30 menit</li>
-              <li><strong>Fokus:</strong> 
+          <h4 class="fw-bold mb-3">Bagian 1 Selesai!</h4>
+          <p class="text-muted mb-4">Anda telah menyelesaikan sesi Knowledge & Foundation.</p>
+          <div class="alert border-0 shadow-sm text-start mb-4 p-4" style="background-color: #f8f9fa;">
+            <div class="d-flex align-items-center mb-3">
+              <h6 class="fw-bold mb-0 text-dark me-2">Technical & Case Study</h6>
+            </div>
+            <ul class="list-unstyled mb-0 small text-secondary vstack gap-2">
+              <li class="d-flex"><i class="bi bi-clock me-2 text-warning"></i> <strong>Waktu:</strong> &nbsp;30 Menit</li>
+              <li class="d-flex"><i class="bi bi-bullseye me-2 text-warning"></i> <strong>Fokus:</strong> &nbsp;
                 @if(str_contains(strtolower($application->jobVacancy->title), 'developer') || 
                     str_contains(strtolower($application->jobVacancy->title), 'programmer') ||
                     str_contains(strtolower($application->jobVacancy->title), 'engineer'))
-                  Code Analysis, Architecture, Debugging, Best Practices
+                  Code Analysis, Architecture, Debugging
                 @else
-                  Workplace Scenarios, Decision Making, Ethical Dilemmas, Strategic Thinking
+                  Scenario, Decision Making, Strategy
                 @endif
               </li>
-              <li><strong>Catatan:</strong> Setelah submit Part 2, tes akan selesai dan skor akan dihitung otomatis</li>
+              <li class="d-flex"><i class="bi bi-exclamation-circle me-2 text-warning"></i>Ini adalah tahap terakhir tes.</li>
             </ul>
           </div>
 
-          <div class="my-4">
-            <p class="text-muted">Pastikan Anda siap sebelum memulai Part 2. Timer akan dimulai segera setelah Anda klik tombol di bawah.</p>
+          <div class="d-grid">
+            <a href="{{ route('test.show', $application->id) }}" class="btn btn-dark-grey py-3 rounded-3 fw-bold">
+              Lanjut ke Bagian 2 <i class="bi bi-arrow-right ms-2"></i>
+            </a>
           </div>
-
-          <a href="{{ route('test.show', $application->id) }}" class="btn btn-success btn-lg px-5 py-3">
-            <i class="bi bi-play-circle-fill me-2"></i>Mulai Part 2
-          </a>
+          
         </div>
       </div>
     </div>

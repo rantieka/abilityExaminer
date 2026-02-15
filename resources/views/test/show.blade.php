@@ -18,7 +18,7 @@
             <div class="alert alert-info text-center">
               Belum ada soal untuk lowongan ini. Silakan hubungi admin.
               <br>
-              <a href="{{ route('home') }}" class="btn btn-outline-primary mt-3">Kembali ke Beranda</a>
+              <a href="{{ route('home') }}" class="btn btn-dark-grey mt-3 py-2 px-4">Kembali ke Beranda</a>
             </div>
           @else
             <form action="{{ route('test.submit', $application->id) }}" method="POST" id="testForm">

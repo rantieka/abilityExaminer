@@ -31,10 +31,19 @@ class TestController extends Controller
       }
       
       $timeLimit = 30 * 60; // 30 minutes in seconds;
-      $elapsed = now()->diffInSeconds($application->part2_started_at);
+      
+      $startTime = \Carbon\Carbon::parse($application->part2_started_at);
+      $now = now();
+      $elapsed = $now->diffInSeconds($startTime, true); // true = absolute
+      
+      // If start time is somehow in future (timezone diff?), treat elapsed as 0
+      if ($startTime > $now) {
+          $elapsed = 0;
+      }
+      
       $remaining = max(0, $timeLimit - $elapsed);
-
-      Log::info("Part 2 Timer: Start=" . $application->part2_started_at . ", Now=" . now() . ", Elapsed=$elapsed, Remaining=$remaining");
+      
+      Log::info("Part 2 Timer Refined: Start=" . $startTime . ", Now=" . $now . ", Elapsed=$elapsed, Remaining=$remaining");
 
       $questions = $jobVacancy->questions()
           ->where('is_active', true)
@@ -53,10 +62,19 @@ class TestController extends Controller
       }
 
       $timeLimit = 30 * 60; // 30 minutes in seconds;
-      $elapsed = now()->diffInSeconds($application->part1_started_at);
+      
+      $startTime = \Carbon\Carbon::parse($application->part1_started_at);
+      $now = now();
+      $elapsed = $now->diffInSeconds($startTime, true); // true = absolute
+      
+      // If start time is somehow in future (timezone diff?), treat elapsed as 0
+      if ($startTime > $now) {
+          $elapsed = 0;
+      }
+      
       $remaining = max(0, $timeLimit - $elapsed);
       
-      Log::info("Part 1 Timer: Start=" . $application->part1_started_at . ", Now=" . now() . ", Elapsed=$elapsed, Remaining=$remaining");
+      Log::info("Part 1 Timer Refined: Start=" . $startTime . ", Now=" . $now . ", Elapsed=$elapsed, Remaining=$remaining");
 
       $questions = $jobVacancy->questions()
           ->where('is_active', true)

@@ -13,7 +13,7 @@ export default defineConfig({
         'resources/css/app.css',
         'resources/js/app.js',
         'resources/js/test-background.js',
-        'resources/js/test-logic.js'
+        'resources/js/test-timer.js'
       ],
       refresh: true,
     }),

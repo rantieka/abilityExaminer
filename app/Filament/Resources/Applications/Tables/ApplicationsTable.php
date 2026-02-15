@@ -81,6 +81,18 @@ class ApplicationsTable
             default => 'danger',
           })
           ->icon(fn ($state, $record) => ($record->status === 'pending' && $record->ai_score === null) ? 'heroicon-m-arrow-path' : null),
+        TextColumn::make('test_score')
+          ->label('Test Score')
+          ->numeric()
+          ->sortable()
+          ->badge()
+          ->formatStateUsing(fn ($state) => $state !== null ? $state . '/100' : '-')
+          ->color(fn ($state) => match (true) {
+            $state >= 70 => 'success',
+            $state >= 40 => 'warning',
+            $state !== null => 'danger',
+            default => 'gray',
+          }),
         // TextColumn::make('email_type')
         //   ->label('Email Status')
         //   ->badge()

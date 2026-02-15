@@ -169,8 +169,8 @@ class TestController extends Controller
     // Get Part 1 answers from database
     $part1Answers = $application->part1_answers ?? [];
     
-    // Merge both parts
-    $allAnswers = array_merge($part1Answers, $part2Answers);
+    // Merge both parts (use + based union to preserve numeric keys)
+    $allAnswers = $part1Answers + $part2Answers;
     
     $correctCount = 0;
     $totalQuestions = $questions->count();
@@ -184,7 +184,11 @@ class TestController extends Controller
 
     $score = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100) : 0;
 
-    $application->update(['test_score' => $score]);
+    $application->update([
+        'test_score' => $score,
+        'part2_answers' => $part2Answers,
+        'test_completed_at' => now()
+    ]);
 
     // Don't show score to user
     return view('test.result');

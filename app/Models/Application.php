@@ -21,7 +21,9 @@ class Application extends Model
     'ai_analysis',
     'test_score',
     'part1_answers',
+    'part2_answers', // Added
     'part1_completed_at',
+    'test_completed_at',
     'part1_started_at',
     'part2_started_at',
     'email_sent_at',
@@ -32,8 +34,10 @@ class Application extends Model
   protected $casts = [
     'ai_analysis' => 'array',
     'part1_answers' => 'array',
+    'part2_answers' => 'array',
     'part1_started_at' => 'datetime',
     'part2_started_at' => 'datetime',
+    'test_completed_at' => 'datetime',
   ];
 
   public function jobVacancy(): BelongsTo

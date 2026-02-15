@@ -39,6 +39,78 @@ body {
 .card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(5px);
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Blue Gradient Text & Backgrounds */
+.bg-gradient-blue {
+  background: linear-gradient(135deg, #0070f3 0%, #00a6ed 100%);
+  color: white;
+}
+
+.text-gradient-blue {
+  background: linear-gradient(135deg, #0070f3 0%, #00a6ed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* List Styling */
+.list-numbered-orange {
+  list-style: none;
+  counter-reset: my-counter;
+  padding-left: 0;
+}
+
+.list-numbered-orange li {
+  counter-increment: my-counter;
+  position: relative;
+  padding-left: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.list-numbered-orange li::before {
+  content: counter(my-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: rgba(255, 184, 0, 0.15);
+  /* Soft Yellow Background */
+  color: #cc9300;
+  /* Darker Yellow/Amber for readability */
+  border-radius: 50%;
+  text-align: center;
+  line-height: 1.5rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.list-check-green {
+  list-style: none;
+  padding-left: 0;
+}
+
+.list-check-green li {
+  position: relative;
+  padding-left: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: #495057;
+}
+
+.list-check-green li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #0ca678;
+  font-weight: bold;
 }
 
 /* Button Yellow (Matching Landing .btn-apply) */
@@ -60,6 +132,25 @@ body {
 .btn-yellow:active {
   background-color: #e0a800;
   color: #ffffff;
+}
+
+/* Custom Part Title Badge */
+.badge-part {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+}
+
+.badge-part-1,
+.badge-part-2 {
+  background: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Custom Badge Yellow */
@@ -84,4 +175,19 @@ body {
 .btn:hover {
   background-color: #f8f9fa;
   border-color: #adb5bd !important;
+}
+
+/* Button Dark Grey (Vercel Style) */
+.btn-dark-grey {
+  background-color: #171717;
+  color: #ffffff;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-dark-grey:hover {
+  background-color: #0a0a0a;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

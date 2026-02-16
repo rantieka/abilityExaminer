@@ -26,15 +26,28 @@ class EditApplication extends EditRecord
         ->label('Send Acceptance Email')
         ->icon('heroicon-o-check-circle')
         ->color('success')
-        ->action(function () {
+        ->form([
+            \Filament\Forms\Components\TextInput::make('test_token')
+                ->label('Test Access Token')
+                ->default(fn () => $this->record->test_token ?? \Illuminate\Support\Str::random(64))
+                ->required()
+                ->helperText('This token will be included in the email link.'),
+            \Filament\Forms\Components\DateTimePicker::make('token_expires_at')
+                ->label('Token Expiration')
+                ->default(fn () => $this->record->token_expires_at ?? now()->addDays(7))
+                ->required(),
+        ])
+        ->action(function (array $data) {
           try {
-            Mail::to($this->record->email)->send(new ApplicationAccepted($this->record));
-            
             $this->record->update([
+              'test_token' => $data['test_token'],
+              'token_expires_at' => $data['token_expires_at'],
               'status' => 'accepted',
               'email_sent_at' => now(),
               'email_type' => 'accepted',
             ]);
+
+            Mail::to($this->record->email)->send(new ApplicationAccepted($this->record));
 
             $url = route('email.preview.accepted', $this->record->id);
             

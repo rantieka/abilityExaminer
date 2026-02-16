@@ -9,11 +9,35 @@ use Illuminate\Support\Facades\Log;
 
 class TestController extends Controller
 {
+  public function verifyToken($token)
+  {
+      $application = Application::where('test_token', $token)->first();
+
+      if (!$application) {
+          return redirect()->route('home')->with('error', 'Token tes tidak valid.');
+      }
+
+      if ($application->token_expires_at && now()->greaterThan($application->token_expires_at)) {
+          return redirect()->route('home')->with('error', 'Token tes sudah kadaluarsa. Silakan hubungi HR.');
+      }
+      
+      if ($application->test_score !== null) {
+           return redirect()->route('home')->with('info', 'Anda sudah menyelesaikan tes ini.');
+      }
+
+      // Log the user in for the test session
+      session(['applicant_id' => $application->id]);
+      
+      return redirect()->route('test.welcome', $application->id);
+  }
+
   public function show(Application $application)
   {
     // Add Authentication Check
     if (session('applicant_id') != $application->id) {
-      return redirect()->route('test.login')->with('error', 'Silakan login terlebih dahulu untuk mengakses tes ini.');
+       // Check if we are in dev/preview mode or if it's a legacy link?
+       // For now, redirect to a generic error or login page (though login page might be deprecated)
+       return redirect()->route('home')->with('error', 'Sesi tidak valid atau kadaluarsa. Silakan gunakan link dari email Anda kembali.');
     }
 
     // check if applicant already took the test
@@ -87,7 +111,7 @@ class TestController extends Controller
   public function welcome(Application $application)
   {
     if (session('applicant_id') != $application->id) {
-      return redirect()->route('test.login')->with('error', 'Silakan login terlebih dahulu untuk mengakses tes ini.');
+      return redirect()->route('home')->with('error', 'Silakan gunakan link tes yang dikirimkan ke email Anda.');
     }
 
     if ($application->test_score !== null) {
@@ -100,7 +124,7 @@ class TestController extends Controller
   public function startTest(Application $application)
   {
     if (session('applicant_id') != $application->id) {
-      return redirect()->route('test.login')->with('error', 'Silakan login terlebih dahulu untuk mengakses tes ini.');
+      return redirect()->route('home')->with('error', 'Sesi Anda tidak valid. Silakan gunakan link dari email Anda kembali.');
     }
 
     // Mark that user has started the test
@@ -116,7 +140,7 @@ class TestController extends Controller
   public function submitPart1(Request $request, Application $application)
   {
     if (session('applicant_id') != $application->id) {
-      return redirect()->route('test.login')->with('error', 'Sesi Anda tidak valid. Silakan login kembali.');
+       return redirect()->route('home')->with('error', 'Sesi Anda tidak valid. Silakan gunakan link dari email Anda kembali.');
     }
 
     if ($application->test_score !== null) {
@@ -136,7 +160,7 @@ class TestController extends Controller
   public function instruction(Application $application)
   {
     if (session('applicant_id') != $application->id) {
-      return redirect()->route('test.login')->with('error', 'Silakan login terlebih dahulu untuk mengakses tes ini.');
+       return redirect()->route('home')->with('error', 'Sesi Anda tidak valid. Silakan gunakan link dari email Anda kembali.');
     }
 
     if ($application->test_score !== null) {
@@ -153,7 +177,7 @@ class TestController extends Controller
   public function submit(Request $request, Application $application)
   {
     if (session('applicant_id') != $application->id) {
-      return redirect()->route('test.login')->with('error', 'Sesi Anda tidak valid. Silakan login kembali.');
+       return redirect()->route('home')->with('error', 'Sesi Anda tidak valid. Silakan gunakan link dari email Anda kembali.');
     }
 
     if ($application->test_score !== null) {

@@ -22,7 +22,7 @@ We will keep your application on file for future opportunities.
 We wish you all the best in your career endeavors.
 
 Best regards,<br>
-**HR Team {{ config('app.name') }}**
+**HR Team**
 
 <x-mail::subcopy>
 If you have any questions regarding this application, please contact us via this email.

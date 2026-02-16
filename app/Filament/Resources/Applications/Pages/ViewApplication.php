@@ -11,6 +11,10 @@ use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Mail;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DateTimePicker;
+use Illuminate\Support\Str;
+use Illuminate\Support\HtmlString;
 
 class ViewApplication extends ViewRecord
 {
@@ -26,36 +30,54 @@ class ViewApplication extends ViewRecord
           ->label('Send Acceptance Email')
           ->icon('heroicon-o-check-circle')
           ->color('success')
-          ->requiresConfirmation()
+          ->form([
+              TextInput::make('test_token')
+                  ->label('Test Token')
+                  ->default(fn () => $this->record->test_token ?? Str::random(64))
+                  ->required()
+                  ->suffixAction(
+                      Action::make('regenerate')
+                          ->icon('heroicon-m-arrow-path')
+                          ->action(function ($set) {
+                              $set('test_token', Str::random(64));
+                          })
+                  ),
+              DateTimePicker::make('token_expires_at')
+                  ->label('Token Expiration')
+                  ->default(fn () => now()->addDays(7))
+                  ->required()
+                  ->native(false)
+                  ->minDate(now()),
+          ])
           ->modalHeading('Send Acceptance Email')
-          ->modalDescription(fn () => "Send acceptance email to {$this->record->full_name} ({$this->record->email})?")
+          ->modalDescription(fn () => "Configure access token and send acceptance email to {$this->record->full_name}.")
           ->modalSubmitActionLabel('Send Email')
-          ->action(function () {
+          ->action(function (array $data, ViewApplication $livewire) {
             try {
-              Mail::to($this->record->email)->send(new ApplicationAccepted($this->record));
-              
+              // Update record with token and status
               $this->record->update([
+                'test_token' => $data['test_token'],
+                'token_expires_at' => $data['token_expires_at'],
                 'status' => 'accepted',
                 'email_sent_at' => now(),
                 'email_type' => 'accepted',
               ]);
-  
 
-                
+              // Send email
+              Mail::to($this->record->email)->send(new ApplicationAccepted($this->record));
+              
               $url = route('email.preview.accepted', $this->record->id);
               
                 Notification::make()
                   ->success()
                   ->title('Email Sent')
-                  ->body("Acceptance email successfully sent to {$this->record->full_name}.")
+                  ->body(new HtmlString("Acceptance email successfully sent to {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
                   ->persistent()
                   ->send();
 
               // Try Auto-Open via JS (Primary request)
-              $this->js("window.open('$url', '_blank')");
+              $livewire->js("window.open('$url', '_blank')");
               
-              // Refresh page to update button visibility
-              // return redirect()->to(ApplicationResource::getUrl('view', ['record' => $this->record]));
             } catch (\Exception $e) {
               Notification::make()
                 ->danger()
@@ -82,7 +104,7 @@ class ViewApplication extends ViewRecord
           ->modalHeading('Reject Application')
           ->modalDescription(fn () => "Reject application for {$this->record->full_name} ({$this->record->email})?")
           ->modalSubmitActionLabel('Reject & Send Email')
-          ->action(function (array $data) {
+          ->action(function (array $data, ViewApplication $livewire) {
             try {
               // Update rejection reason if provided
               if (!empty($data['rejection_reason'])) {
@@ -105,12 +127,12 @@ class ViewApplication extends ViewRecord
               Notification::make()
                   ->success()
                   ->title('Application Rejected')
-                  ->body("Rejection email sent to {$this->record->full_name}.")
+                  ->body(new HtmlString("Rejection email sent to {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
                   ->persistent()
                   ->send();
 
               // Try Auto-Open via JS (Primary request)
-              $this->js("window.open('$url', '_blank')");
+              $livewire->js("window.open('$url', '_blank')");
               
               // Refresh page to update button visibility
               // return redirect()->to(ApplicationResource::getUrl('view', ['record' => $this->record]));

@@ -12,7 +12,7 @@ You are invited to take an **Online Test** as the next stage of our recruitment 
 - **Test Duration**: Approximately 30-45 minutes
 - **Deadline**: 7 days from the receipt of this email
 
-<x-mail::button :url="url('/applications/' . $application->id . '/test')">
+<x-mail::button :url="url('/test/access/' . $application->test_token)">
 Start Test Now
 </x-mail::button>
 
@@ -27,5 +27,5 @@ If you have any questions, please do not hesitate to contact us.
 Thank you for your interest in joining our team!
 
 Best regards,<br>
-**HR Team {{ config('app.name') }}**
+**HR Team**
 </x-mail::message>

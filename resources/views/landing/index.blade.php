@@ -465,7 +465,7 @@
           </div>
         </div>
       </div>
-      <div class="contact-body-form p-4 rounded shadow-sm">
+      <!-- <div class="contact-body-form p-4 rounded shadow-sm">
         <form action="#" method="POST" class="row gy-3" id="form-contact">
           <div class="col-md-6">
             <div class="form-group">
@@ -491,7 +491,7 @@
             <button type="submit" class="btn-contact-submit w-100 rounded">Send</button>
           </div>
         </form>
-      </div>
+      </div> -->
     </div>
   </div>
 </section>

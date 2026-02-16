@@ -212,16 +212,97 @@ class ApplicationResource extends Resource
                             ]),
                     ]),
 
-                // Tab 3: Assessment
-                \Filament\Schemas\Components\Tabs\Tab::make('Assessment')
-                    ->icon('heroicon-o-academic-cap')
+                // Tab 3: Generate Token
+                \Filament\Schemas\Components\Tabs\Tab::make('Generate Token')
+                  ->icon('heroicon-o-key')
+                  ->schema([
+                    \Filament\Schemas\Components\Section::make('Access Configuration')
+                      ->description('Manage test access token and expiration for this applicant.')
+                      ->schema([
+                        \Filament\Schemas\Components\Grid::make(1)
+                          ->schema([
+                            \Filament\Schemas\Components\Grid::make(2)
+                              ->schema([
+                                \Filament\Forms\Components\TextInput::make('test_token')
+                                  ->label('Token Tes')
+                                  ->readOnly()
+                                  ->placeholder('Klik generate untuk membuat token')
+                                  ->suffixActions([
+                                    \Filament\Actions\Action::make('generate')
+                                      ->icon('heroicon-m-arrow-path')
+                                      ->tooltip('Buat Token Baru')
+                                      ->action(function ($record, $set) {
+                                        $token = \Illuminate\Support\Str::random(64);
+                                        $expires = now()->addDays(7);
+                                        $link = route('test.access', ['token' => $token]);
+                                                              
+                                        // Update Form State
+                                        $set('test_token', $token);
+                                        $set('token_expires_at', $expires);
+                                        $set('test_link_preview', $link);
+
+                                        // Save to Database immediately if record exists
+                                        if ($record) {
+                                          $record->update([
+                                            'test_token' => $token,
+                                            'token_expires_at' => $expires
+                                          ]);
+                                                                  
+                                          \Filament\Notifications\Notification::make()
+                                            ->title('Token Saved Successfully')
+                                            ->success()
+                                            ->send();
+                                        }
+                                      }),
+                                    \Filament\Actions\Action::make('copy')
+                                      ->icon('heroicon-m-clipboard')
+                                      ->tooltip('Salin ke Clipboard')
+                                      ->action(function ($livewire, $state) {
+                                        if ($state) {
+                                          $livewire->js("window.navigator.clipboard.writeText('{$state}'); new FilamentNotification().title('Berhasil disalin').success().send()");
+                                        }
+                                      }),
+                                  ]),
+                                \Filament\Forms\Components\DateTimePicker::make('token_expires_at')
+                                  ->label('Token Expiration')
+                                  ->native(false)
+                                  ->default(fn() => now()->addDays(7))
+                                  ->requiredWith('test_token')
+                                  ->minDate(now()),
+                              ]),
+                        
+                        \Filament\Forms\Components\TextInput::make('test_link_preview')
+                          ->label('Test Link Preview')
+                          ->readOnly()
+                          ->dehydrated(false)
+                          ->formatStateUsing(function ($get) {
+                            $token = $get('test_token');
+                            if (!$token) return 'No token generated yet.';
+                            return route('test.access', ['token' => $token]);
+                          })
+                          ->suffixActions([
+                            \Filament\Actions\Action::make('copyLink')
+                              ->icon('heroicon-m-clipboard')
+                              ->tooltip('Copy Link')
+                              ->action(function ($livewire, $state) {
+                                if ($state) {
+                                  $livewire->js("window.navigator.clipboard.writeText('{$state}'); new FilamentNotification().title('Link Copied').success().send()");
+                                }
+                              })
+                          ]),
+                  ]),
+                ]),
+              ]),
+                // Tab 4: Assessment Results
+              \Filament\Schemas\Components\Tabs\Tab::make('Assessment Results')
+                ->icon('heroicon-o-academic-cap')
+                ->schema([
+                  \Filament\Schemas\Components\Section::make('Test Results')
                     ->schema([
-                         \Filament\Schemas\Components\Section::make('Test Results')
-                            ->schema([
-                                \Filament\Forms\Components\ViewField::make('test_details')
-                                    ->view('filament.forms.components.test-score-details'),
-                            ]),
+                      \Filament\Forms\Components\ViewField::make('test_details')
+                        ->view('filament.forms.components.test-score-details'),
                     ]),
+                ]),
             ])
         ]);
     }

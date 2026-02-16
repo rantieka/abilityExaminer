@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Applications\Tables;
 
 use App\Mail\ApplicationAccepted;
 use App\Mail\ApplicationRejected;
+use App\Models\Application; // Added
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -150,13 +151,20 @@ class ApplicationsTable
                 }
 
                 try {
-                  Mail::to($record->email)->send(new ApplicationAccepted($record));
+                  // Generate Test Token and Expiration
+                  $test_token = \Illuminate\Support\Str::random(64);
+                  $token_expires_at = now()->addDays(7);
                   
                   $record->update([
                     'status' => 'accepted',
                     'email_sent_at' => now(),
                     'email_type' => 'accepted',
+                    'test_token' => $test_token,
+                    'token_expires_at' => $token_expires_at,
                   ]);
+
+                  // Send email after updating record so it has access to the token
+                  Mail::to($record->email)->send(new ApplicationAccepted($record));
                   
                   $successCount++;
                 } catch (\Exception $e) {

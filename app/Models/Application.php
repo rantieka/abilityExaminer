@@ -17,6 +17,8 @@ class Application extends Model
     'phone',
     'cv_path',
     'status',
+    'test_token',
+    'token_expires_at',
     'ai_score',
     'ai_analysis',
     'test_score',
@@ -38,6 +40,7 @@ class Application extends Model
     'part1_started_at' => 'datetime',
     'part2_started_at' => 'datetime',
     'test_completed_at' => 'datetime',
+    'token_expires_at' => 'datetime',
   ];
 
   public function jobVacancy(): BelongsTo

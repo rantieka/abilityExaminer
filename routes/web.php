@@ -22,6 +22,9 @@ use App\Http\Controllers\TestAuthController;
 Route::get('/test/login', [TestAuthController::class, 'index'])->name('test.login');
 Route::post('/test/login', [TestAuthController::class, 'authenticate'])->name('test.authenticate');
 
+// Test Access via Token
+Route::get('/test/access/{token}', [TestController::class, 'verifyToken'])->name('test.access');
+
 // Protected Test Routes (Middleware check in Controller)
 Route::get('/test/{application}/welcome', [TestController::class, 'welcome'])->name('test.welcome');
 Route::post('/test/{application}/start', [TestController::class, 'startTest'])->name('test.start');

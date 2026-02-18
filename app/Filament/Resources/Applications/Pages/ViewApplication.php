@@ -16,42 +16,105 @@ use Filament\Forms\Components\DateTimePicker;
 use Illuminate\Support\Str;
 use Illuminate\Support\HtmlString;
 
-class ViewApplication extends ViewRecord
-{
-    protected static string $resource = ApplicationResource::class;
+class ViewApplication extends ViewRecord {
+  protected static string $resource = ApplicationResource::class;
 
-    protected function getHeaderActions(): array
-    {
-      return [
-        DeleteAction::make(),
-        
+  protected function getHeaderActions(): array {
+    return [
+      DeleteAction::make(),
+      
+      // Action: Remind Supervisor (Visible if no questions)
+      Action::make('remind_supervisor')
+        ->label('Remind Supervisor')
+        ->icon('heroicon-o-bell-alert')
+        ->color('warning')
+        ->visible(function () {
+          $jobVacancy = $this->record->jobVacancy;
+          return $jobVacancy && 
+                       !in_array($this->record->status, ['accepted', 'rejected']) &&
+                       !$jobVacancy->questions()->where('is_active', true)->exists();
+        })
+        ->requiresConfirmation()
+        ->modalHeading('Remind Supervisor')
+        ->modalDescription(fn () => "Send a notification to the supervisor ({$this->record->jobVacancy->createdBy->name}) to create test questions for this Job Vacancy?")
+        ->action(function () {
+          $recipient = $this->record->jobVacancy->createdBy;
+                
+          if ($recipient) {
+            Notification::make()
+              ->warning()
+              ->title('Action Required: Missing Test Questions')
+              ->body("HR is trying to accept an applicant for '{$this->record->jobVacancy->title}' but no test questions are available. Please create them immediately.")
+              ->actions([
+                \Filament\Actions\Action::make('create_questions')
+                  ->label('Create Questions')
+                  ->button()
+                  ->url(\App\Filament\Resources\Questions\QuestionResource::getUrl('index', ['job_id' => $this->record->jobVacancy->id])),
+              ])
+              ->sendToDatabase($recipient);
+
+            Notification::make()
+              ->success()
+              ->title('Reminder Sent')
+              ->body("Notification sent to {$recipient->name}.")
+              ->send();
+          }
+        }),
+
         // Action: Send Acceptance Email
         Action::make('send_accepted_email')
           ->label('Send Acceptance Email')
           ->icon('heroicon-o-check-circle')
           ->color('success')
           ->form([
-              TextInput::make('test_token')
-                  ->label('Test Token')
-                  ->default(fn () => $this->record->test_token ?? Str::random(64))
-                  ->required()
-                  ->suffixAction(
-                      Action::make('regenerate')
-                          ->icon('heroicon-m-arrow-path')
-                          ->action(function ($set) {
-                              $set('test_token', Str::random(64));
-                          })
-                  ),
-              DateTimePicker::make('token_expires_at')
-                  ->label('Token Expiration')
-                  ->default(fn () => now()->addDays(7))
-                  ->required()
-                  ->native(false)
-                  ->minDate(now()),
+            TextInput::make('test_token')
+              ->label('Test Token')
+              ->default(fn () => $this->record->test_token ?? Str::random(64))
+              ->required()
+              ->suffixAction(
+                Action::make('regenerate')
+                  ->icon('heroicon-m-arrow-path')
+                  ->action(function ($set) {
+                    $set('test_token', Str::random(64));
+                  })
+              ),
+            DateTimePicker::make('token_expires_at')
+                ->label('Token Expiration')
+                ->default(fn () => now()->addDays(7))
+                ->required()
+                ->native(false)
+                ->minDate(now()),
           ])
           ->modalHeading('Send Acceptance Email')
           ->modalDescription(fn () => "Configure access token and send acceptance email to {$this->record->full_name}.")
           ->modalSubmitActionLabel('Send Email')
+          ->before(function (Action $action) {
+              $jobVacancy = $this->record->jobVacancy;
+
+              if (! $jobVacancy) {
+                  Notification::make()
+                      ->danger()
+                      ->title('Error')
+                      ->body('Job Vacancy data is missing. Cannot verify test questions.')
+                      ->send();
+                  $action->halt();
+              }
+
+              $hasQuestions = $jobVacancy->questions()
+                  ->where('is_active', true)
+                  ->exists();
+
+              if (! $hasQuestions) {
+                  Notification::make()
+                      ->danger()
+                      ->title('Cannot Send Test')
+                      ->body('There are no active questions. Please remind the supervisor to create them.')
+                      ->persistent()
+                      ->send();
+
+                  $action->halt();
+              }
+          })
           ->action(function (array $data, ViewApplication $livewire) {
             try {
               // Update record with token and status

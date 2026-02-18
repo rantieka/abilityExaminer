@@ -65,13 +65,14 @@ class EditJobVacancy extends EditRecord
           if ($record->createdBy && $record->created_by !== auth()->id()) {
               \Filament\Notifications\Notification::make()
                 ->success()
-                ->title('Your Job Vacancy Request was Approved!')
-                ->body("Job vacancy \"{$record->title}\" has been approved and published.")
+                ->title('Job Vacancy Approved!')
+                ->body("Job vacancy \"{$record->title}\" is now active. Please proceed to create the test questions.")
                 ->actions([
-                    \Filament\Actions\Action::make('view')
+                    \Filament\Actions\Action::make('create_questions')
+                        ->label('Create Questions')
                         ->button()
                         ->markAsRead()
-                        ->url(JobVacancyResource::getUrl('index')),
+                        ->url(\App\Filament\Resources\Questions\QuestionResource::getUrl('index', ['job_id' => $record->id])),
                 ])
                 ->sendToDatabase($record->createdBy);
           }

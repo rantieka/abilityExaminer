@@ -84,15 +84,28 @@ class ApplicationsTable
           ->icon(fn ($state, $record) => ($record->status === 'pending' && $record->ai_score === null) ? 'heroicon-m-arrow-path' : null),
         TextColumn::make('test_score')
           ->label('Test Score')
-          ->numeric()
-          ->sortable()
           ->badge()
-          ->formatStateUsing(fn ($state) => $state !== null ? $state . '/100' : '-')
-          ->color(fn ($state) => match (true) {
-            $state >= 70 => 'success',
-            $state >= 40 => 'warning',
-            $state !== null => 'danger',
-            default => 'gray',
+          ->sortable()
+          ->default('-')
+          ->formatStateUsing(function ($state, $record) {
+              if (is_numeric($state)) {
+                  return $state . '/100';
+              }
+              if ($state === null && $record->status === 'accepted') {
+                  return 'Waiting';
+              }
+              return $state; // If null, default('-') will take over
+          })
+          ->color(fn ($state, $record) => match (true) {
+              $state === null && $record->status === 'accepted' => 'warning',
+              $state === null || $state === '-' => 'gray',
+              is_numeric($state) && $state >= 70 => 'success',
+              is_numeric($state) && $state >= 40 => 'warning',
+              default => 'danger',
+          })
+          ->icon(fn ($state, $record) => match (true) {
+              $state === null && $record->status === 'accepted' => 'heroicon-m-clock',
+              default => null,
           }),
         // TextColumn::make('email_type')
         //   ->label('Email Status')

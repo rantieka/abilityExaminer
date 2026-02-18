@@ -23,26 +23,9 @@
   <!-- Footer -->
   @include('components.footer_landing')
 
-  <!-- Toastify CSS & JS -->
-  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.css">
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
-  <style>
-      .toast-custom .toast-close {
-          color: #9ca3af !important; /* Tailwind gray-400 */
-          opacity: 1 !important;
-          padding-left: 10px;
-      }
-      .toast-custom .toast-close:hover {
-          color: #4b5563 !important; /* Tailwind gray-600 */
-      }
-  </style>
-  
-  <script>
-    // Toast Notification Logic
-    document.addEventListener('DOMContentLoaded', function() {
-        // ... (toast logic remains same) ...
-    });
-  </script>
+  <!-- Toastify -->
+  @include('components.toastify')
+
   @stack('scripts')
 </body>
 </html>

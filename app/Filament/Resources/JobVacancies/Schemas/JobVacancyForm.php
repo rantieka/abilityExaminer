@@ -49,36 +49,12 @@ class JobVacancyForm
           ->columnSpanFull()
           ->columns(2)
           ->schema([
-            Select::make('department')
+            TextInput::make('department')
               ->label('Department')
-              ->options(function () {
-                  $defaults = [
-                      'IT' => 'IT',
-                      'HR' => 'HR',
-                      'Finance' => 'Finance',
-                      'Operations' => 'Operations',
-                      'Sales' => 'Sales',
-                      'Marketing' => 'Marketing',
-                  ];
-                  
-                  $existing = \App\Models\JobVacancy::query()
-                      ->whereNotNull('department')
-                      ->distinct()
-                      ->pluck('department', 'department')
-                      ->toArray();
-
-                  return array_merge($defaults, $existing);
-              })
-              ->native(false)
-              ->preload()
-              ->required()
-              ->createOptionForm([
-                    TextInput::make('name')
-                        ->required(),
-              ])
-              ->createOptionUsing(function (array $data) {
-                  return $data['name'];
-              }),
+              ->default('IT')
+              ->disabled()
+              ->dehydrated()
+              ->required(),
 
             Select::make('employment_type')
               ->label('Employment Type')

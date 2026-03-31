@@ -21,7 +21,7 @@ class GroqService
   /**
    * Send a prompt to Groq and get the response.
    */
-  public function chat(array $messages, float $temperature = 0.5)
+  public function chat(array $messages, float $temperature = 0.5, int $maxTokens = 4096)
   {
 
       // Bypass SSL verification for local development (Windows/Laragon SSL cert issue)
@@ -36,7 +36,7 @@ class GroqService
           'model' => $this->model,
           'messages' => $messages,
           'temperature' => $temperature,
-          'max_tokens' => 2048,
+          'max_tokens' => $maxTokens,
           'response_format' => ['type' => 'json_object'], // Enforce JSON mode
         ]);
 

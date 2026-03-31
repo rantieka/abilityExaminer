@@ -18,147 +18,109 @@ class GenerateExamQuestions // implements ShouldQueue (Temporary force sync)
   use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
   public $jobVacancy;
-  public $timeout = 600; // Increased timeout for heavier generation
+  public $timeout = 600;
 
   public function __construct(JobVacancy $jobVacancy)
   {
-      $this->jobVacancy = $jobVacancy;
+    $this->jobVacancy = $jobVacancy;
   }
 
   public function handle(GroqService $groq): void
   // public function handle(OllamaService $ai): void // Fallback
   {
-
     try {
-      // Detect industry type
-      $industryType = $this->detectIndustryType();
-      Log::info("Detected industry type: {$industryType}");
-
       // Part 1: Knowledge & Foundation (20 Questions) - Universal
       $promptPart1 = $this->buildPart1Prompt();
-      $this->generateBatch($groq, $promptPart1, 'knowledge');
+      $this->generateBatch($groq, $promptPart1, 'knowledge', 4096);
 
-      // Part 2: Technical/Case Study (15 Questions) - Industry-specific
-      $promptPart2 = $industryType === 'tech' 
-        ? $this->buildPart2TechPrompt() 
-        : $this->buildPart2NonTechPrompt();
-      $this->generateBatch($groq, $promptPart2, 'technical');
+      // Part 2: Technical (20 Questions)
+      $promptPart2 = $this->buildPart2TechPrompt();
+      $this->generateBatch($groq, $promptPart2, 'technical', 8192);
 
     } catch (\Exception $e) {
       Log::error("Failed to generate exam questions: " . $e->getMessage());
     }
   }
 
-  protected function detectIndustryType(): string
-  {
-    $techKeywords = ['developer', 'programmer', 'engineer', 'IT', 'software', 'web', 'mobile', 
-                     'data', 'devops', 'backend', 'frontend', 'fullstack', 'QA', 'tester',
-                     'system', 'network', 'database', 'cloud', 'security', 'AI', 'ML'];
-    
-    $title = strtolower($this->jobVacancy->title);
-    $qualifications = strtolower(strip_tags($this->jobVacancy->qualifications ?? ''));
-    
-    foreach ($techKeywords as $keyword) {
-      if (str_contains($title, $keyword) || str_contains($qualifications, $keyword)) {
-        return 'tech';
-      }
-    }
-    
-    return 'non-tech';
-  }
-
   protected function buildPart1Prompt(): string
   {
     return "
-      Buatkan TEPAT 20 soal pilihan ganda untuk posisi '{$this->jobVacancy->title}'.
+      Buat TEPAT 20 soal pilihan ganda PENGETAHUAN DASAR (definisi, teori, terminologi) untuk posisi '{$this->jobVacancy->title}'.
       Kualifikasi: " . strip_tags($this->jobVacancy->qualifications) . "
-
-      Distribusi: 6 Easy, 10 Medium, 4 Hard
-      
-      Format JSON:
-      {\"questions\": [{\"text\": \"...\", \"options\": {\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"}, \"correct\": \"A\", \"difficulty\": \"easy\"}]}
-      
-      WAJIB: Output HANYA JSON. HARUS 20 soal, tidak boleh kurang.";
+      BAHASA: Semua teks soal dan pilihan jawaban WAJIB dalam Bahasa Indonesia.
+      DILARANG: studi kasus, skenario, debugging, atau dilema.
+      Distribusi: 6 Easy, 10 Medium, 4 Hard.
+      Topik wajib: terminologi bidang, konsep dasar, standar industri, tools umum, prinsip kerja posisi.
+      Format JSON: {\"questions\": [{\"text\":\"...\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"A\",\"difficulty\":\"easy\"}]}
+      Output HANYA JSON. Tepat 20 soal.";
   }
 
   protected function buildPart2TechPrompt(): string
   {
     return "
-      Buatkan TEPAT 20 soal TECHNICAL untuk posisi '{$this->jobVacancy->title}'.
+      Buat TEPAT 20 soal CODING & TECHNICAL untuk posisi '{$this->jobVacancy->title}'.
       Kualifikasi: " . strip_tags($this->jobVacancy->qualifications) . "
-
-      Distribusi: 6 Easy, 10 Medium, 4 Hard
-      
-      WAJIB ada:
-      - Code snippet (5-10 baris)
-      - Architecture scenario
-      - Debugging case (N+1, performance)
-      - Best practice
-      
-      Contoh [MEDIUM]:
-      Database lambat karena N+1 saat load 1000 records. Solusi:
-      A) Upgrade server B) Eager loading with() C) Index saja D) Cache semua
-      
-      Format JSON:
-      {\"questions\": [{\"text\": \"...\", \"options\": {\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"}, \"correct\": \"B\", \"difficulty\": \"medium\"}]}
-      
-      WAJIB: Output HANYA JSON. HARUS 20 soal, tidak boleh kurang.";
+      BAHASA: Semua teks soal, penjelasan, dan pilihan jawaban WAJIB dalam Bahasa Indonesia. Hanya snippet kode yang boleh dalam bahasa pemrograman (PHP/SQL).
+      SETIAP soal WAJIB menyertakan snippet kode (PHP, SQL, atau pseudocode, 3-8 baris) di dalam teks soal.
+      DILARANG: soal tanpa kode, soal definisi murni, atau soal yang hanya berupa paragraf teks.
+      Distribusi: 6 Easy, 10 Medium, 4 Hard.
+      Distribusi tipe soal:
+      - 6 soal: Predict output (baca kode, pilih output yang benar)
+      - 6 soal: Find the bug (kode ada error, pilih baris/penyebab yang salah)
+      - 4 soal: Fix the code (diberikan kode bermasalah, pilih perbaikan yang tepat)
+      - 4 soal: SQL/query analysis (query lambat atau salah, pilih solusi terbaik)
+      Format JSON: {\"questions\": [{\"text\":\"...\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"B\",\"difficulty\":\"medium\"}]}
+      Output HANYA JSON. Tepat 20 soal.";
   }
 
-  protected function buildPart2NonTechPrompt(): string
+  protected function generateBatch(GroqService $groq, string $prompt, string $sectionTag, int $maxTokens = 4096)
+  // protected function generateBatch(OllamaService $ai, string $prompt, string $sectionTag, int $maxTokens = 4096) // Fallback
   {
-    return "
-      Buatkan TEPAT 20 soal CASE STUDY untuk posisi '{$this->jobVacancy->title}'.
-      Kualifikasi: " . strip_tags($this->jobVacancy->qualifications) . "
+    $expectedCount = 20;
+    $maxAttempts   = 3;
 
-      Distribusi: 6 Easy, 10 Medium, 4 Hard
-      
-      WAJIB ada:
-      - Workplace conflict
-      - Resource allocation (budget/time)
-      - Ethical dilemma
-      - Strategic decision
-      
-      Contoh [HARD]:
-      Candidate excellent, tapi resign 3x dalam 2 tahun. Pertanyaan terbaik:
-      A) \"Kenapa sering resign?\" B) Reject C) \"Cerita career journey 2 tahun terakhir?\" D) Check reference
-      
-      Format JSON:
-      {\"questions\": [{\"text\": \"...\", \"options\": {\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"}, \"correct\": \"C\", \"difficulty\": \"hard\"}]}
-      
-      WAJIB: Output HANYA JSON. HARUS 20 soal, tidak boleh kurang.";
-  }
+    for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+      try {
+        $response = $groq->chat(
+          [
+            ['role' => 'system', 'content' => "Anda adalah generator soal ujian. Output JSON SAJA — tanpa penjelasan atau teks lain. Semua soal WAJIB dalam Bahasa Indonesia. Generate TEPAT {$expectedCount} soal, tidak kurang tidak lebih."],
+            ['role' => 'user', 'content' => $prompt]
+          ],
+          0.5,
+          $maxTokens
+        );
 
-  protected function generateBatch(GroqService $groq, string $prompt, string $sectionTag)
-  // protected function generateBatch(OllamaService $ai, string $prompt, string $sectionTag) // Fallback
-  {
-    try {
-      $expectedCount = 20; // Both parts generate 20 questions
-      
-      $response = $groq->chat([
-        ['role' => 'system', 'content' => "Anda Senior Technical Recruiter. Output JSON Only. WAJIB generate TEPAT {$expectedCount} soal, tidak boleh kurang atau lebih."],
-        ['role' => 'user', 'content' => $prompt]
-      ]);
+        $questions = array_slice($response['questions'] ?? [], 0, $expectedCount);
+        $count     = count($questions);
 
-      if (!empty($response['questions'])) {
-        foreach ($response['questions'] as $q) {
-          $data = [
-            'job_vacancy_id' => $this->jobVacancy->id,
-            'question_text' => $q['text'],
-            'options' => $q['options'],
-            'correct_answer' => $q['correct'],
-            'is_active' => false,
-            'section' => $sectionTag
-          ];
-          
-          Log::info("Saving Question:", $data); // Debug Insert
+        Log::info("Attempt {$attempt} for {$sectionTag}: got {$count} questions (raw: " . count($response['questions'] ?? []) . ").");
 
-          Question::create($data);
+        if ($count < $expectedCount && $attempt < $maxAttempts) {
+          Log::warning("Under-generated {$sectionTag}: {$count}/{$expectedCount}. Retrying (attempt {$attempt})...");
+          continue;
         }
-        Log::info("Generated batch for {$sectionTag} with " . count($response['questions']) . " questions.");
+
+        // Save whatever we have (could be less on final attempt)
+        foreach ($questions as $q) {
+          Question::create([
+            'job_vacancy_id' => $this->jobVacancy->id,
+            'question_text'  => $q['text'],
+            'options'        => $q['options'],
+            'correct_answer' => $q['correct'],
+            'is_active'      => false,
+            'section'        => $sectionTag,
+          ]);
+        }
+
+        Log::info("Saved {$count} questions for {$sectionTag}.");
+        return; // success
+
+      } catch (\Exception $e) {
+        Log::error("Error on attempt {$attempt} for {$sectionTag}: " . $e->getMessage());
+        if ($attempt === $maxAttempts) {
+          throw $e;
+        }
       }
-    } catch (\Exception $e) {
-      Log::error("Error generating batch {$sectionTag}: " . $e->getMessage());
     }
   }
 }

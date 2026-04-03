@@ -95,8 +95,9 @@ class GenerateExamQuestions // implements ShouldQueue (Temporary force sync)
 
         Log::info("Attempt {$attempt} for {$sectionTag}: got {$count} questions (raw: " . count($response['questions'] ?? []) . ").");
 
-        if ($count < $expectedCount && $attempt < $maxAttempts) {
-          Log::warning("Under-generated {$sectionTag}: {$count}/{$expectedCount}. Retrying (attempt {$attempt})...");
+        if ($count < ($expectedCount - 2) && $attempt < $maxAttempts) {
+          Log::warning("Under-generated {$sectionTag}: {$count}/{$expectedCount}. Retrying in 22 seconds (attempt {$attempt})...");
+          sleep(22); // Menghindari Groq Rate Limit (12000 TPM limit)
           continue;
         }
 

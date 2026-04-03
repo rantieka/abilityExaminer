@@ -66,13 +66,13 @@ class QuestionsTable
 					])
 					->headerActions([
 						Action::make('generate')
-							->label('Generate 35 Exam Questions')
+							->label('Generate Exam Questions')
 							->icon('heroicon-o-sparkles')
 							->color('warning')
 							->visible(true)
 							->requiresConfirmation()
 							->modalHeading('Generate Exam Questions?')
-							->modalDescription('This will generate 35 questions (Knowledge & Technical) using AI. The result will be added to this Job Vacancy.')
+							->modalDescription('This will  questions (Knowledge & Technical) using AI. The result will be added to this Job Vacancy.')
 							->action(function ($livewire) {
 								// Read from the sticky property on the Livewire component
 								$jobId = $livewire->job_id ?? null;

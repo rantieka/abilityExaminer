@@ -126,27 +126,7 @@ class EditJobVacancy extends EditRecord
         })
         ->successNotification(null)
         ->after(fn () => redirect()->route('filament.admin.resources.job-vacancies.index')),
-      DeleteAction::make(),
     ];
-  }
-
-  protected function getFormActions(): array
-  {
-      $user   = auth()->user();
-      $record = $this->record;
-
-      // HR / super_admin: selalu bisa save
-      if ($user->hasRole(['hr', 'super_admin'])) {
-          return parent::getFormActions();
-      }
-
-      // SPV: hanya bisa save saat status pending atau rejected (belum/sudah ditolak)
-      if ($user->hasRole('spv') && in_array($record->status, ['pending', 'rejected'])) {
-          return parent::getFormActions();
-      }
-
-      // Role lain atau status approved/published: sembunyikan tombol Save
-      return [];
   }
 
   protected function getUpdatedNotificationTitle(): ?string {

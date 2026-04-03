@@ -149,11 +149,6 @@ class JobVacanciesTable
         ->extraAttributes(['style' => 'text-decoration: none !important'])
         ->visible(fn (JobVacancy $record) => $record->archived_at !== null && auth()->user()->hasRole(['hr', 'super_admin', 'spv']))
         ->action(fn (JobVacancy $record) => $record->update(['archived_at' => null])),
-    ])
-    ->toolbarActions([
-      BulkActionGroup::make([
-        DeleteBulkAction::make(),
-      ]),
     ]);
   }
 }

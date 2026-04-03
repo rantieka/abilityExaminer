@@ -27,10 +27,13 @@ class JobVacancyForm
           ->columnSpanFull()
           ->columns(2)
           ->schema([
-            TextInput::make('title')
+            Select::make('title')
               ->required()
-              ->maxLength(255)
-              ->live(onBlur: true)
+              ->options([
+                  'Frontend Developer' => 'Frontend Developer',
+                  'Backend Developer' => 'Backend Developer',
+              ])
+              ->live()
               ->afterStateUpdated(function ($set, $state) {
                 if ($state) {
                   $set('slug', Str::slug($state));
@@ -60,18 +63,14 @@ class JobVacancyForm
               ->label('Employment Type')
               ->options([
                   'Full Time' => 'Full Time',
-                  'Part Time' => 'Part Time',
                   'Contract' => 'Contract',
-                  'Internship' => 'Internship',
               ])
               ->required(),
-            Select::make('work_arrangement')
+            TextInput::make('work_arrangement')
               ->label('Work Arrangement')
-              ->options([
-                  'WFO' => 'WFO',
-                  'WFH' => 'WFH',
-                  'Hybrid' => 'Hybrid',
-              ])
+              ->default('WFO')
+              ->disabled()
+              ->dehydrated()
               ->required(),
             TextInput::make('required_count')
               ->label('Vacancies Needed')
@@ -82,14 +81,11 @@ class JobVacancyForm
             DatePicker::make('published_until')
                   ->label('Publish Until')
                   ->native(false)
-                  ->visible(fn () => Auth::user()->hasRole(['hr', 'super_admin']))
+                  ->visible(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord && Auth::user()->hasRole(['hr', 'super_admin']))
                   ->required(fn ($get) => $get('status') === 'approved'),
-            RichEditor::make('location')
-              ->label('Office Location')
+            \Filament\Forms\Components\Hidden::make('location')
               ->default(fn () => \App\Models\Setting::get('office_address'))
-              ->required()
-              ->columnSpanFull()
-              ->visible(fn () => Auth::user()->hasRole(['hr', 'super_admin'])),
+              ->required(),
           ]),
 
         // SECTION 3: DESKRIPSI & KUALIFIKASI
@@ -112,7 +108,7 @@ class JobVacancyForm
               'rejected' => 'Rejected',
           ])
           ->default(fn () => Auth::user()->hasRole(['hr', 'super_admin']) ? 'approved' : 'pending')
-          ->disabled(fn () => !Auth::user()->hasRole(['hr', 'super_admin'])) // SPV cannot change status directly
+          ->disabled(fn ($livewire) => !Auth::user()->hasRole(['hr', 'super_admin']) || $livewire instanceof \Filament\Resources\Pages\EditRecord)
           ->dehydrated()
           ->required()
           ->visible(fn() => Auth::user()->hasRole(['hr', 'super_admin', 'spv'])),

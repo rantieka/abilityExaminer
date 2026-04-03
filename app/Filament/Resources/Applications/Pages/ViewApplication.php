@@ -16,54 +16,18 @@ use Filament\Forms\Components\DateTimePicker;
 use Illuminate\Support\Str;
 use Illuminate\Support\HtmlString;
 
+use Filament\Actions\ActionGroup;
+
 class ViewApplication extends ViewRecord {
   protected static string $resource = ApplicationResource::class;
 
   protected function getHeaderActions(): array {
     return [
-      DeleteAction::make(),
-      
-      // Action: Remind Supervisor (Visible if no questions)
-      Action::make('remind_supervisor')
-        ->label('Remind Supervisor')
-        ->icon('heroicon-o-bell-alert')
-        ->color('warning')
-        ->visible(function () {
-          $jobVacancy = $this->record->jobVacancy;
-          return $jobVacancy && 
-                       !in_array($this->record->status, ['accepted', 'rejected']) &&
-                       !$jobVacancy->questions()->where('is_active', true)->exists();
-        })
-        ->requiresConfirmation()
-        ->modalHeading('Remind Supervisor')
-        ->modalDescription(fn () => "Send a notification to the supervisor ({$this->record->jobVacancy->createdBy->name}) to create test questions for this Job Vacancy?")
-        ->action(function () {
-          $recipient = $this->record->jobVacancy->createdBy;
-                
-          if ($recipient) {
-            Notification::make()
-              ->warning()
-              ->title('Action Required: Missing Test Questions')
-              ->body("HR is trying to accept an applicant for '{$this->record->jobVacancy->title}' but no test questions are available. Please create them immediately.")
-              ->actions([
-                \Filament\Actions\Action::make('create_questions')
-                  ->label('Create Questions')
-                  ->button()
-                  ->url(\App\Filament\Resources\Questions\QuestionResource::getUrl('index', ['job_id' => $this->record->jobVacancy->id])),
-              ])
-              ->sendToDatabase($recipient);
 
-            Notification::make()
-              ->success()
-              ->title('Reminder Sent')
-              ->body("Notification sent to {$recipient->name}.")
-              ->send();
-          }
-        }),
 
         // Action: Send Acceptance Email
         Action::make('send_accepted_email')
-          ->label('Send Acceptance Email')
+          ->label('Send Acceptance / Interview Email')
           ->icon('heroicon-o-check-circle')
           ->color('success')
           ->form([
@@ -85,8 +49,8 @@ class ViewApplication extends ViewRecord {
                 ->native(false)
                 ->minDate(now()),
           ])
-          ->modalHeading('Send Acceptance Email')
-          ->modalDescription(fn () => "Configure access token and send acceptance email to {$this->record->full_name}.")
+          ->modalHeading('Kirim Email Interviu / Tes')
+          ->modalDescription(fn () => "Kirim email persetujuan (berisi link akses ujian) kepada {$this->record->full_name}.")
           ->modalSubmitActionLabel('Send Email')
           ->before(function (Action $action) {
               $jobVacancy = $this->record->jobVacancy;
@@ -183,7 +147,6 @@ class ViewApplication extends ViewRecord {
                 'email_type' => 'rejected',
               ]);
   
-
                 
               $url = route('email.preview.rejected', $this->record->id);
               
@@ -197,8 +160,6 @@ class ViewApplication extends ViewRecord {
               // Try Auto-Open via JS (Primary request)
               $livewire->js("window.open('$url', '_blank')");
               
-              // Refresh page to update button visibility
-              // return redirect()->to(ApplicationResource::getUrl('view', ['record' => $this->record]));
             } catch (\Exception $e) {
               Notification::make()
                 ->danger()

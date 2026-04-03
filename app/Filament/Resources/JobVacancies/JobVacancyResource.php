@@ -23,6 +23,16 @@ class JobVacancyResource extends Resource
 
   protected static ?string $recordTitleAttribute = 'title';
 
+  public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+  {
+      return false; // Mencegah delete per item
+  }
+
+  public static function canDeleteAny(): bool
+  {
+      return false; // Mencegah bulk delete
+  }
+
   public static function form(Schema $schema): Schema
   {
     return JobVacancyForm::configure($schema);

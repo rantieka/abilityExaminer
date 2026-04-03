@@ -290,6 +290,48 @@ class ApplicationResource extends Resource
                                 }
                               })
                           ]),
+                        
+                        \Filament\Forms\Components\Placeholder::make('missing_questions_warning')
+                          ->hiddenLabel()
+                          ->content(new \Illuminate\Support\HtmlString('<span class="text-warning-600 font-medium">⚠️ Warning: No exam questions available for this job vacancy. Test token cannot be generated.</span>'))
+                          ->visible(function ($record) {
+                              $jobVacancy = $record?->jobVacancy;
+                              return $jobVacancy && 
+                                           !in_array($record?->status, ['accepted', 'rejected']) &&
+                                           !$jobVacancy->questions()->where('is_active', true)->exists();
+                          })
+                          ->hintActions([
+                              \Filament\Actions\Action::make('remind_supervisor_fix')
+                                ->label('Remind Supervisor')
+                                ->icon('heroicon-o-bell-alert')
+                                ->color('warning')
+                                ->requiresConfirmation() // button() dihapus karena tidak disupport di hint actions
+                                ->modalHeading('Remind Supervisor')
+                                ->modalDescription(fn ($record) => "Send a notification to the supervisor ({$record->jobVacancy->createdBy->name}) to create test questions for this Job Vacancy?")
+                                ->action(function ($record) {
+                                  $recipient = $record->jobVacancy->createdBy;
+                                        
+                                  if ($recipient) {
+                                    \Filament\Notifications\Notification::make()
+                                      ->warning()
+                                      ->title('Action Required: Missing Test Questions')
+                                      ->body("HR is trying to generate a test token for '{$record->jobVacancy->title}' but no test questions are available. Please create them immediately.")
+                                      ->actions([
+                                        \Filament\Notifications\Actions\Action::make('create_questions')
+                                          ->label('Create Questions')
+                                          ->button()
+                                          ->url(\App\Filament\Resources\Questions\QuestionResource::getUrl('index', ['job_id' => $record->jobVacancy->id])),
+                                      ])
+                                      ->sendToDatabase($recipient);
+
+                                    \Filament\Notifications\Notification::make()
+                                      ->success()
+                                      ->title('Reminder Sent')
+                                      ->body("Notification sent to {$recipient->name}.")
+                                      ->send();
+                                  }
+                                }),
+                          ]),
                   ]),
                 ]),
               ]),

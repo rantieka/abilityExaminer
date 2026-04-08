@@ -147,6 +147,19 @@ class ApplicationResource extends Resource
                                         ->content(fn ($record) => $record?->ai_analysis 
                                         ? new \Illuminate\Support\HtmlString('
                                             <div class="ai-analysis-container">
+                                                ' . (str_contains($record->ai_analysis['summary'] ?? '', 'System Fail') || str_contains($record->ai_analysis['summary'] ?? '', 'Sistem gagal') || (empty($record->ai_analysis['pros']) && empty($record->ai_analysis['cons'])) ? '
+                                                <!-- Error State -->
+                                                <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm mb-4">
+                                                    <div class="flex items-center">
+                                                        <div class="ml-3">
+                                                            <h3 class="text-sm font-bold text-red-800">AI Screening Failed</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center justify-center h-24 bg-gray-50 rounded-lg border border-gray-200">
+                                                    <p class="text-xs text-gray-500 italic">No analysis data available due to system error. Please review CV manually.</p>
+                                                </div>
+                                                ' : '
                                                 <!-- Executive Summary Card -->
                                                 <div class="exec-summary-card">
                                                 <div class="card-header">
@@ -173,8 +186,8 @@ class ApplicationResource extends Resource
                                                         ' . (isset($record->ai_analysis['pros']) && is_array($record->ai_analysis['pros']) 
                                                         ? implode('', array_map(fn($item) => '
                                                             <li class="list-item">
-                                                                <span class="bullet-point bg-green-400"></span>
-                                                                <span class="list-text">' . htmlspecialchars($item) . '</span>
+                                                                 <span class="bullet-point bg-green-400"></span>
+                                                                 <span class="list-text">' . htmlspecialchars($item) . '</span>
                                                             </li>', $record->ai_analysis['pros']))
                                                         : '<li class="no-data">No data</li>') . '
                                                     </ul>
@@ -198,7 +211,7 @@ class ApplicationResource extends Resource
                                                         : '<li class="no-data">No data</li>') . '
                                                     </ul>
                                                     </div>
-                                                </div>
+                                                </div>') . '
                                             </div>')
                                         : new \Illuminate\Support\HtmlString('
                                             <div class="flex items-center justify-center h-32 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">

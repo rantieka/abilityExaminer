@@ -25,12 +25,14 @@ class JobVacancyResource extends Resource
 
   public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
   {
-      return false; // Mencegah delete per item
+      // Only allow deletion if the status is Draft, Rejected, or Pending
+      return in_array($record->status, ['draft', 'rejected', 'pending']);
   }
 
   public static function canDeleteAny(): bool
   {
-      return false; // Mencegah bulk delete
+      // Disable bulk delete to prevent accidental data loss
+      return false;
   }
 
   public static function form(Schema $schema): Schema

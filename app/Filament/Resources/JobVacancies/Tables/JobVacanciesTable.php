@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -25,7 +26,7 @@ class JobVacanciesTable
           ->rowIndex(),
         TextColumn::make('title')
           ->searchable()
-          ->description(fn (JobVacancy $record) => $record->is_fulltime ? 'Full Time' : 'Part Time'),
+          ->description(fn (JobVacancy $record) => $record->employment_type),
         TextColumn::make('slug')
           ->searchable()
           ->toggleable(isToggledHiddenByDefault: true),
@@ -49,9 +50,7 @@ class JobVacanciesTable
             'rejected' => 'danger',
             default => 'info',
           })
-          ->formatStateUsing(fn (string $state, $record): string => 
-            ucfirst($state) . ($record->is_published ? ' (Published)' : ' (Draft)')
-          )
+          ->formatStateUsing(fn (string $state): string => ucfirst($state))
           ->searchable()
           ->sortable(),
         TextColumn::make('created_at')
@@ -83,9 +82,9 @@ class JobVacanciesTable
         ->default(false),
     ])
     ->recordActions([
-      // ViewAction::make()
-      //   ->extraAttributes(['style' => 'text-decoration: none !important'])
-      //   ->visible(fn () => auth()->user()->hasRole('spv')),
+      ViewAction::make()
+        ->extraAttributes(['style' => 'text-decoration: none !important']),
+      /* 
       EditAction::make()
         ->extraAttributes(['style' => 'text-decoration: none !important'])
         ->visible(function (JobVacancy $record) {
@@ -101,6 +100,7 @@ class JobVacanciesTable
             
             return false;
         }),
+      */
       Action::make('questions')
         ->label('Questions')
         ->icon('heroicon-o-document-text')
@@ -148,7 +148,36 @@ class JobVacanciesTable
         ->requiresConfirmation()
         ->extraAttributes(['style' => 'text-decoration: none !important'])
         ->visible(fn (JobVacancy $record) => $record->archived_at !== null && auth()->user()->hasRole(['hr', 'super_admin', 'spv']))
-        ->action(fn (JobVacancy $record) => $record->update(['archived_at' => null])),
+        ->form([
+            \Filament\Forms\Components\DatePicker::make('published_until')
+                ->label('New Publication Date')
+                ->helperText('Set a new expiry date for this unarchived vacancy.')
+                ->required()
+                ->native(false)
+                ->default(fn (JobVacancy $record) => $record->published_until && $record->published_until >= now() ? $record->published_until : now()->addDays(30))
+                ->minDate(now()),
+        ])
+        ->action(function (JobVacancy $record, array $data) {
+            $record->update([
+                'archived_at' => null,
+                'published_until' => $data['published_until'],
+            ]);
+
+            \Filament\Notifications\Notification::make()
+                ->success()
+                ->title('Job vacancy unarchived and reactivated!')
+                ->send();
+        }),
+      DeleteAction::make()
+        ->visible(fn (JobVacancy $record) => in_array($record->status, ['draft', 'rejected', 'pending']) && auth()->user()->hasRole(['hr', 'super_admin'])),
     ]);
+    /* 
+    ->bulkActions([
+      BulkActionGroup::make([
+        DeleteBulkAction::make()
+          ->visible(fn () => auth()->user()->hasRole(['hr', 'super_admin'])),
+      ]),
+    ]);
+    */
   }
 }

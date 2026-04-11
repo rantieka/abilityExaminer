@@ -147,7 +147,7 @@ class ApplicationResource extends Resource
                                         ->content(fn ($record) => $record?->ai_analysis 
                                         ? new \Illuminate\Support\HtmlString('
                                             <div class="ai-analysis-container">
-                                                ' . (str_contains($record->ai_analysis['summary'] ?? '', 'System Fail') || str_contains($record->ai_analysis['summary'] ?? '', 'Sistem gagal') || (empty($record->ai_analysis['pros']) && empty($record->ai_analysis['cons'])) ? '
+                                                ' . (str_contains(strtolower($record->ai_analysis['summary'] ?? ''), 'failed') || str_contains(strtolower($record->ai_analysis['summary'] ?? ''), 'gagal') || (empty($record->ai_analysis['pros']) && empty($record->ai_analysis['cons'])) ? '
                                                 <!-- Error State -->
                                                 <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm mb-4">
                                                     <div class="flex items-center">
@@ -202,13 +202,17 @@ class ApplicationResource extends Resource
                                                         <h4 class="card-title text-red-900">Profile Weaknesses</h4>
                                                     </div>
                                                     <ul class="list-container">
-                                                        ' . (isset($record->ai_analysis['cons']) && is_array($record->ai_analysis['cons']) 
+                                                        ' . (isset($record->ai_analysis['cons']) && count($record->ai_analysis['cons']) > 0 
                                                         ? implode('', array_map(fn($item) => '
                                                             <li class="list-item">
                                                                 <span class="bullet-point bg-red-400"></span>
                                                                 <span class="list-text">' . htmlspecialchars($item) . '</span>
                                                             </li>', $record->ai_analysis['cons']))
-                                                        : '<li class="no-data">No data</li>') . '
+                                                        : '
+                                                            <li class="list-item">
+                                                                <span class="bullet-point bg-green-400"></span>
+                                                                <span class="list-text italic text-gray-500">Kandidat telah memenuhi seluruh kualifikasi utama.</span>
+                                                            </li>') . '
                                                     </ul>
                                                     </div>
                                                 </div>') . '

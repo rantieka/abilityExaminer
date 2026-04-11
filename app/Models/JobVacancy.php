@@ -28,6 +28,9 @@ class JobVacancy extends Model
     'work_arrangement',
     'department',
     'location',
+    'required_skills',
+    'preferred_skills',
+    'bonus_skills',
   ];
 
   protected $casts = [
@@ -35,6 +38,9 @@ class JobVacancy extends Model
     'rejected_at' => 'datetime',
     'published_until' => 'date',
     'archived_at' => 'datetime',
+    'required_skills' => 'array',
+    'preferred_skills' => 'array',
+    'bonus_skills' => 'array',
   ];
 
   public function createdBy()

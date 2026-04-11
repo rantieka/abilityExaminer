@@ -26,21 +26,30 @@
         <p>{!! $job->description !!}</p>
       </div>
       <div class="mb-4">
-        <h5 class="fw-bold mb-3">Qualifications</h5>
-        <p>{!! $job->qualifications !!}</p>
+        <h5 class="fw-bold mb-3">We're looking for</h5>
+        <div class="mb-1">{!! $job->qualifications !!}</div>
       </div>
+
+      @if($job->required_skills || $job->preferred_skills || $job->bonus_skills)
       <div class="mb-4">
-        @if($job->location || \App\Models\Setting::get('office_address'))
-          <h5 class="fw-bold mb-3">Office Location</h5>
-          <div class="mb-0">
-            @if($job->location)
-              {!! $job->location !!}
-            @else
-              {!! nl2br(e(\App\Models\Setting::get('office_address'))) !!}
-            @endif
-          </div>
+        <h5 class="fw-bold mb-3">Technical Skills</h5>
+        @if($job->required_skills)
+          @foreach($job->required_skills as $skill)
+            <span class="badge bg-light text-dark border me-1 mb-1">{{ $skill }}</span>
+          @endforeach
+        @endif
+        @if($job->preferred_skills)
+          @foreach($job->preferred_skills as $skill)
+            <span class="badge bg-light text-dark border me-1 mb-1">{{ $skill }}</span>
+          @endforeach
+        @endif
+        @if($job->bonus_skills)
+          @foreach($job->bonus_skills as $skill)
+            <span class="badge bg-light text-dark border me-1 mb-1">{{ $skill }}</span>
+          @endforeach
         @endif
       </div>
+      @endif
     </div>
     <div class="col-md-4">
       <div class="careers-form mb-4">

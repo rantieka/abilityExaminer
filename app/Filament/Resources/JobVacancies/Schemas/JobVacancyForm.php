@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Section;
 
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 
 class JobVacancyForm
 {
@@ -26,6 +27,7 @@ class JobVacancyForm
         Section::make('Position')
           ->columnSpanFull()
           ->columns(2)
+          ->disabled(fn ($record) => $record?->status === 'approved')
           ->schema([
             Select::make('title')
               ->required()
@@ -37,6 +39,16 @@ class JobVacancyForm
               ->afterStateUpdated(function ($set, $state) {
                 if ($state) {
                   $set('slug', Str::slug($state));
+                  
+                  if ($state === 'Backend Developer') {
+                      $set('required_skills', ['PHP', 'CodeIgniter']);
+                      $set('preferred_skills', ['Ruby', 'Ruby on Rails']);
+                      $set('bonus_skills', ['Git', 'MySQL', 'REST API', 'Postman']);
+                  } elseif ($state === 'Frontend Developer') {
+                      $set('required_skills', ['JavaScript', 'HTML', 'CSS']);
+                      $set('preferred_skills', ['React']);
+                      $set('bonus_skills', ['Git', 'Responsive Design', 'API Integration', 'Bootstrap', 'Jquery']);
+                  }
                 }
               }),
             TextInput::make('slug')
@@ -51,6 +63,7 @@ class JobVacancyForm
         Section::make('Job Details')
           ->columnSpanFull()
           ->columns(2)
+          ->disabled(fn ($record) => $record?->status === 'approved')
           ->schema([
             TextInput::make('department')
               ->label('Department')
@@ -83,14 +96,12 @@ class JobVacancyForm
                   ->native(false)
                   ->visible(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord && Auth::user()->hasRole(['hr', 'super_admin']))
                   ->required(fn ($get) => $get('status') === 'approved'),
-            \Filament\Forms\Components\Hidden::make('location')
-              ->default(fn () => \App\Models\Setting::get('office_address'))
-              ->required(),
           ]),
 
         // SECTION 3: DESKRIPSI & KUALIFIKASI
-        Section::make('Description & Qualifications')
+        Section::make('Description & General Qualifications')
             ->columnSpanFull()
+            ->disabled(fn ($record) => $record?->status === 'approved')
             ->schema([
                 Textarea::make('description')
                   ->label('Description')
@@ -98,8 +109,75 @@ class JobVacancyForm
                   ->rows(10)
                   ->columnSpanFull(),
                 RichEditor::make('qualifications')
+                  ->label('General Qualifications')
                   ->columnSpanFull(),
             ]),
+
+        // SECTION: SKILLS
+        Section::make('Technical Skills')
+          ->columnSpanFull()
+          ->columns(3)
+          ->disabled(fn ($record) => $record?->status === 'approved')
+          ->schema([
+            Select::make('required_skills')
+              ->label('Required Skills')
+              ->multiple()
+              ->required()
+              ->live()
+              ->options(fn ($get) => match ($get('title')) {
+                  'Backend Developer' => [
+                      'PHP' => 'PHP',
+                      'CodeIgniter' => 'CodeIgniter',
+                      'Python' => 'Python',
+                      'Django' => 'Django',
+                  ],
+                  'Frontend Developer' => [
+                      'JavaScript' => 'JavaScript',
+                      'HTML' => 'HTML',
+                      'CSS' => 'CSS',
+                  ],
+                  default => [],
+              })
+              ->placeholder('Select required skills...'),
+            Select::make('preferred_skills')
+              ->label('Preferred Skills')
+              ->multiple()
+              ->live()
+              ->options(fn ($get) => match ($get('title')) {
+                  'Backend Developer' => [
+                      'Ruby' => 'Ruby',
+                      'Ruby on Rails' => 'Ruby on Rails',
+                  ],
+                  'Frontend Developer' => [
+                      'React' => 'React',
+                      'Vue' => 'Vue',
+                      'Angular' => 'Angular',
+                  ],
+                  default => [],
+              })
+              ->placeholder('Select preferred skills...'),
+            Select::make('bonus_skills')
+              ->label('Bonus Skills')
+              ->multiple()
+              ->live()
+              ->options(fn ($get) => match ($get('title')) {
+                  'Backend Developer' => [
+                      'Git' => 'Git',
+                      'MySQL' => 'MySQL',
+                      'REST API' => 'REST API',
+                      'Postman' => 'Postman',
+                  ],
+                  'Frontend Developer' => [
+                      'Git' => 'Git',
+                      'Responsive Design' => 'Responsive Design',
+                      'API Integration' => 'API Integration',
+                      'Bootstrap' => 'Bootstrap',
+                      'Jquery' => 'Jquery',
+                  ],
+                  default => [],
+              })
+              ->placeholder('Select bonus skills...'),
+          ]),
         Select::make('status')
           ->options([
               'draft' => 'Draft',
@@ -108,7 +186,6 @@ class JobVacancyForm
               'rejected' => 'Rejected',
           ])
           ->default(fn () => Auth::user()->hasRole(['hr', 'super_admin']) ? 'approved' : 'pending')
-          ->disabled(fn ($livewire) => !Auth::user()->hasRole(['hr', 'super_admin']) || $livewire instanceof \Filament\Resources\Pages\EditRecord)
           ->dehydrated()
           ->required()
           ->visible(fn() => Auth::user()->hasRole(['hr', 'super_admin', 'spv'])),

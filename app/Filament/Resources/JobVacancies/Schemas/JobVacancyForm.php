@@ -29,7 +29,9 @@ class JobVacancyForm
           ->columns(2)
           ->disabled(fn ($record) => $record?->status === 'approved')
           ->schema([
-            Select::make('title')
+
+            \Filament\Forms\Components\Select::make('title')
+              ->label('Position Title')
               ->required()
               ->options([
                   'Frontend Developer' => 'Frontend Developer',
@@ -38,25 +40,13 @@ class JobVacancyForm
               ->live()
               ->afterStateUpdated(function ($set, $state) {
                 if ($state) {
-                  $set('slug', Str::slug($state));
-                  
-                  if ($state === 'Backend Developer') {
-                      $set('required_skills', ['PHP', 'CodeIgniter']);
-                      $set('preferred_skills', ['Ruby', 'Ruby on Rails']);
-                      $set('bonus_skills', ['Git', 'MySQL', 'REST API', 'Postman']);
-                  } elseif ($state === 'Frontend Developer') {
-                      $set('required_skills', ['JavaScript', 'HTML', 'CSS']);
-                      $set('preferred_skills', ['React']);
-                      $set('bonus_skills', ['Git', 'Responsive Design', 'API Integration', 'Bootstrap', 'Jquery']);
-                  }
+                  $set('slug', \Illuminate\Support\Str::slug($state) . '-' . uniqid());
                 }
               }),
-            TextInput::make('slug')
+            \Filament\Forms\Components\TextInput::make('slug')
               ->required()
               ->maxLength(255)
-              ->unique(ignoreRecord: true)
-              ->disabled()
-              ->dehydrated(),
+              ->unique(ignoreRecord: true),
           ]),
 
         // SECTION 2: DETAIL PEKERJAAN

@@ -210,8 +210,8 @@ class ApplicationResource extends Resource
                                                             </li>', $record->ai_analysis['cons']))
                                                         : '
                                                             <li class="list-item">
-                                                                <span class="bullet-point bg-green-400"></span>
-                                                                <span class="list-text italic text-gray-500">Kandidat telah memenuhi seluruh kualifikasi utama.</span>
+                                                                <span class="bullet-point bg-gray-400"></span>
+                                                                <span class="list-text italic text-gray-500">No prominent weaknesses identified.</span>
                                                             </li>') . '
                                                     </ul>
                                                     </div>

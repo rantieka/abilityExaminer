@@ -18,17 +18,6 @@ class ProcessCvScreening implements ShouldQueue
 {
   use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-  const max_req_score = 40;
-  const max_exp_score = 35;
-  const max_edu_score = 5;
-  const max_skill_score = 15;
-  const advanced_skill_keywords = [
-    'aws', 'gcp', 'azure', 'docker', 'kubernetes', 'k8s', 'ci/cd', 'tdd',
-    'redis', 'elasticsearch', 'kafka', 'rabbitmq', 'microservices',
-    'system design', 'architecture', 'jenkins', 'terraform', 'ansible',
-    'graphql', 'web rtc', 'grpc', 'sidekiq', 'devops', 'machine learning'
-  ];
-
   public $tries = 1; // Set to 1 to avoid repeated failed requests
   public $backoff = [10];
   public $application;
@@ -57,6 +46,8 @@ class ProcessCvScreening implements ShouldQueue
       }
 
       $cvText = $this->parsePdf($parser, $path);
+      $cvText = preg_replace('/\s+/', ' ', $cvText);
+      $cvText = mb_substr($cvText, 0, 8000); 
 
       if (trim($cvText) === '') {
         Log::warning("Empty CV text for Application ID: " . $this->application->id . " (possibly image-based PDF).");
@@ -77,49 +68,82 @@ class ProcessCvScreening implements ShouldQueue
         throw new \LogicException("Job vacancy '{$job->title}' has no defined qualifications. Cannot perform screening.");
       }
 
-      $qualifications = strip_tags($job->qualifications);
-
       // Send to AI for structured data extraction
-      $messages = $this->buildPrompt($job->title, $qualifications, $anonymizedCvText);
+      $messages = $this->buildPrompt($job, $anonymizedCvText);
 
       // Low temperature for deterministic, structured extraction
       $rawResult = $groq->chat($messages, 0.1);
       Log::info("Groq Raw Result: " . json_encode($rawResult));
 
       if (!$rawResult) {
-        // No response = infrastructure/network/API issue → rethrow for potential retry
         throw new \RuntimeException("Groq AI returned no valid response. Possible network or API issue.");
       }
 
       // Validate & sanitize AI JSON structure before processing
       $result = $this->validateAiResponse($rawResult);
 
-      // Score & persist result
-      $calculatedScore = $this->calculateScore($result);
+      // Score & persist result based on Job constraints
+      $calculatedScore = $this->calculateScore($result, $job);
       Log::info("Calculated PHP Score: {$calculatedScore}");
 
       // Build human-readable summary from the requirements analysis
-      $reqAnalysis = $result['requirements_analysis'];
-      $pros        = [];
-      $cons        = [];
+      $skillsFound = $result['skills_found'];
+      $otherSkills = $result['other_technical_skills'];
+      $generalReqs = $result['general_requirements_analysis'];
+      $expYearsRaw = $result['experience_years'];
+      $expYears    = (float) $expYearsRaw;
 
-      foreach ($reqAnalysis as $item) {
-        if ($item['is_met'] ?? false) {
-          $pros[] = $item['requirement'];
-        } else {
-          $cons[] = $item['requirement'];
-        }
+      $pros = [];
+      $cons = [];
+
+      // Required Skills
+      $allRequired = $job->required_skills ?? [];
+      $foundRequiredLower = array_map('strtolower', $skillsFound['required']);
+      $missingRequired = [];
+      foreach ($allRequired as $req) {
+          if (!in_array(strtolower($req), $foundRequiredLower)) {
+              $missingRequired[] = $req;
+          }
       }
 
-      $summary = "Meets " . count($pros) . " of " . count($reqAnalysis) . " required qualifications. "
-                     . "Actual experience: " . $result['experience_years'] . " year(s).";
+      if (count($missingRequired) === 0 && count($allRequired) > 0) {
+          $pros[] = "Meets all required skills (" . implode(', ', $allRequired) . ").";
+      } elseif (count($missingRequired) > 0) {
+          $cons[] = "Missing required skills: " . implode(', ', $missingRequired) . ".";
+      }
+
+      // Preferred/Bonus
+      if (count($skillsFound['preferred']) > 0) {
+          $pros[] = "Possesses preferred skills (" . implode(', ', $skillsFound['preferred']) . ").";
+      }
+      if (count($skillsFound['bonus']) > 0) {
+          $pros[] = "Has bonus qualifications in " . implode(', ', $skillsFound['bonus']) . ".";
+      }
+
+      // General Requirements
+      foreach ($generalReqs as $item) {
+          $reqTextLower = strtolower($item['requirement'] ?? '');
+          $isMet        = $item['is_met'] ?? true;
+
+          // If fresh graduate but candidate has experience, skip (do not display in pros/cons)
+          if (str_contains($reqTextLower, 'fresh') && $expYears >= 1) {
+              continue;
+          }
+
+          if (!$isMet) {
+              $cons[] = "Failed general qualification: " . ($item['requirement'] ?? 'Unknown');
+          }
+      }
+
+      $expFormatted = (float) $expYearsRaw;
+      $summary = "Identified " . count($skillsFound['required']) . " required skills and " . count($skillsFound['preferred']) . " preferred skills with " . $expFormatted . " years of experience.";
 
       $this->application->update([
         'ai_score'    => $calculatedScore,
         'ai_analysis' => [
           'summary'        => $summary,
-          'pros'           => $pros,
-          'cons'           => $cons,
+          'pros'           => array_slice(array_filter($pros), 0, 5),
+          'cons'           => array_slice(array_filter($cons), 0, 5),
           'extracted_data' => $result,
         ],
         'status' => 'pending',
@@ -175,66 +199,51 @@ class ProcessCvScreening implements ShouldQueue
     }
   }
 
-  /**
-   * Build the structured chat messages array for the AI extraction request.
-   * Technical instructions are in English for better LLM compliance.
-   * Job qualifications and CV text remain in their original language.
-   *
-   * @return array<int, array{role: string, content: string}>
-   */
-  protected function buildPrompt(string $jobTitle, string $qualifications, string $cvText): array {
-    $systemMessage = 'You are a strict CV Data Extractor. '
-      . 'Your only task is to extract structured facts from a candidate CV against a list of job qualifications. '
-      . 'You must output valid JSON only. Never add scores, opinions, or explanations.';
+  protected function buildPrompt(\App\Models\JobVacancy $job, string $cvText): array {
+    $systemMessage = 'You are an HR Evaluation AI. You extract structured data. Output valid JSON ONLY without markdown formatting blocks.';
+
+    $reqSkills = is_array($job->required_skills) ? implode(', ', $job->required_skills) : '';
+    $prefSkills = is_array($job->preferred_skills) ? implode(', ', $job->preferred_skills) : '';
+    $bonusSkills = is_array($job->bonus_skills) ? implode(', ', $job->bonus_skills) : '';
+    $qualifications = strip_tags($job->qualifications ?? '');
 
     $userPrompt = "
-        ## Job Position
-        Title: {$jobTitle}
+        Role: {$job->title}
 
-        ## Required Qualifications (from job posting)
+        We are strictly looking for the following categorized skills:
+        REQUIRED SKILLS: {$reqSkills}
+        PREFERRED SKILLS: {$prefSkills}
+        BONUS SKILLS: {$bonusSkills}
+        
+        General Qualifications:
         {$qualifications}
 
-        ## Candidate CV Text (Anonymized)
+        CV Content:
         {$cvText}
 
-        ## Extraction Rules
-        1. DO NOT assign any score. Extract boolean facts only.
-        2. Break down job qualifications into individual requirements.
-          - Keep compound requirements as one (e.g. \"PHP or Ruby\" = 1 requirement).
-        3. Evaluate each requirement strictly based on explicit evidence in the CV.
-          - Do NOT assume or infer.
-        4. Extract:
-          - All technical skills mentioned
-          - Total years of relevant experience (0 if none)
-          - Highest education level and field
-        5. Match technologies by meaning, not exact wording
-          (e.g. CI = CodeIgniter, RoR = Ruby on Rails, JS = JavaScript).
-        6. Classify each requirement:
-          - Soft skill → set \"is_soft_skill\": true and assume \"is_met\": true unless contradicted
-          - Technical skill → set \"is_soft_skill\": false and evaluate strictly
-        7. For \"Fresh Graduate\":
-          - Set \"is_met\": false if experience_years > 1
-        8. ALWAYS include all job requirements in the output.
-          - Never skip any requirement
+        Evaluation Rules:
+        1. Parse the CV and identify which of the EXACT REQUIRED, PREFERRED, and BONUS skills are explicitly or implicitly present. Use synonyms intelligently (e.g. 'React.js' counts for 'React').
+        2. Extract any other relevant technical skills into 'other_technical_skills'.
+        3. Evaluate if the candidate meets the 'General Qualifications'. Provide a short label for each rule (e.g. 'Willing to work on-site') and state 'is_met': true/false.
+        4. Accurately extract the candidate's total years of professional experience (decimals allowed).
+        5. Extract their latest/highest education degree and major.
 
-        ## Output Format
-        Respond with valid JSON only. No explanation, no markdown, no extra text.
+        Format JSON strictly like this:
         {
-          \"candidate_skills\": [\"list of all technical skills found in CV\"],
-          \"requirements_analysis\": [
+          \"skills_found\": {
+            \"required\": [\"list of REQUIRED skills found in CV\"],
+            \"preferred\": [\"list of PREFERRED skills found in CV\"],
+            \"bonus\": [\"list of BONUS skills found in CV\"]
+          },
+          \"other_technical_skills\": [\"list of other tools/frameworks\"],
+          \"general_requirements_analysis\": [
             {
-              \"requirement\": \"exact qualification text from the job posting\",
-              \"is_met\": true,
-              \"is_soft_skill\": false
-            },
-            {
-              \"requirement\": \"soft skill requirement example\",
-              \"is_met\": true,
-              \"is_soft_skill\": true
+              \"requirement\": \"Short English/Indo Label\",
+              \"is_met\": true
             }
           ],
-          \"experience_years\": 2.5,
-          \"education\": \"Degree name and field of study\"
+          \"experience_years\": 0.0,
+          \"education\": \"Degree and major\"
         }
     ";
 
@@ -244,187 +253,96 @@ class ProcessCvScreening implements ShouldQueue
     ];
   }
 
-  /**
-   * Validate the AI response structure and sanitize all fields.
-   * Returns a guaranteed-safe array with all expected keys.
-   * Logs warnings for any structural anomalies without throwing.
-   *
-   * @throws \LogicException if the response is critically malformed (e.g. wrong root type)
-   */
   protected function validateAiResponse(array $result): array
   {
-    // Requirements analysis
-    $reqAnalysis = $result['requirements_analysis'] ?? [];
-
-    if (!is_array($reqAnalysis)) {
-      Log::warning("AI response: 'requirements_analysis' is not an array. Defaulting to empty.");
-      $reqAnalysis = [];
-    }
-
+    $skills = $result['skills_found'] ?? [];
+    
+    $reqAnalysis = $result['general_requirements_analysis'] ?? [];
     $sanitizedReqs = [];
-    foreach ($reqAnalysis as $index => $item) {
-      if (!is_array($item)) {
-        Log::warning("AI response: requirements_analysis[{$index}] is not an object. Skipping.");
-        continue;
-      }
-      $isSoftSkill = (bool) ($item['is_soft_skill'] ?? false);
-      $sanitizedReqs[] = [
-        'requirement'  => is_string($item['requirement'] ?? null)
-          ? trim($item['requirement'])
-          : 'Unknown requirement',
-        'is_met'       => (bool) ($item['is_met'] ?? false),
-        'is_soft_skill' => $isSoftSkill,
-      ];
-    }
-
-    // Candidate skills
-    $skills = $result['candidate_skills'] ?? [];
-
-    if (!is_array($skills)) {
-      Log::warning("AI response: 'candidate_skills' is not an array. Defaulting to empty.");
-      $skills = [];
-    }
-
-    $skills = array_values(array_filter($skills, fn($s) => is_string($s) && !empty(trim($s))));
-
-    // Experience years
-    $expYears = $result['experience_years'] ?? 0;
-
-    if (!is_numeric($expYears)) {
-      Log::warning("AI response: 'experience_years' is not numeric (got: " . json_encode($expYears) . "). Defaulting to 0.");
-      $expYears = 0;
-    }
-
-    // Education
-    $education = $result['education'] ?? '';
-
-    if (!is_string($education)) {
-      Log::warning("AI response: 'education' is not a string. Defaulting to empty.");
-      $education = '';
+    if (is_array($reqAnalysis)) {
+        foreach ($reqAnalysis as $item) {
+            if (is_array($item)) {
+                $sanitizedReqs[] = [
+                    'requirement' => trim((string)($item['requirement'] ?? 'Unknown')),
+                    'is_met'      => (bool)($item['is_met'] ?? false),
+                ];
+            }
+        }
     }
 
     return [
-      'requirements_analysis' => $sanitizedReqs,
-      'candidate_skills'      => $skills,
-      'experience_years'      => (float) $expYears,
-      'education'             => trim($education),
+      'skills_found' => [
+          'required'  => is_array($skills['required'] ?? null) ? array_map('strval', $skills['required']) : [],
+          'preferred' => is_array($skills['preferred'] ?? null) ? array_map('strval', $skills['preferred']) : [],
+          'bonus'     => is_array($skills['bonus'] ?? null) ? array_map('strval', $skills['bonus']) : [],
+      ],
+      'other_technical_skills'        => is_array($result['other_technical_skills'] ?? null) ? array_map('strval', $result['other_technical_skills']) : [],
+      'general_requirements_analysis' => $sanitizedReqs,
+      'experience_years'              => is_numeric($result['experience_years'] ?? null) ? (float) $result['experience_years'] : 0.0,
+      'education'                     => is_string($result['education'] ?? null) ? trim($result['education']) : '',
     ];
   }
 
-  /**
-   * Calculate CV score strictly inside PHP based on AI-extracted data.
-   *
-   * Score Breakdown:
-   *  - Requirements Met : max 40 points (hard/technical reqs only)
-   *  - Experience Years : max 35 points (tiered, proportional)
-   *  - Education Level  : max 5 points
-   *  - Skill Depth      : max 15 points (breadth of technical skills)
-   *  - Penalty          :  -5 points if CV has no detectable data at all
-   */
-  protected function calculateScore(array $extractedData): int {
+  protected function calculateScore(array $extractedData, \App\Models\JobVacancy $job): int {
     $score = 0;
+    $expYears = $extractedData['experience_years'] ?? 0;
 
-    // Extract experience early so we can use it to override requirements (e.g. Fresh Graduate)
-    $expYears = floatval($extractedData['experience_years'] ?? 0);
+    $reqSkills  = is_array($job->required_skills)  ? $job->required_skills  : [];
+    $prefSkills = is_array($job->preferred_skills) ? $job->preferred_skills : [];
+    $bonusSkills = is_array($job->bonus_skills)    ? $job->bonus_skills     : [];
 
-    // Requirements Met Score (Max 40 points)
-    $reqAnalysis     = $extractedData['requirements_analysis'] ?? [];
-    $candidateSkills = $extractedData['candidate_skills'] ?? [];
+    $reqCount   = count($reqSkills);
+    $prefCount  = count($prefSkills);
+    $bonusCount = count($bonusSkills);
 
-    $hardReqs = array_filter($reqAnalysis, fn($item) => !($item['is_soft_skill'] ?? false));
-    $reqCount = count($hardReqs);
+    $foundReq   = count($extractedData['skills_found']['required']  ?? []);
+    $foundPref  = count($extractedData['skills_found']['preferred'] ?? []);
+    $foundBonus = count($extractedData['skills_found']['bonus']     ?? []);
 
+    // 1. Core Required Skills (Max 60 points)
     if ($reqCount > 0) {
-      $metCount = 0;
-      foreach ($hardReqs as $item) {
-        $reqTextLower = strtolower($item['requirement'] ?? '');
-        
-        // Ignore "Fresh Graduate" failing if candidate has more than 1 year of experience.
-        $freshKeywords = ['fresh grad', 'fresh graduate', 'fresh graduated'];
-        $isFreshReq = collect($freshKeywords)->contains(fn($kw) => str_contains($reqTextLower, $kw));
-        if ($isFreshReq && $expYears > 1) {
-          $metCount++;
-          continue;
-        }
-
-        if (($item['is_met'] ?? false) === true) {
-          $metCount++;
-        }
-      }
-      $matchRatio = $metCount / $reqCount;
-      $score += round($matchRatio * self::max_req_score);
-      Log::info("Requirements scoring: {$metCount}/{$reqCount} hard requirements met (soft skills excluded).");
-    } else {
-      // use skill count as a rough estimate (capped at max req points)
-      $score += min(self::max_req_score, count($candidateSkills) * 5);
+        $matchRatio = $foundReq / $reqCount;
+        $score += (int) round($matchRatio * 60);
     }
 
-    // Experience Score (Max 35 points) — Proportional & Tiered
+    // 2. Preferred & Bonus Skills (Max 10 points)
+    $prefRatio  = $prefCount  > 0 ? $foundPref  / $prefCount  : 0;
+    $bonusRatio = $bonusCount > 0 ? $foundBonus / $bonusCount : 0;
+    $optPoints  = ($prefRatio * 6) + ($bonusRatio * 4);
+    $score += (int) min(10, round($optPoints));
+
+    // 3. Experience (Max 20 points)
     $expScore = match (true) {
-      $expYears >= 3 => self::max_exp_score,
-      $expYears >= 1 => 25,
-      $expYears > 0  => 15,
-      default        => 5, 
+        $expYears >= 5 => 20,
+        $expYears >= 4 => 18,
+        $expYears >= 3 => 16,
+        $expYears >= 2 => 13,
+        $expYears >= 1 => 8,
+        $expYears > 0  => 4,
+        default        => 0,
     };
     $score += $expScore;
 
-    // Education Score (Max 5 points)
-    $education = strtolower($extractedData['education'] ?? '');
-    $eduScore = 0;
+    // 4. General Requirements & Education (Max 10 points)
+    $genReqs   = $extractedData['general_requirements_analysis'] ?? [];
+    $genPoints = 10;
+    foreach ($genReqs as $item) {
+      $reqTextLower = strtolower($item['requirement'] ?? '');
+      $isMet        = $item['is_met'] ?? true;
 
-    if (str_contains($education, 's3') || str_contains($education, 'doktor') || str_contains($education, 'phd')) {
-      $eduScore = self::max_edu_score;
-    } elseif (str_contains($education, 's2') || str_contains($education, 'magister') || str_contains($education, 'master')) {
-      $eduScore = 4;
-    } elseif (str_contains($education, 's1') || str_contains($education, 'sarjana') || str_contains($education, 'bachelor') || (str_contains($education, 'd4'))) {
-      $eduScore = 3;
-    } elseif (str_contains($education, 'd3')) {
-      $eduScore = 2;
-    } elseif (str_contains($education, 'd2') || str_contains($education, 'd1')) {
-      $eduScore = 1;
-    } elseif (!empty($education)) {
-      $eduScore = 1;
-    }
-    $score += $eduScore;
-
-    // Skill Depth Score (Max 15 points) -> Weighted Evaluation
-    $weightedSkillCount = 0;
-    
-    // Normalize and remove duplicates to prevent double-counting the same skill
-    $normalizedSkills = array_map(fn($s) => strtolower(trim($s)), $candidateSkills);
-    $uniqueSkills = array_unique($normalizedSkills);
-
-    foreach ($uniqueSkills as $skillLower) {
-      $isAdvanced = false;
-      foreach (self::advanced_skill_keywords as $advIdx) {
-        if (str_contains($skillLower, $advIdx)) {
-          $isAdvanced = true;
-          break;
-        }
+      // Skip fresh graduate requirement if candidate has experience
+      if (str_contains($reqTextLower, 'fresh') && $expYears >= 1) {
+        $isMet = true;
       }
-      $weightedSkillCount += $isAdvanced ? 2 : 1;
+
+      if (!$isMet) {
+        $genPoints -= 3;
+      }
     }
+    $score += max(0, $genPoints);
 
-    $skillDepthScore = match (true) {
-      $weightedSkillCount >= 25 => self::max_skill_score, // Expert profile (many advanced skills)
-      $weightedSkillCount >= 15 => 12, // Advanced technical profile
-      $weightedSkillCount >= 8 => 9,  // Strong technical profile
-      $weightedSkillCount >= 4  => 5,  // Moderate skill breadth
-      $weightedSkillCount >= 2  => 2,  // Basic skill set detected
-      default                   => 0,
-    };
-
-    $score += $skillDepthScore;
-    Log::info("Skill depth score: {$skillDepthScore} pts (Weighted Count Score: {$weightedSkillCount} from " . count($candidateSkills) . " raw skills).");
-
-    // Penalty — only if the CV yields absolutely no extractable data
-    $hasNoData = empty($reqAnalysis) && empty($candidateSkills) && $expYears == 0 && empty($education);
-    if ($hasNoData) {
-      $score -= 5; // Reduced penalty: CV provided no evaluable information
-    }
-
-    // Clamp score between 0 and 100
-    return max(0, min(100, (int) round($score)));
+    // Safeguard bounds
+    return max(0, min(100, $score));
   }
 
   // Mask personally identifiable information (PII) from CV text before sending to AI.

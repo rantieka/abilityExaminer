@@ -107,7 +107,7 @@ class ProcessCvScreening implements ShouldQueue
       }
 
       if (count($missingRequired) === 0 && count($allRequired) > 0) {
-          $pros[] = "Meets all required skills (" . implode(', ', $allRequired) . ").";
+          $pros[] = "Matches all mandatory core requirements.";
       } elseif (count($missingRequired) > 0) {
           $cons[] = "Missing required skills: " . implode(', ', $missingRequired) . ".";
       }
@@ -142,7 +142,10 @@ class ProcessCvScreening implements ShouldQueue
         'ai_score'    => $calculatedScore,
         'ai_analysis' => [
           'summary'        => $summary,
-          'pros'           => array_slice(array_filter($pros), 0, 5),
+          'pros'           => array_merge(
+              $result['key_strengths'] ?? [],
+              $pros
+          ),
           'cons'           => array_slice(array_filter($cons), 0, 5),
           'extracted_data' => $result,
         ],
@@ -227,6 +230,7 @@ class ProcessCvScreening implements ShouldQueue
         3. Evaluate if the candidate meets the 'General Qualifications'. Provide a short label for each rule (e.g. 'Willing to work on-site') and state 'is_met': true/false.
         4. Accurately extract the candidate's total years of professional experience (decimals allowed).
         5. Extract their latest/highest education degree and major.
+        6. Provide 2-3 qualitative 'key_strengths'. Focus on specific expertise, software mastery, or soft skills (e.g., 'Expertise in building scalable microservices' or 'Strong background in Financial Systems') instead of just job titles.
 
         Format JSON strictly like this:
         {
@@ -243,7 +247,8 @@ class ProcessCvScreening implements ShouldQueue
             }
           ],
           \"experience_years\": 0.0,
-          \"education\": \"Degree and major\"
+          \"education\": \"Degree and major\",
+          \"key_strengths\": [\"Descriptive strength 1\", \"Descriptive strength 2\"]
         }
     ";
 
@@ -272,14 +277,15 @@ class ProcessCvScreening implements ShouldQueue
 
     return [
       'skills_found' => [
-          'required'  => is_array($skills['required'] ?? null) ? array_map('strval', $skills['required']) : [],
-          'preferred' => is_array($skills['preferred'] ?? null) ? array_map('strval', $skills['preferred']) : [],
-          'bonus'     => is_array($skills['bonus'] ?? null) ? array_map('strval', $skills['bonus']) : [],
+          'required'  => is_array($skills['required'] ?? null) ? array_map(fn($val) => is_array($val) ? json_encode($val) : (string)$val, $skills['required']) : [],
+          'preferred' => is_array($skills['preferred'] ?? null) ? array_map(fn($val) => is_array($val) ? json_encode($val) : (string)$val, $skills['preferred']) : [],
+          'bonus'     => is_array($skills['bonus'] ?? null) ? array_map(fn($val) => is_array($val) ? json_encode($val) : (string)$val, $skills['bonus']) : [],
       ],
-      'other_technical_skills'        => is_array($result['other_technical_skills'] ?? null) ? array_map('strval', $result['other_technical_skills']) : [],
+      'other_technical_skills'        => is_array($result['other_technical_skills'] ?? null) ? array_map(fn($val) => is_array($val) ? json_encode($val) : (string)$val, $result['other_technical_skills']) : [],
       'general_requirements_analysis' => $sanitizedReqs,
       'experience_years'              => is_numeric($result['experience_years'] ?? null) ? (float) $result['experience_years'] : 0.0,
       'education'                     => is_string($result['education'] ?? null) ? trim($result['education']) : '',
+      'key_strengths'                 => is_array($result['key_strengths'] ?? null) ? array_map(fn($val) => is_array($val) ? json_encode($val) : (string)$val, $result['key_strengths']) : [],
     ];
   }
 

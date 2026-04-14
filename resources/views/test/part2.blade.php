@@ -51,7 +51,9 @@
               <div class="question-block mb-5">
                 <div class="d-flex mb-3">
                     <span class="flex-shrink-0 bg-light text-dark fw-bold rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">{{ $index + 1 }}</span>
-                    <h5 class="fw-bold mb-0 pt-1" style="line-height: 1.5;">{{ $question->question_text }}</h5>
+                    <h5 class="fw-bold mb-0 pt-1" style="line-height: 1.6;">
+                      {!! preg_replace('/```(?:php)?(.*?)```/s', '<pre class="bg-dark text-light p-3 rounded-3 mt-2 shadow-sm"><code>$1</code></pre>', e($question->question_text)) !!}
+                    </h5>
                 </div>
                 
                 <div class="options-list ps-5">

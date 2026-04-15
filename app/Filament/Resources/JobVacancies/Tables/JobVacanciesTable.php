@@ -27,6 +27,17 @@ class JobVacanciesTable
         TextColumn::make('title')
           ->searchable()
           ->description(fn (JobVacancy $record) => $record->employment_type),
+        TextColumn::make('experience_level')
+          ->label('Level')
+          ->badge()
+          ->color(fn (string $state): string => match ($state) {
+            'senior' => 'danger',
+            'middle' => 'info',
+            'junior' => 'success',
+            default => 'gray',
+          })
+          ->formatStateUsing(fn (string $state): string => ucfirst($state))
+          ->sortable(),
         TextColumn::make('slug')
           ->searchable()
           ->toggleable(isToggledHiddenByDefault: true),

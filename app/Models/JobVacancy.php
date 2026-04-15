@@ -12,6 +12,7 @@ class JobVacancy extends Model
 
   protected $fillable = [
     'title',
+    'experience_level',
     'slug',
     'created_by',
     'description',

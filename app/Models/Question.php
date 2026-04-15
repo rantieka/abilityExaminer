@@ -13,6 +13,7 @@ class Question extends Model
     'correct_answer',
     'is_active',
     'section',
+    'difficulty',
   ];
 
   protected $casts = [

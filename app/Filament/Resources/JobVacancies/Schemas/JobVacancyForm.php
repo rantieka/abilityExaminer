@@ -47,6 +47,16 @@ class JobVacancyForm
               ->required()
               ->maxLength(255)
               ->unique(ignoreRecord: true),
+            \Filament\Forms\Components\Select::make('experience_level')
+              ->label('Experience Level')
+              ->required()
+              ->options([
+                  'junior' => 'Junior / Fresh Graduate',
+                  'middle' => 'Mid Level ',
+                  'senior' => 'Senior',
+              ])
+              ->default('junior')
+              ->columnSpanFull(),
           ]),
 
         // SECTION 2: DETAIL PEKERJAAN

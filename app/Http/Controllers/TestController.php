@@ -196,17 +196,24 @@ class TestController extends Controller
     // Merge both parts (use + based union to preserve numeric keys)
     $allAnswers = $part1Answers + $part2Answers;
     
-    $correctCount = 0;
-    $totalQuestions = $questions->count();
+    $totalPossiblePoints = 0;
+    $earnedPoints = 0;
 
     foreach ($questions as $question) {
+      // Tentukan bobot berdasarkan difficulty
+      $weight = 5; // Default medium
+      if ($question->difficulty === 'easy') $weight = 2;
+      if ($question->difficulty === 'hard') $weight = 10;
+
+      $totalPossiblePoints += $weight;
+
       $userAnswer = $allAnswers[$question->id] ?? null;
       if ($userAnswer === $question->correct_answer) {
-        $correctCount++;
+        $earnedPoints += $weight;
       }
     }
 
-    $score = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100) : 0;
+    $score = $totalPossiblePoints > 0 ? round(($earnedPoints / $totalPossiblePoints) * 100) : 0;
 
     $application->update([
         'test_score' => $score,

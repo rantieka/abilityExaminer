@@ -72,7 +72,9 @@ class TestController extends Controller
       $questions = $jobVacancy->questions()
           ->where('is_active', true)
           ->where('section', 'technical')
+          ->inRandomOrder($application->id) // Stable random order per applicant
           ->get();
+
       return view('test.part2', compact('application', 'questions', 'remaining'));
     } else {
       // Check if user has seen welcome page (using session)
@@ -103,7 +105,9 @@ class TestController extends Controller
       $questions = $jobVacancy->questions()
           ->where('is_active', true)
           ->where('section', 'knowledge')
+          ->inRandomOrder($application->id) // Stable random order per applicant
           ->get();
+
       return view('test.part1', compact('application', 'questions', 'remaining'));
     }
   }
@@ -200,7 +204,7 @@ class TestController extends Controller
     $earnedPoints = 0;
 
     foreach ($questions as $question) {
-      // Tentukan bobot berdasarkan difficulty
+      // Determine weight based on difficulty
       $weight = 5; // Default medium
       if ($question->difficulty === 'easy') $weight = 2;
       if ($question->difficulty === 'hard') $weight = 10;

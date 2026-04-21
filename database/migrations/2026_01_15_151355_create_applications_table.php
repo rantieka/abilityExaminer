@@ -6,29 +6,29 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('applications', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('job_vacancy_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); // Nullable for guest
-            $table->string('full_name');
-            $table->string('email');
-            $table->string('phone')->nullable();
-            $table->string('cv_path'); // Path to uploaded PDF
-            $table->string('status')->default('pending'); // pending, reviewed, accepted, rejected
-            $table->timestamps();
-        });
-    }
+  /**
+  * Run the migrations.
+  */
+  public function up(): void
+  {
+    Schema::create('applications', function (Blueprint $table) {
+      $table->id();
+      $table->foreignId('job_vacancy_id')->constrained()->cascadeOnDelete();
+      $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); // Nullable for guest
+      $table->string('full_name');
+      $table->string('email');
+      $table->string('phone')->nullable();
+      $table->string('cv_path'); // Path to uploaded PDF
+      $table->string('status')->default('pending'); // pending, reviewed, accepted, rejected
+      $table->timestamps();
+    });
+  }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('applications');
-    }
+  /**
+  * Reverse the migrations.
+  */
+  public function down(): void
+  {
+    Schema::dropIfExists('applications');
+  }
 };

@@ -131,10 +131,10 @@ class GenerateExamQuestions
 
       RULES:
       1. LANGUAGE: All question text and options MUST be in Indonesian (Bahasa Indonesia).
-      2. FORBIDDEN: Long case studies, code snippets, or debugging (Part 1 is strictly for fundamental theory).
+      2. STRICTLY THEORY ONLY: ABSOLUTELY NO code snippets, NO variable assignment calculations (e.g., a=b), NO logic tracing, and NO technical symbols. Questions must focus on definitions, functions, concepts, and best practices.
       3. DIFFICULTY DISTRIBUTION: {$diff['distribution']}.
       4. CONTENT FOCUS: {$diff['focus']} related to the skills above.
-      5. UNIQUENESS: EVERY question MUST have a unique topic. DO NOT repeat the same concept (e.g. if one question is about Variables, others must be about Loops, OOP, or SQL). Complement existing questions.
+      5. UNIQUENESS: EVERY question MUST have a unique topic. DO NOT repeat the same concept. Complement existing questions.
       
       JSON Format: {\"questions\": [{\"text\":\"...\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"A\",\"difficulty\":\"easy\"}]}
       Output ONLY JSON. Exactly {$count} UNIQUE questions. No duplicates.";
@@ -166,10 +166,10 @@ class GenerateExamQuestions
 
       RULES:
       1. LANGUAGE: All question text and analysis MUST be in Indonesian (Bahasa Indonesia). Use original syntax for code snippets (e.g., {$req}).
-      2. EVERY question MUST include a unique code snippet (3-10 lines) within the question text.
+      2. CASE STUDY & LOGIC: Every question MUST include a code snippet (3-10 lines) and focus on technical case studies, logic tracing, syntax analysis, bug detection, or predicting output.
       3. DIFFICULTY DISTRIBUTION: {$diff['distribution']}.
       4. CONTENT FOCUS: {$diff['tech_focus']}.
-      5. UNIQUENESS: Ensure technical logic, bug types, and snippets are COMPLETELY DIFFERENT across all {$count} questions. No repetition of the same bug or logic pattern.
+      5. UNIQUENESS: Ensure technical logic, bug types, and snippets are COMPLETELY DIFFERENT across all questions. No repetition of the same logic pattern.
       
       JSON Format: {\"questions\": [{\"text\":\"...\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"B\",\"difficulty\":\"medium\"}]}
       Output ONLY JSON. Exactly {$count} UNIQUE questions. No duplicates.";

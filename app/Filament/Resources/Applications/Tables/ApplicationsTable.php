@@ -67,6 +67,7 @@ class ApplicationsTable
             default => null,
           }),
         TextColumn::make('ai_score')
+          ->label('CV Score')
           ->numeric()
           ->sortable()
           ->badge()

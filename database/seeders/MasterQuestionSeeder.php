@@ -13,15 +13,15 @@ class MasterQuestionSeeder extends Seeder
     $masterQuestions = [
       // Backend question
       [
-        'section' => 'knowledge',
+        'section' => 'technical',
         'text' => 'Apabila a=7, b=12, jika diberikan instruksi a=b; b=a; maka akan mengakibatkan nilai...',
         'options' => ['A' => 'a=7, b=12', 'B' => 'a=12, b=7', 'C' => 'a=12, b=12', 'D' => 'a=7, b=7'],
         'correct' => 'C',
-        'tags' => ['backend', 'general'],
+        'tags' => ['backend',                                                                                                                                                                                'general'],
         'difficulty' => 'easy'
       ],
       [
-        'section' => 'knowledge',
+        'section' => 'technical',
         'text' => 'Diberikan algoritma P=12; P=P+5; Q=P. Berapakah nilai P dan Q masing-masing?',
         'options' => ['A' => '12 dan 17', 'B' => '17 dan 12', 'C' => '17 dan 17', 'D' => '12 dan 12'],
         'correct' => 'C',
@@ -65,7 +65,7 @@ class MasterQuestionSeeder extends Seeder
 
       // PHP specific
       [
-        'section' => 'technical',
+        'section' => 'knowledge',
         'text' => 'Manakah penulisan Array 2 Dimensi yang benar di PHP?',
         'options' => [
           'A' => '$data = [1, 2, 3];',
@@ -78,7 +78,7 @@ class MasterQuestionSeeder extends Seeder
         'difficulty' => 'medium'
       ],
       [
-        'section' => 'technical',
+        'section' => 'knowledge',
         'text' => 'Manakah contoh Looping Dinamis yang benar menggunakan foreach di PHP?',
         'options' => [
           'A' => 'for($i=0; $i<10; $i++)',
@@ -114,7 +114,7 @@ class MasterQuestionSeeder extends Seeder
         'difficulty' => 'medium'
       ],
       [
-        'section' => 'technical',
+        'section' => 'knowledge',
         'text' => 'Keyword apa yang digunakan di PHP untuk membuat sebuah Class mewarisi (inherit) dari Class lain?',
         'options' => ['A' => 'implements', 'B' => 'extends', 'C' => 'requires', 'D' => 'includes'],
         'correct' => 'B',
@@ -148,7 +148,7 @@ class MasterQuestionSeeder extends Seeder
         'difficulty' => 'easy'
       ],
       [
-        'section' => 'technical',
+        'section' => 'knowledge',
         'text' => 'Manakah query SQL yang benar untuk mengubah (update) data nama pada tabel "users" yang memiliki id=1?',
         'options' => [
           'A' => 'CHANGE users SET name="Budi" WHERE id=1',
@@ -184,7 +184,7 @@ class MasterQuestionSeeder extends Seeder
         'difficulty' => 'medium'
       ],
       [
-        'section' => 'technical',
+        'section' => 'knowledge',
         'text' => 'Manakah properti CSS yang digunakan untuk menyembunyikan elemen namun tetap memakan ruang (space) di layout?',
         'options' => ['A' => 'display: none;', 'B' => 'visibility: hidden;', 'C' => 'opacity: 1;', 'D' => 'margin-top: -999px;'],
         'correct' => 'B',
@@ -205,7 +205,7 @@ class MasterQuestionSeeder extends Seeder
         'difficulty' => 'easy'
       ],
       [
-        'section' => 'technical',
+        'section' => 'knowledge',
         'text' => 'Properti Flexbox untuk mengatur perataan elemen secara horizontal (main-axis) adalah?',
         'options' => ['A' => 'align-items', 'B' => 'justify-content', 'C' => 'flex-direction', 'D' => 'display-flex'],
         'correct' => 'B',
@@ -233,6 +233,58 @@ class MasterQuestionSeeder extends Seeder
         'tags' => ['frontend', 'general', 'JavaScript'],
         'difficulty' => 'medium'
       ],
+      [
+        'section' => 'technical',
+        'text' => 'Bagaimana cara memilih elemen dengan class "features__item" yang memiliki data-id="7" dan menambahkan class "highlighted" menggunakan jQuery?',
+        'options' => [
+          'A' => "$('.features__item[data-id=\"7\"]').addClass('highlighted');",
+          'B' => "$('#features__item').attr('id', '7').addClass('highlighted');",
+          'C' => "$('.features__item').data('id', 7).class('highlighted');",
+          'D' => "getElementByClass('.features__item').setData('id', 7).add('highlighted');"
+        ],
+        'correct' => 'A',
+        'tags' => ['frontend', 'jQuery', 'JavaScript'],
+        'difficulty' => 'hard'
+      ],
+      [
+        'section' => 'knowledge',
+        'text' => 'Berapakah nilai breakpoint (lebar layar) yang paling umum digunakan dalam framework CSS (seperti Bootstrap) untuk memisahkan tampilan Tablet dan Desktop (Large devices)?',
+        'options' => [
+          'A' => '320px',
+          'B' => '576px',
+          'C' => '768px',
+          'D' => '992px'
+        ],
+        'correct' => 'D',
+        'tags' => ['frontend', 'CSS', 'Responsive'],
+        'difficulty' => 'medium'
+      ],
+      [
+        'section' => 'knowledge',
+        'text' => 'Manakah di bawah ini yang merupakan kumpulan framework atau library JavaScript yang populer untuk membangun User Interface (UI)?',
+        'options' => [
+          'A' => 'React, Vue, Angular',
+          'B' => 'Laravel, Django, Ruby on Rails',
+          'C' => 'MySQL, PostgreSQL, MongoDB',
+          'D' => 'Apache, Nginx, Docker'
+        ],
+        'correct' => 'A',
+        'tags' => ['frontend', 'JavaScript'],
+        'difficulty' => 'easy'
+      ],
+      [
+        'section' => 'knowledge',
+        'text' => 'Properti Flexbox yang digunakan untuk mengatur perataan elemen secara vertikal (cross-axis) di dalam container adalah?',
+        'options' => [
+          'A' => 'justify-content',
+          'B' => 'align-items',
+          'C' => 'flex-direction',
+          'D' => 'float'
+        ],
+        'correct' => 'B',
+        'tags' => ['frontend', 'CSS'],
+        'difficulty' => 'medium'
+      ]
     ];
 
     $vacancies = JobVacancy::all();

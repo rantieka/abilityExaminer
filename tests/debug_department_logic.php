@@ -1,19 +1,19 @@
 <?php
 // Simulate the options closure logic
 $defaults = [
-    'IT' => 'IT',
-    'HR' => 'HR',
-    'Finance' => 'Finance',
-    'Operations' => 'Operations',
-    'Sales' => 'Sales',
-    'Marketing' => 'Marketing',
+  'IT' => 'IT',
+  'HR' => 'HR',
+  'Finance' => 'Finance',
+  'Operations' => 'Operations',
+  'Sales' => 'Sales',
+  'Marketing' => 'Marketing',
 ];
 
 $existing = \App\Models\JobVacancy::query()
-    ->whereNotNull('department')
-    ->distinct()
-    ->pluck('department', 'department')
-    ->toArray();
+  ->whereNotNull('department')
+  ->distinct()
+  ->pluck('department', 'department')
+  ->toArray();
 
 $merged = array_merge($defaults, $existing);
 

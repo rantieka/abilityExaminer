@@ -16,35 +16,35 @@ use Filament\Tables\Table;
 
 class QuestionResource extends Resource
 {
-    protected static ?string $model = Question::class;
+  protected static ?string $model = Question::class;
 
-    protected static bool $shouldRegisterNavigation = false;
+  protected static bool $shouldRegisterNavigation = false;
 
-    protected static ?string $recordTitleAttribute = 'question_text';
+  protected static ?string $recordTitleAttribute = 'question_text';
 
-    public static function form(Schema $schema): Schema
-    {
-        return QuestionForm::configure($schema);
-    }
+  public static function form(Schema $schema): Schema
+  {
+    return QuestionForm::configure($schema);
+  }
 
-    public static function table(Table $table): Table
-    {
-        return QuestionsTable::configure($table);
-    }
+  public static function table(Table $table): Table
+  {
+    return QuestionsTable::configure($table);
+  }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
+  public static function getRelations(): array
+  {
+    return [
+      //
+    ];
+  }
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => ListQuestions::route('/'),
-            'create' => CreateQuestion::route('/create'),
-            'edit' => EditQuestion::route('/{record}/edit'),
-        ];
-    }
+  public static function getPages(): array
+  {
+    return [
+      'index' => ListQuestions::route('/'),
+      'create' => CreateQuestion::route('/create'),
+      'edit' => EditQuestion::route('/{record}/edit'),
+    ];
+  }
 }

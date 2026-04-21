@@ -12,45 +12,45 @@ use Illuminate\Queue\SerializesModels;
 
 class ApplicationRejected extends Mailable
 {
-    use Queueable, SerializesModels;
+  use Queueable, SerializesModels;
 
-    public $application;
+  public $application;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct(Application $application)
-    {
-        $this->application = $application;
-    }
+  /**
+  * Create a new message instance.
+  */
+  public function __construct(Application $application)
+  {
+    $this->application = $application;
+  }
 
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Update on Your Application - ' . $this->application->jobVacancy->title,
-        );
-    }
+  /**
+  * Get the message envelope.
+  */
+  public function envelope(): Envelope
+  {
+    return new Envelope(
+      subject: 'Update on Your Application - ' . $this->application->jobVacancy->title,
+    );
+  }
 
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            markdown: 'emails.application-rejected',
-        );
-    }
+  /**
+  * Get the message content definition.
+  */
+  public function content(): Content
+  {
+    return new Content(
+      markdown: 'emails.application-rejected',
+    );
+  }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
-    }
+  /**
+  * Get the attachments for the message.
+  *
+  * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+  */
+  public function attachments(): array
+  {
+    return [];
+  }
 }

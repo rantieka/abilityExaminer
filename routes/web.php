@@ -7,7 +7,7 @@ use App\Http\Controllers\CareerController;
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
 Route::get('/test-bootstrap', function () {
-    return view('test-bootstrap');
+  return view('test-bootstrap');
 });
 
 // Career
@@ -36,72 +36,72 @@ Route::post('/test/{application}', [TestController::class, 'submit'])->name('tes
 // Email Preview Routes (Development Only)
 // Email Preview Routes (Accessible in all envs for now)
 Route::get('/email-preview/accepted/{application}', function ($id) {
-    $application = \App\Models\Application::findOrFail($id);
-    return new \App\Mail\ApplicationAccepted($application);
+  $application = \App\Models\Application::findOrFail($id);
+  return new \App\Mail\ApplicationAccepted($application);
 })->name('email.preview.accepted');
 
 Route::get('/email-preview/rejected/{application}', function ($id) {
-    $application = \App\Models\Application::findOrFail($id);
-    return new \App\Mail\ApplicationRejected($application);
+  $application = \App\Models\Application::findOrFail($id);
+  return new \App\Mail\ApplicationRejected($application);
 })->name('email.preview.rejected');
 
 // UI Preview Routes (Development Only)
 Route::get('/test-preview/part1', function () {
-    $application = new \App\Models\Application();
-    $application->id = 'preview-id';
-    $jobVacancy = new \App\Models\JobVacancy(['title' => 'Preview Job Position']);
-    $application->setRelation('jobVacancy', $jobVacancy);
+  $application = new \App\Models\Application();
+  $application->id = 'preview-id';
+  $jobVacancy = new \App\Models\JobVacancy(['title' => 'Preview Job Position']);
+  $application->setRelation('jobVacancy', $jobVacancy);
 
-    // Dummy Questions for Preview
-    $questions = collect([
-        (object)[
-            'id' => 1,
-            'question_text' => 'Contoh Pertanyaan Knowledge 1?',
-            'options' => ['A' => 'Pilihan A', 'B' => 'Pilihan B', 'C' => 'Pilihan C', 'D' => 'Pilihan D'],
-        ],
-        (object)[
-            'id' => 2,
-            'question_text' => 'Contoh Pertanyaan Knowledge 2?',
-            'options' => ['A' => 'Pilihan A', 'B' => 'Pilihan B', 'C' => 'Pilihan C', 'D' => 'Pilihan D'],
-        ],
-    ]);
+  // Dummy Questions for Preview
+  $questions = collect([
+    (object)[
+      'id' => 1,
+      'question_text' => 'Contoh Pertanyaan Knowledge 1?',
+      'options' => ['A' => 'Pilihan A', 'B' => 'Pilihan B', 'C' => 'Pilihan C', 'D' => 'Pilihan D'],
+    ],
+    (object)[
+      'id' => 2,
+      'question_text' => 'Contoh Pertanyaan Knowledge 2?',
+      'options' => ['A' => 'Pilihan A', 'B' => 'Pilihan B', 'C' => 'Pilihan C', 'D' => 'Pilihan D'],
+    ],
+  ]);
 
-    return view('test.part1', compact('application', 'questions'));
+  return view('test.part1', compact('application', 'questions'));
 });
 
 Route::get('/test-preview/part2', function () {
-    $application = new \App\Models\Application();
-    $application->id = 'preview-id';
-    $jobVacancy = new \App\Models\JobVacancy(['title' => 'Preview Job Position']);
-    $application->setRelation('jobVacancy', $jobVacancy);
+  $application = new \App\Models\Application();
+  $application->id = 'preview-id';
+  $jobVacancy = new \App\Models\JobVacancy(['title' => 'Preview Job Position']);
+  $application->setRelation('jobVacancy', $jobVacancy);
 
-    // Dummy Questions for Preview
-    $questions = collect([
-        (object)[
-            'id' => 3,
-            'question_text' => 'Contoh Pertanyaan Teknis 1?',
-            'options' => ['A' => 'Solusi A', 'B' => 'Solusi B', 'C' => 'Solusi C', 'D' => 'Solusi D'],
-        ],
-    ]);
+  // Dummy Questions for Preview
+  $questions = collect([
+    (object)[
+      'id' => 3,
+      'question_text' => 'Contoh Pertanyaan Teknis 1?',
+      'options' => ['A' => 'Solusi A', 'B' => 'Solusi B', 'C' => 'Solusi C', 'D' => 'Solusi D'],
+    ],
+  ]);
 
-    return view('test.part2', compact('application', 'questions'));
+  return view('test.part2', compact('application', 'questions'));
 });
 
 // Temporary Reset Route (Delete after debugging)
 Route::get('/test-reset/{id}', function ($id) {
-    if(session()->has('applicant_id')) {
-        $app = \App\Models\Application::find(session('applicant_id'));
-        if($app) {
-           $app->update([
-               'part1_started_at' => null, 
-               'part2_started_at' => null,
-               'part1_completed_at' => null,
-               'test_score' => null,
-               'part1_answers' => null
-           ]);
-           session()->forget('test_started_' . $app->id);
-           return "Reset success! <a href='/test/{$app->id}'>Go back to test</a>";
-        }
+  if(session()->has('applicant_id')) {
+    $app = \App\Models\Application::find(session('applicant_id'));
+    if($app) {
+     $app->update([
+       'part1_started_at' => null, 
+       'part2_started_at' => null,
+       'part1_completed_at' => null,
+       'test_score' => null,
+       'part1_answers' => null
+     ]);
+     session()->forget('test_started_' . $app->id);
+     return "Reset success! <a href='/test/{$app->id}'>Go back to test</a>";
     }
-    return "Application not found or session expired.";
+  }
+  return "Application not found or session expired.";
 });

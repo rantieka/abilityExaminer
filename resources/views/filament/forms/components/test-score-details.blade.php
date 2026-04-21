@@ -1,283 +1,282 @@
 @php
-    $record = $getRecord();
-    $testScore = $record->test_score;
+  $record = $getRecord();
+  $testScore = $record->test_score;
 
-    if ($testScore === null) {
-        $content = null;
+  if ($testScore === null) {
+    $content = null;
+  } else {
+    $jobVacancy = $record->jobVacancy;
+    
+    if (!$jobVacancy) {
+      $content = 'Job Vacancy deleted';
     } else {
-        $jobVacancy = $record->jobVacancy;
-        
-        if (!$jobVacancy) {
-            $content = 'Job Vacancy deleted';
-        } else {
-            $questions = $jobVacancy->questions()->where('is_active', true)->get();
-            $part1Questions = $questions->where('section', 'knowledge');
-            $part2Questions = $questions->where('section', 'technical');
-            
-            // Answers
-            $part1Answers = $record->part1_answers ?? [];
-            $part2Answers = $record->part2_answers ?? []; // Added
-            
-            // Helper to calculate score for a set of questions
-            $calculate = function($qs, $answers) {
-                $total = $qs->count();
-                $correct = 0;
-                foreach($qs as $q) {
-                    if (($answers[$q->id] ?? null) === $q->correct_answer) {
-                        $correct++;
-                    }
-                }
-                return ['correct' => $correct, 'total' => $total, 'percentage' => $total > 0 ? round(($correct/$total)*100) : 0];
-            };
-            
-            // For Part 1, we have explicit answers field.
-            $p1Stats = $calculate($part1Questions, $part1Answers);
-            $p2Stats = $calculate($part2Questions, $part2Answers); // Added
+      $questions = $jobVacancy->questions()->where('is_active', true)->get();
+      $part1Questions = $questions->where('section', 'knowledge');
+      $part2Questions = $questions->where('section', 'technical');
+      
+      // Answers - Merge both parts to ensure answers are found even if sections moved
+      $allAnswers = ($record->part1_answers ?? []) + ($record->part2_answers ?? []);
+      
+      // Helper to calculate score for a set of questions
+      $calculate = function($qs, $answers) {
+        $total = $qs->count();
+        $correct = 0;
+        foreach($qs as $q) {
+          if (($answers[$q->id] ?? null) === $q->correct_answer) {
+            $correct++;
+          }
         }
+        return ['correct' => $correct, 'total' => $total, 'percentage' => $total > 0 ? round(($correct/$total)*100) : 0];
+      };
+      
+      // Calculate stats using merged answers
+      $p1Stats = $calculate($part1Questions, $allAnswers);
+      $p2Stats = $calculate($part2Questions, $allAnswers);
     }
+  }
 @endphp
 
 <div class="space-y-4">
-    @if($testScore === null)
-        <p class="text-gray-500 italic">Test not completed yet.</p>
-    @elseif(isset($content) && $content === 'Job Vacancy deleted')
-         <p class="text-red-500 italic">Job Vacancy associated with this application has been deleted, detailed score breakdown is unavailable.</p>
-    @else
-        <div style="background-color: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
-            <!-- Header Result -->
-            <div style="padding: 1.5rem; background: linear-gradient(to right, #f9fafb, #ffffff); border-bottom: 1px solid #f3f4f6;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div style="padding: 0.75rem; background-color: #dbeafe; color: #2563eb; border-radius: 9999px; width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <!-- Heroicon: academic-cap -->
-                        <svg style="width: 2rem; height: 2rem;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.499 5.516 51.63 51.63 0 00-2.658.813m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 style="font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: #111827; margin: 0;">Test Score: <span style="color: #2563eb;">{{ $testScore }}</span><span style="font-size: 1rem; color: #9ca3af; font-weight: 400;">/100</span></h3>
-                        <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">Evaluation based on {{ $questions->count() }} total questions</p>
-                    </div>
-                    <div style="margin-left: auto; text-align: right;">
-                       <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background-color: {{ $testScore >= 70 ? '#d1fae5' : ($testScore >= 50 ? '#fef3c7' : '#fee2e2') }}; color: {{ $testScore >= 70 ? '#065f46' : ($testScore >= 50 ? '#92400e' : '#991b1b') }};">
-                            {{ $testScore >= 70 ? 'Passed' : ($testScore >= 50 ? 'Review Needed' : 'Below Threshold') }}
-                       </span>
-                       @if(!empty($record->test_completed_at))
-                           @php
-                               $completedAt = $record->test_completed_at;
-                               // Use part1_started_at as start time. If not available, use created_at as fallback
-                               $startedAt = $record->part1_started_at ?? $record->created_at;
-                               
-                               // Calculate duration
-                               // detailed diff
-                               // true = absolute (no "before"/"after"), false = not short, 2 = parts
-                               $duration = $startedAt ? $startedAt->diffForHumans($completedAt, true, false, 2) : '-';
-                           @endphp
-                           <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #6b7280; text-align: right;">
-                               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem;">
-                                   <svg style="width: 0.875rem; height: 0.875rem;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                   <span>{{ $duration }}</span>
-                               </div>
-                               <div style="color: #9ca3af; font-size: 0.7rem;">{{ $completedAt->format('d M Y, H:i') }}</div>
-                           </div>
-                       @else
-                           <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af; text-align: right;">
-                               <div>Time not recorded</div>
-                           </div>
-                       @endif
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Breakdown Grid -->
-            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background-color: #f3f4f6;">
-                <!-- Part 1 -->
-                <div style="background-color: white; padding: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <div>
-                             <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">Part 1: Knowledge</h4>
-                             <p style="font-size: 0.75rem; color: #9ca3af;">Multiple choice & theory</p>
-                        </div>
-                        <div style="padding: 0.25rem; background-color: #f3f4f6; border-radius: 0.375rem;">
-                           <svg style="width: 1.25rem; height: 1.25rem; color: #6b7280;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                           </svg>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 1rem;">
-                        <div style="display: flex; align-items: baseline; gap: 0.5rem;">
-                             <span style="font-size: 1.875rem; font-weight: 700; color: #111827;">{{ $p1Stats['correct'] }}</span>
-                             <span style="font-size: 0.875rem; color: #6b7280;">/ {{ $p1Stats['total'] }} Correct</span>
-                        </div>
-                        <div style="width: 100%; height: 0.5rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
-                            <div style="height: 100%; background-color: #3b82f6; width: {{ $p1Stats['percentage'] }}%;"></div>
-                        </div>
-                        <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; text-align: right;">{{ $p1Stats['percentage'] }}% proficiency</p>
-                    </div>
-                </div>
-                
-                <!-- Part 2 -->
-                <div style="background-color: white; padding: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <div>
-                             <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">Part 2: Technical</h4>
-                             <p style="font-size: 0.75rem; color: #9ca3af;">Case study & practical</p>
-                        </div>
-                        <div style="padding: 0.25rem; background-color: #f3f4f6; border-radius: 0.375rem;">
-                           <svg style="width: 1.25rem; height: 1.25rem; color: #6b7280;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-                           </svg>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 1rem;">
-                        <div style="display: flex; align-items: baseline; gap: 0.5rem;">
-                             <span style="font-size: 1.875rem; font-weight: 700; color: #111827;">{{ $p2Stats['correct'] }}</span>
-                             <span style="font-size: 0.875rem; color: #6b7280;">/ {{ $p2Stats['total'] }} Correct</span>
-                        </div>
-                        <div style="width: 100%; height: 0.5rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
-                            <div style="height: 100%; background-color: #3b82f6; width: {{ $p2Stats['percentage'] }}%;"></div>
-                        </div>
-                        <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; text-align: right;">{{ $p2Stats['percentage'] }}% proficiency</p>
-                    </div>
-                </div>
-            </div>
+  @if($testScore === null)
+    <p class="text-gray-500 italic">Test not completed yet.</p>
+  @elseif(isset($content) && $content === 'Job Vacancy deleted')
+    <p class="text-red-500 italic">Job Vacancy associated with this application has been deleted, detailed score breakdown is unavailable.</p>
+  @else
+    <div style="background-color: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+      <!-- Header Result -->
+      <div style="padding: 1.5rem; background: linear-gradient(to right, #f9fafb, #ffffff); border-bottom: 1px solid #f3f4f6;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="padding: 0.75rem; background-color: #dbeafe; color: #2563eb; border-radius: 9999px; width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <!-- Heroicon: academic-cap -->
+            <svg style="width: 2rem; height: 2rem;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+             <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.499 5.516 51.63 51.63 0 00-2.658.813m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+            </svg>
+          </div>
+          <div>
+            <h3 style="font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: #111827; margin: 0;">Test Score: <span style="color: #2563eb;">{{ $testScore }}</span><span style="font-size: 1rem; color: #9ca3af; font-weight: 400;">/100</span></h3>
+            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">Evaluation based on {{ $questions->count() }} total questions</p>
+          </div>
+          <div style="margin-left: auto; text-align: right;">
+           <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background-color: {{ $testScore >= 70 ? '#d1fae5' : ($testScore >= 50 ? '#fef3c7' : '#fee2e2') }}; color: {{ $testScore >= 70 ? '#065f46' : ($testScore >= 50 ? '#92400e' : '#991b1b') }};">
+              {{ $testScore >= 70 ? 'Passed' : ($testScore >= 50 ? 'Review Needed' : 'Below Threshold') }}
+           </span>
+           @if(!empty($record->test_completed_at))
+             @php
+               $completedAt = $record->test_completed_at;
+               // Use part1_started_at as start time. If not available, use created_at as fallback
+               $startedAt = $record->part1_started_at ?? $record->created_at;
+               
+               // Calculate duration
+               // detailed diff
+               // true = absolute (no "before"/"after"), false = not short, 2 = parts
+               $duration = $startedAt ? $startedAt->diffForHumans($completedAt, true, false, 2) : '-';
+             @endphp
+             <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #6b7280; text-align: right;">
+               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem;">
+                 <svg style="width: 0.875rem; height: 0.875rem;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                 <span>{{ $duration }}</span>
+               </div>
+               <div style="color: #9ca3af; font-size: 0.7rem;">{{ $completedAt->format('d M Y, H:i') }}</div>
+             </div>
+           @else
+             <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af; text-align: right;">
+               <div>Time not recorded</div>
+             </div>
+           @endif
+          </div>
         </div>
+      </div>
+      
+      <!-- Breakdown Grid -->
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background-color: #f3f4f6;">
+        <!-- Part 1 -->
+        <div style="background-color: white; padding: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <div>
+              <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">Part 1: Knowledge</h4>
+              <p style="font-size: 0.75rem; color: #9ca3af;">Multiple choice & theory</p>
+            </div>
+            <div style="padding: 0.25rem; background-color: #f3f4f6; border-radius: 0.375rem;">
+             <svg style="width: 1.25rem; height: 1.25rem; color: #6b7280;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+             </svg>
+            </div>
+          </div>
+          
+          <div style="margin-top: 1rem;">
+            <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+              <span style="font-size: 1.875rem; font-weight: 700; color: #111827;">{{ $p1Stats['correct'] }}</span>
+              <span style="font-size: 0.875rem; color: #6b7280;">/ {{ $p1Stats['total'] }} Correct</span>
+            </div>
+            <div style="width: 100%; height: 0.5rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
+              <div style="height: 100%; background-color: #3b82f6; width: {{ $p1Stats['percentage'] }}%;"></div>
+            </div>
+            <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; text-align: right;">{{ $p1Stats['percentage'] }}% proficiency</p>
+          </div>
+        </div>
+        
+        <!-- Part 2 -->
+        <div style="background-color: white; padding: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <div>
+              <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">Part 2: Technical</h4>
+              <p style="font-size: 0.75rem; color: #9ca3af;">Case study & practical</p>
+            </div>
+            <div style="padding: 0.25rem; background-color: #f3f4f6; border-radius: 0.375rem;">
+             <svg style="width: 1.25rem; height: 1.25rem; color: #6b7280;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+             </svg>
+            </div>
+          </div>
+          
+          <div style="margin-top: 1rem;">
+            <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+              <span style="font-size: 1.875rem; font-weight: 700; color: #111827;">{{ $p2Stats['correct'] }}</span>
+              <span style="font-size: 0.875rem; color: #6b7280;">/ {{ $p2Stats['total'] }} Correct</span>
+            </div>
+            <div style="width: 100%; height: 0.5rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
+              <div style="height: 100%; background-color: #3b82f6; width: {{ $p2Stats['percentage'] }}%;"></div>
+            </div>
+            <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; text-align: right;">{{ $p2Stats['percentage'] }}% proficiency</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        <!-- Detailed Breakdown (Collapsible) -->
-        <div x-data="{ expanded: false }" style="margin-top: 1.5rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; background-color: white; overflow: hidden;">
-            <button @click="expanded = !expanded" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background-color: #f9fafb; border: none; cursor: pointer; text-align: left; transition: background-color 0.2s;">
-                <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">View Detailed Question Summary</span>
-                <span x-show="!expanded" style="color: #9ca3af;">
-                    <svg style="width: 1.25rem; height: 1.25rem;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                </span>
-                <span x-show="expanded" style="color: #9ca3af; display: none;">
-                    <svg style="width: 1.25rem; height: 1.25rem;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
-                </span>
-            </button>
-            
-            <div x-show="expanded" x-collapse style="border-top: 1px solid #e5e7eb;">
-                <div style="padding: 1.5rem;">
-                    @if($part1Questions->isEmpty())
-                        <p style="text-align: center; color: #6b7280; font-style: italic;">No questions found for Part 1.</p>
-                    @else
-                        <div style="display: flex; flex-direction: column; gap: 1rem;">
-                            @foreach($part1Questions as $index => $question)
-                                @php
-                                    $userAnswerKey = $part1Answers[$question->id] ?? null;
-                                    $correctKey = $question->correct_answer;
-                                    $isCorrect = $userAnswerKey === $correctKey;
-                                    $userAnswerText = $question->options[$userAnswerKey] ?? 'No Answer';
-                                    $correctAnswerText = $question->options[$correctKey] ?? 'Unknown';
-                                @endphp
-                                <div style="border: 1px solid {{ $isCorrect ? '#bbf7d0' : '#fecaca' }}; border-radius: 0.5rem; padding: 1rem; background-color: {{ $isCorrect ? '#f0fdf4' : '#fef2f2' }};">
-                                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                                        <div style="flex-shrink: 0; width: 1.75rem; height: 1.75rem; background-color: {{ $isCorrect ? '#22c55e' : '#ef4444' }}; color: white; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem;">
-                                            {{ $loop->iteration }}
-                                        </div>
-                                        <div style="flex-grow: 1;">
-                                            <p style="font-weight: 500; color: #1f2937; margin-bottom: 0.5rem;">{!! nl2br(e($question->question_text)) !!}</p>
-                                            
-                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; font-size: 0.875rem;">
-                                                <!-- User Answer -->
-                                                <div>
-                                                    <span style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Candidate's Answer</span>
-                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                        @if($userAnswerKey)
-                                                            <span style="font-weight: 600; color: {{ $isCorrect ? '#166534' : '#991b1b' }};">{{ $userAnswerKey }}.</span>
-                                                            <span style="color: #374151;">{{ $userAnswerText }}</span>
-                                                        @else
-                                                            <span style="color: #9ca3af; font-style: italic;">Skipped / No Answer</span>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Correct Answer (Only show if incorrect to save space/reduce visual noise, or always show for clarity? Let's always show for audit purposes) -->
-                                                @if(!$isCorrect)
-                                                <div style="border-left: 2px solid #e5e7eb; padding-left: 1rem;">
-                                                    <span style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Correct Answer</span>
-                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                        <span style="font-weight: 600; color: #166534;">{{ $correctKey }}.</span>
-                                                        <span style="color: #374151;">{{ $correctAnswerText }}</span>
-                                                    </div>
-                                                </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <div style="flex-shrink: 0;">
-                                            @if($isCorrect)
-                                                <svg style="width: 1.5rem; height: 1.5rem; color: #16a34a;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                            @else
-                                                <svg style="width: 1.5rem; height: 1.5rem; color: #dc2626;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
+    <!-- Detailed Breakdown (Collapsible) -->
+    <div x-data="{ expanded: false }" style="margin-top: 1.5rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; background-color: white; overflow: hidden;">
+      <button @click="expanded = !expanded" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background-color: #f9fafb; border: none; cursor: pointer; text-align: left; transition: background-color 0.2s;">
+        <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">View Detailed Question Summary</span>
+        <span x-show="!expanded" style="color: #9ca3af;">
+          <svg style="width: 1.25rem; height: 1.25rem;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+        </span>
+        <span x-show="expanded" style="color: #9ca3af; display: none;">
+          <svg style="width: 1.25rem; height: 1.25rem;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
+        </span>
+      </button>
+      
+      <div x-show="expanded" x-collapse style="border-top: 1px solid #e5e7eb;">
+        <div style="padding: 1.5rem;">
+          @if($part1Questions->isEmpty())
+            <p style="text-align: center; color: #6b7280; font-style: italic;">No questions found for Part 1.</p>
+          @else
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              @foreach($part1Questions as $index => $question)
+                @php
+                  $userAnswerKey = $allAnswers[$question->id] ?? null;
+                  $correctKey = $question->correct_answer;
+                  $isCorrect = $userAnswerKey === $correctKey;
+                  $userAnswerText = $question->options[$userAnswerKey] ?? 'No Answer';
+                  $correctAnswerText = $question->options[$correctKey] ?? 'Unknown';
+                @endphp
+                <div style="border: 1px solid {{ $isCorrect ? '#bbf7d0' : '#fecaca' }}; border-radius: 0.5rem; padding: 1rem; background-color: {{ $isCorrect ? '#f0fdf4' : '#fef2f2' }};">
+                  <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                    <div style="flex-shrink: 0; width: 1.75rem; height: 1.75rem; background-color: {{ $isCorrect ? '#22c55e' : '#ef4444' }}; color: white; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem;">
+                      {{ $loop->iteration }}
+                    </div>
+                    <div style="flex-grow: 1;">
+                      <p style="font-weight: 500; color: #1f2937; margin-bottom: 0.5rem;">{!! nl2br(e($question->question_text)) !!}</p>
+                      
+                      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; font-size: 0.875rem;">
+                        <!-- User Answer -->
+                        <div>
+                          <span style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Candidate's Answer</span>
+                          <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            @if($userAnswerKey)
+                              <span style="font-weight: 600; color: {{ $isCorrect ? '#166534' : '#991b1b' }};">{{ $userAnswerKey }}.</span>
+                              <span style="color: #374151;">{{ $userAnswerText }}</span>
+                            @else
+                              <span style="color: #9ca3af; font-style: italic;">Skipped / No Answer</span>
+                            @endif
+                          </div>
                         </div>
-                    @endif
+                        
+                        <!-- Correct Answer (Only show if incorrect to save space/reduce visual noise, or always show for clarity? Let's always show for audit purposes) -->
+                        @if(!$isCorrect)
+                        <div style="border-left: 2px solid #e5e7eb; padding-left: 1rem;">
+                          <span style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Correct Answer</span>
+                          <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-weight: 600; color: #166534;">{{ $correctKey }}.</span>
+                            <span style="color: #374151;">{{ $correctAnswerText }}</span>
+                          </div>
+                        </div>
+                        @endif
+                      </div>
+                    </div>
+                    <div style="flex-shrink: 0;">
+                      @if($isCorrect)
+                        <svg style="width: 1.5rem; height: 1.5rem; color: #16a34a;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      @else
+                        <svg style="width: 1.5rem; height: 1.5rem; color: #dc2626;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      @endif
+                    </div>
+                  </div>
+                </div>
+              @endforeach
+            </div>
+          @endif
 
-                    @if(!$part2Questions->isEmpty())
-                        <div style="margin-top: 2rem; border-top: 1px dashed #e5e7eb; padding-top: 1.5rem;">
-                            <h4 style="font-size: 1rem; font-weight: 700; color: #1f2937; margin-bottom: 1rem;">Part 2: Technical/Case Study</h4>
-                            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                                @foreach($part2Questions as $index => $question)
-                                    @php
-                                        $userAnswerKey = $part2Answers[$question->id] ?? null;
-                                        $correctKey = $question->correct_answer;
-                                        $isCorrect = $userAnswerKey === $correctKey;
-                                        $userAnswerText = $question->options[$userAnswerKey] ?? 'No Answer';
-                                        $correctAnswerText = $question->options[$correctKey] ?? 'Unknown';
-                                    @endphp
-                                    <div style="border: 1px solid {{ $isCorrect ? '#bbf7d0' : '#fecaca' }}; border-radius: 0.5rem; padding: 1rem; background-color: {{ $isCorrect ? '#f0fdf4' : '#fef2f2' }};">
-                                        <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                                            <div style="flex-shrink: 0; width: 1.75rem; height: 1.75rem; background-color: {{ $isCorrect ? '#22c55e' : '#ef4444' }}; color: white; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem;">
-                                                {{ $loop->iteration }}
-                                            </div>
-                                            <div style="flex-grow: 1;">
-                                                <p style="font-weight: 500; color: #1f2937; margin-bottom: 0.5rem;">{!! nl2br(e($question->question_text)) !!}</p>
-                                                
-                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; font-size: 0.875rem;">
-                                                    <!-- User Answer -->
-                                                    <div>
-                                                        <span style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Candidate's Answer</span>
-                                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                            @if($userAnswerKey)
-                                                                <span style="font-weight: 600; color: {{ $isCorrect ? '#166534' : '#991b1b' }};">{{ $userAnswerKey }}.</span>
-                                                                <span style="color: #374151;">{{ $userAnswerText }}</span>
-                                                            @else
-                                                                <span style="color: #9ca3af; font-style: italic;">Skipped / No Answer</span>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <!-- Correct Answer -->
-                                                    @if(!$isCorrect)
-                                                    <div style="border-left: 2px solid #e5e7eb; padding-left: 1rem;">
-                                                        <span style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Correct Answer</span>
-                                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                            <span style="font-weight: 600; color: #166534;">{{ $correctKey }}.</span>
-                                                            <span style="color: #374151;">{{ $correctAnswerText }}</span>
-                                                        </div>
-                                                    </div>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                            <div style="flex-shrink: 0;">
-                                                @if($isCorrect)
-                                                    <svg style="width: 1.5rem; height: 1.5rem; color: #16a34a;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                                @else
-                                                    <svg style="width: 1.5rem; height: 1.5rem; color: #dc2626;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+          @if(!$part2Questions->isEmpty())
+            <div style="margin-top: 2rem; border-top: 1px dashed #e5e7eb; padding-top: 1.5rem;">
+              <h4 style="font-size: 1rem; font-weight: 700; color: #1f2937; margin-bottom: 1rem;">Part 2: Technical/Case Study</h4>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                @foreach($part2Questions as $index => $question)
+                  @php
+                    $userAnswerKey = $allAnswers[$question->id] ?? null;
+                    $correctKey = $question->correct_answer;
+                    $isCorrect = $userAnswerKey === $correctKey;
+                    $userAnswerText = $question->options[$userAnswerKey] ?? 'No Answer';
+                    $correctAnswerText = $question->options[$correctKey] ?? 'Unknown';
+                  @endphp
+                  <div style="border: 1px solid {{ $isCorrect ? '#bbf7d0' : '#fecaca' }}; border-radius: 0.5rem; padding: 1rem; background-color: {{ $isCorrect ? '#f0fdf4' : '#fef2f2' }};">
+                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                      <div style="flex-shrink: 0; width: 1.75rem; height: 1.75rem; background-color: {{ $isCorrect ? '#22c55e' : '#ef4444' }}; color: white; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem;">
+                        {{ $loop->iteration }}
+                      </div>
+                      <div style="flex-grow: 1;">
+                        <p style="font-weight: 500; color: #1f2937; margin-bottom: 0.5rem;">{!! nl2br(e($question->question_text)) !!}</p>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; font-size: 0.875rem;">
+                          <!-- User Answer -->
+                          <div>
+                            <span style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Candidate's Answer</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                              @if($userAnswerKey)
+                                <span style="font-weight: 600; color: {{ $isCorrect ? '#166534' : '#991b1b' }};">{{ $userAnswerKey }}.</span>
+                                <span style="color: #374151;">{{ $userAnswerText }}</span>
+                              @else
+                                <span style="color: #9ca3af; font-style: italic;">Skipped / No Answer</span>
+                              @endif
                             </div>
+                          </div>
+                          
+                          <!-- Correct Answer -->
+                          @if(!$isCorrect)
+                          <div style="border-left: 2px solid #e5e7eb; padding-left: 1rem;">
+                            <span style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Correct Answer</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                              <span style="font-weight: 600; color: #166534;">{{ $correctKey }}.</span>
+                              <span style="color: #374151;">{{ $correctAnswerText }}</span>
+                            </div>
+                          </div>
+                          @endif
                         </div>
-                    @endif
-                </div>
+                      </div>
+                      <div style="flex-shrink: 0;">
+                        @if($isCorrect)
+                          <svg style="width: 1.5rem; height: 1.5rem; color: #16a34a;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        @else
+                          <svg style="width: 1.5rem; height: 1.5rem; color: #dc2626;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        @endif
+                      </div>
+                    </div>
+                  </div>
+                @endforeach
+              </div>
             </div>
+          @endif
         </div>
-    @endif
+      </div>
+    </div>
+  @endif
 </div>

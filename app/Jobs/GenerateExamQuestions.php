@@ -80,25 +80,25 @@ class GenerateExamQuestions
   {
     $level = strtolower($level);
 
-    if ($level === 'senior' || $level === 'lead' || $level === 'manager') {
+    if ($level === 'senior') {
       return [
         'distribution' => '2 Easy, 6 Medium, 12 Hard',
         'focus' => 'Advanced Knowledge, Architecture, System Scalability, Security, Advanced Optimization',
         'tech_focus' => 'Architecture, System Design, Advanced Debugging, Security'
       ];
-    } elseif ($level === 'junior' || $level === 'entry' || $level === 'intern') {
+    } elseif ($level === 'middle') {
       return [
-        'distribution' => '10 Easy, 8 Medium, 2 Hard',
-        'focus' => 'Fundamental Understanding, Basic Syntax, Standard Tool Usage',
-        'tech_focus' => 'Basic Syntax, Fundamental Logic, Simple Debugging'
+        'distribution' => '6 Easy, 10 Medium, 4 Hard',
+        'focus' => 'Industry standards, core concepts, common tools, working principles',
+        'tech_focus' => 'Industry standard practices, framework usage, intermediate debugging'
       ];
     }
 
-    // Default (Middle)
+    // Default (Junior)
     return [
-      'distribution' => '6 Easy, 10 Medium, 4 Hard',
-      'focus' => 'Industry standards, core concepts, common tools, working principles',
-      'tech_focus' => 'Industry standard practices, framework usage, intermediate debugging'
+      'distribution' => '10 Easy, 8 Medium, 2 Hard',
+      'focus' => 'Fundamental Understanding, Basic Syntax, Standard Tool Usage',
+      'tech_focus' => 'Basic Syntax, Fundamental Logic, Simple Debugging'
     ];
   }
 
@@ -136,7 +136,7 @@ class GenerateExamQuestions
       4. CONTENT FOCUS: {$diff['focus']} related to the skills above.
       5. UNIQUENESS: EVERY question MUST have a unique topic. DO NOT repeat the same concept. Complement existing questions.
       
-      JSON Format: {\"questions\": [{\"text\":\"...\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"A\",\"difficulty\":\"easy\"}]}
+      JSON Format: {\"questions\": [{\"text\":\"Question text...\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"A\",\"difficulty\":\"easy\"}]}
       Output ONLY JSON. Exactly {$count} UNIQUE questions. No duplicates.";
   }
 
@@ -165,13 +165,13 @@ class GenerateExamQuestions
       {$context}
 
       RULES:
-      1. LANGUAGE: All question text and analysis MUST be in Indonesian (Bahasa Indonesia). Use original syntax for code snippets (e.g., {$req}).
-      2. CASE STUDY & LOGIC: Every question MUST include a code snippet (3-10 lines) and focus on technical case studies, logic tracing, syntax analysis, bug detection, or predicting output.
+      1. LANGUAGE: All question text and analysis MUST be in Indonesian (Bahasa Indonesia). Use original syntax for code snippets (e.g., PHP, JavaScript).
+      2. CASE STUDY & LOGIC: Every question MUST include a code snippet wrapped in triple backticks (```) and focus on technical case studies, logic tracing, syntax analysis, bug detection, or predicting output.
       3. DIFFICULTY DISTRIBUTION: {$diff['distribution']}.
       4. CONTENT FOCUS: {$diff['tech_focus']}.
       5. UNIQUENESS: Ensure technical logic, bug types, and snippets are COMPLETELY DIFFERENT across all questions. No repetition of the same logic pattern.
       
-      JSON Format: {\"questions\": [{\"text\":\"...\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"B\",\"difficulty\":\"medium\"}]}
+      JSON Format: {\"questions\": [{\"text\":\"Question text... ```code here```\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"B\",\"difficulty\":\"medium\"}]}
       Output ONLY JSON. Exactly {$count} UNIQUE questions. No duplicates.";
   }
 

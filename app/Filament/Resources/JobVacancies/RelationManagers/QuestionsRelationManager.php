@@ -101,7 +101,7 @@ class QuestionsRelationManager extends RelationManager
 
       Notification::make()
         ->title('Generation Started')
-        ->body('Permintaan generate 35 soal (Knowledge & Technical) sedang diproses di background. Harap tunggu beberapa saat.')
+        ->body('Request to generate questions (Knowledge & Technical) is being processed in the background. Please wait.')
         ->success()
         ->send();
     }

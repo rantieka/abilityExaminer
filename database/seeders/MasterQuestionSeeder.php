@@ -14,15 +14,15 @@ class MasterQuestionSeeder extends Seeder
       // Backend question
       [
         'section' => 'technical',
-        'text' => 'Apabila a=7, b=12, jika diberikan instruksi a=b; b=a; maka akan mengakibatkan nilai...',
+        'text' => 'Apabila a=7, b=12, jika diberikan instruksi ```a=b; b=a;``` maka akan mengakibatkan nilai...',
         'options' => ['A' => 'a=7, b=12', 'B' => 'a=12, b=7', 'C' => 'a=12, b=12', 'D' => 'a=7, b=7'],
         'correct' => 'C',
-        'tags' => ['backend',                                                                                                                                                                                'general'],
+        'tags' => ['backend', 'general'],
         'difficulty' => 'easy'
       ],
       [
         'section' => 'technical',
-        'text' => 'Diberikan algoritma P=12; P=P+5; Q=P. Berapakah nilai P dan Q masing-masing?',
+        'text' => 'Diberikan algoritma ```P=12; P=P+5; Q=P;``` Berapakah nilai P dan Q masing-masing?',
         'options' => ['A' => '12 dan 17', 'B' => '17 dan 12', 'C' => '17 dan 17', 'D' => '12 dan 12'],
         'correct' => 'C',
         'tags' => ['backend', 'general'],
@@ -43,7 +43,7 @@ class MasterQuestionSeeder extends Seeder
       ],
       [
         'section' => 'technical',
-        'text' => 'Dalam IF Bersarang, jika $x=15: if($x>10){ if($x<20){ echo "A"; } } else { echo "B"; }. Apa outputnya?',
+        'text' => 'Dalam IF Bersarang, jika $x=15: ```if($x>10){ if($x<20){ echo "A"; } } else { echo "B"; }``` Apa outputnya?',
         'options' => ['A' => 'A', 'B' => 'B', 'C' => 'AB', 'D' => 'Tidak ada output'],
         'correct' => 'A',
         'tags' => ['backend', 'general'],

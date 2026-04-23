@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateDisplay(remaining);
       } else {
         clearInterval(timerInterval);
-        alert("Waktu Habis! Jawaban Anda akan dikirim otomatis.");
+        alert("Time Up! Your answers will be submitted automatically.");
         if (form) form.submit();
       }
     }, 1000);

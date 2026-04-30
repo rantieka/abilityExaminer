@@ -50,7 +50,6 @@ return [
   'gemini' => [
     'api_key' => env('GEMINI_API_KEY'),
     'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1'),
-    'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'), // Default to 1.5 for higher free quota (1500 RPD)
-    // 'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'), // 2.5 has strict 20 RPD limit in some regions
+    'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
   ],
 ];

@@ -11,33 +11,31 @@ class TestController extends Controller
 {
   public function verifyToken($token)
   {
-      $application = Application::where('test_token', $token)->first();
+    $application = Application::where('test_token', $token)->first();
 
-      if (!$application) {
-          return redirect()->route('home')->with('error', 'Token tes tidak valid.');
-      }
+    if (!$application) {
+      return redirect()->route('home')->with('error', 'Token tes tidak valid.');
+    }
 
-      if ($application->token_expires_at && now()->greaterThan($application->token_expires_at)) {
-          return redirect()->route('home')->with('error', 'Token tes sudah kadaluarsa. Silakan hubungi HR.');
-      }
-      
-      if ($application->test_score !== null) {
-           return redirect()->route('home')->with('info', 'Anda sudah menyelesaikan tes ini.');
-      }
+    if ($application->token_expires_at && now()->greaterThan($application->token_expires_at)) {
+      return redirect()->route('home')->with('error', 'Token tes sudah kadaluarsa. Silakan hubungi HR.');
+    }
+    
+    if ($application->test_score !== null) {
+      return redirect()->route('home')->with('info', 'Anda sudah menyelesaikan tes ini.');
+    }
 
-      // Log the user in for the test session
-      session(['applicant_id' => $application->id]);
-      
-      return redirect()->route('test.welcome', $application->id);
+    // Log the user in for the test session
+    session(['applicant_id' => $application->id]);
+    
+    return redirect()->route('test.welcome', $application->id);
   }
 
   public function show(Application $application)
   {
     // Add Authentication Check
     if (session('applicant_id') != $application->id) {
-       // Check if we are in dev/preview mode or if it's a legacy link?
-       // For now, redirect to a generic error or login page (though login page might be deprecated)
-       return redirect()->route('home')->with('error', 'Sesi tidak valid atau kadaluarsa. Silakan gunakan link dari email Anda kembali.');
+      return redirect()->route('home')->with('error', 'Sesi tidak valid atau kadaluarsa. Silakan gunakan link dari email Anda kembali.');
     }
 
     // check if applicant already took the test
@@ -51,7 +49,7 @@ class TestController extends Controller
     if ($application->part1_completed_at) {
       // Show Part 2 (Technical/Case Study)
       if (!$application->part2_started_at) {
-          $application->update(['part2_started_at' => now()]);
+        $application->update(['part2_started_at' => now()]);
       }
       
       $timeLimit = 30 * 60; // 30 minutes in seconds;
@@ -62,7 +60,7 @@ class TestController extends Controller
       
       // If start time is somehow in future (timezone diff?), treat elapsed as 0
       if ($startTime > $now) {
-          $elapsed = 0;
+        $elapsed = 0;
       }
       
       $remaining = max(0, $timeLimit - $elapsed);
@@ -84,7 +82,7 @@ class TestController extends Controller
       
       // Show Part 1 (Knowledge & Foundation)
       if (!$application->part1_started_at) {
-          $application->update(['part1_started_at' => now()]);
+        $application->update(['part1_started_at' => now()]);
       }
 
       $timeLimit = 30 * 60; // 30 minutes in seconds;
@@ -95,7 +93,7 @@ class TestController extends Controller
       
       // If start time is somehow in future (timezone diff?), treat elapsed as 0
       if ($startTime > $now) {
-          $elapsed = 0;
+        $elapsed = 0;
       }
       
       $remaining = max(0, $timeLimit - $elapsed);
@@ -203,6 +201,12 @@ class TestController extends Controller
     $totalPossiblePoints = 0;
     $earnedPoints = 0;
 
+    $breakdown = [
+      'required'  => ['earned' => 0, 'possible' => 0, 'percentage' => 0],
+      'preferred' => ['earned' => 0, 'possible' => 0, 'percentage' => 0],
+      'bonus'     => ['earned' => 0, 'possible' => 0, 'percentage' => 0],
+    ];
+
     foreach ($questions as $question) {
       // Determine weight based on difficulty
       $weight = 5; // Default medium
@@ -210,17 +214,36 @@ class TestController extends Controller
       if ($question->difficulty === 'hard') $weight = 10;
 
       $totalPossiblePoints += $weight;
+      
+      $category = $question->skill_category ?? 'required';
+      if (isset($breakdown[$category])) {
+          $breakdown[$category]['possible'] += $weight;
+      }
 
       $userAnswer = $allAnswers[$question->id] ?? null;
-      if ($userAnswer === $question->correct_answer) {
+      
+      // Map numeric keys (0,1,2,3) to letters (A,B,C,D) for robust comparison
+      $mappedUserAnswer = is_numeric($userAnswer) ? chr(65 + (int)$userAnswer) : $userAnswer;
+      $mappedCorrectAnswer = is_numeric($question->correct_answer) ? chr(65 + (int)$question->correct_answer) : $question->correct_answer;
+
+      if ($mappedUserAnswer === $mappedCorrectAnswer) {
         $earnedPoints += $weight;
+        if (isset($breakdown[$category])) {
+            $breakdown[$category]['earned'] += $weight;
+        }
       }
+    }
+
+    // Calculate percentages for breakdown
+    foreach ($breakdown as $key => $data) {
+        $breakdown[$key]['percentage'] = $data['possible'] > 0 ? round(($data['earned'] / $data['possible']) * 100) : 0;
     }
 
     $score = $totalPossiblePoints > 0 ? round(($earnedPoints / $totalPossiblePoints) * 100) : 0;
 
     $application->update([
         'test_score' => $score,
+        'test_details' => $breakdown,
         'part2_answers' => $part2Answers,
         'test_completed_at' => now()
     ]);

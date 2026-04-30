@@ -88,57 +88,111 @@
       </div>
       
       <!-- Breakdown Grid -->
-      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background-color: #f3f4f6;">
-        <!-- Part 1 -->
-        <div style="background-color: white; padding: 1.5rem;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-            <div>
-              <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">Part 1: Knowledge</h4>
-              <p style="font-size: 0.75rem; color: #9ca3af;">Multiple choice & theory</p>
+      <div style="display: grid; grid-row-gap: 1px; background-color: #f3f4f6;">
+        <!-- Part 1 & 2 Summary -->
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px;">
+            <div style="background-color: white; padding: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <div>
+                    <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">Part 1: Knowledge</h4>
+                    <p style="font-size: 0.75rem; color: #9ca3af;">Theory & Concepts</p>
+                    </div>
+                    <div style="padding: 0.25rem; background-color: #f3f4f6; border-radius: 0.375rem;">
+                    <svg style="width: 1.25rem; height: 1.25rem; color: #6b7280;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                    <span style="font-size: 1.875rem; font-weight: 700; color: #111827;">{{ $p1Stats['correct'] }}</span>
+                    <span style="font-size: 0.875rem; color: #6b7280;">/ {{ $p1Stats['total'] }} Correct</span>
+                    </div>
+                    <div style="width: 100%; height: 0.5rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
+                    <div style="height: 100%; background-color: #3b82f6; width: {{ $p1Stats['percentage'] }}%;"></div>
+                    </div>
+                </div>
             </div>
-            <div style="padding: 0.25rem; background-color: #f3f4f6; border-radius: 0.375rem;">
-             <svg style="width: 1.25rem; height: 1.25rem; color: #6b7280;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-             </svg>
+
+            <div style="background-color: white; padding: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <div>
+                    <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">Part 2: Technical</h4>
+                    <p style="font-size: 0.75rem; color: #9ca3af;">Case Study & Logic</p>
+                    </div>
+                    <div style="padding: 0.25rem; background-color: #f3f4f6; border-radius: 0.375rem;">
+                    <svg style="width: 1.25rem; height: 1.25rem; color: #6b7280;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                    <span style="font-size: 1.875rem; font-weight: 700; color: #111827;">{{ $p2Stats['correct'] }}</span>
+                    <span style="font-size: 0.875rem; color: #6b7280;">/ {{ $p2Stats['total'] }} Correct</span>
+                    </div>
+                    <div style="width: 100%; height: 0.5rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
+                    <div style="height: 100%; background-color: #3b82f6; width: {{ $p2Stats['percentage'] }}%;"></div>
+                    </div>
+                </div>
             </div>
-          </div>
-          
-          <div style="margin-top: 1rem;">
-            <div style="display: flex; align-items: baseline; gap: 0.5rem;">
-              <span style="font-size: 1.875rem; font-weight: 700; color: #111827;">{{ $p1Stats['correct'] }}</span>
-              <span style="font-size: 0.875rem; color: #6b7280;">/ {{ $p1Stats['total'] }} Correct</span>
-            </div>
-            <div style="width: 100%; height: 0.5rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
-              <div style="height: 100%; background-color: #3b82f6; width: {{ $p1Stats['percentage'] }}%;"></div>
-            </div>
-            <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; text-align: right;">{{ $p1Stats['percentage'] }}% proficiency</p>
-          </div>
         </div>
-        
-        <!-- Part 2 -->
+
+        <!-- Skill Category Breakdown (New Section) -->
+        <div style="background-color: #f9fafb; padding: 1rem 1.5rem; border-top: 1px solid #f3f4f6; border-bottom: 1px solid #f3f4f6;">
+            <h4 style="font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.1em;">Skill Category Performance (Weighted)</h4>
+        </div>
+
         <div style="background-color: white; padding: 1.5rem;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-            <div>
-              <h4 style="font-size: 0.875rem; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">Part 2: Technical</h4>
-              <p style="font-size: 0.75rem; color: #9ca3af;">Case study & practical</p>
+            @php
+                $details = $record->test_details ?? [
+                    'required' => ['percentage' => 0, 'earned' => 0, 'possible' => 0],
+                    'preferred' => ['percentage' => 0, 'earned' => 0, 'possible' => 0],
+                    'bonus' => ['percentage' => 0, 'earned' => 0, 'possible' => 0]
+                ];
+            @endphp
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem;">
+                <!-- Required -->
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <div style="width: 0.5rem; height: 0.5rem; border-radius: 9999px; background-color: #ef4444;"></div>
+                        <span style="font-size: 0.875rem; font-weight: 600; color: #374151;">Required Skills</span>
+                    </div>
+                    <div style="display: flex; align-items: baseline; gap: 0.25rem;">
+                        <span style="font-size: 1.25rem; font-weight: 700; color: #111827;">{{ $details['required']['percentage'] }}%</span>
+                        <span style="font-size: 0.75rem; color: #9ca3af;">({{ $details['required']['earned'] }}/{{ $details['required']['possible'] }} pts)</span>
+                    </div>
+                    <div style="width: 100%; height: 0.375rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
+                        <div style="height: 100%; background-color: #ef4444; width: {{ $details['required']['percentage'] }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Preferred -->
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <div style="width: 0.5rem; height: 0.5rem; border-radius: 9999px; background-color: #f59e0b;"></div>
+                        <span style="font-size: 0.875rem; font-weight: 600; color: #374151;">Preferred Skills</span>
+                    </div>
+                    <div style="display: flex; align-items: baseline; gap: 0.25rem;">
+                        <span style="font-size: 1.25rem; font-weight: 700; color: #111827;">{{ $details['preferred']['percentage'] }}%</span>
+                        <span style="font-size: 0.75rem; color: #9ca3af;">({{ $details['preferred']['earned'] }}/{{ $details['preferred']['possible'] }} pts)</span>
+                    </div>
+                    <div style="width: 100%; height: 0.375rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
+                        <div style="height: 100%; background-color: #f59e0b; width: {{ $details['preferred']['percentage'] }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Bonus -->
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <div style="width: 0.5rem; height: 0.5rem; border-radius: 9999px; background-color: #10b981;"></div>
+                        <span style="font-size: 0.875rem; font-weight: 600; color: #374151;">Bonus Skills</span>
+                    </div>
+                    <div style="display: flex; align-items: baseline; gap: 0.25rem;">
+                        <span style="font-size: 1.25rem; font-weight: 700; color: #111827;">{{ $details['bonus']['percentage'] }}%</span>
+                        <span style="font-size: 0.75rem; color: #9ca3af;">({{ $details['bonus']['earned'] }}/{{ $details['bonus']['possible'] }} pts)</span>
+                    </div>
+                    <div style="width: 100%; height: 0.375rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
+                        <div style="height: 100%; background-color: #10b981; width: {{ $details['bonus']['percentage'] }}%;"></div>
+                    </div>
+                </div>
             </div>
-            <div style="padding: 0.25rem; background-color: #f3f4f6; border-radius: 0.375rem;">
-             <svg style="width: 1.25rem; height: 1.25rem; color: #6b7280;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-             </svg>
-            </div>
-          </div>
-          
-          <div style="margin-top: 1rem;">
-            <div style="display: flex; align-items: baseline; gap: 0.5rem;">
-              <span style="font-size: 1.875rem; font-weight: 700; color: #111827;">{{ $p2Stats['correct'] }}</span>
-              <span style="font-size: 0.875rem; color: #6b7280;">/ {{ $p2Stats['total'] }} Correct</span>
-            </div>
-            <div style="width: 100%; height: 0.5rem; background-color: #f3f4f6; border-radius: 9999px; margin-top: 0.5rem; overflow: hidden;">
-              <div style="height: 100%; background-color: #3b82f6; width: {{ $p2Stats['percentage'] }}%;"></div>
-            </div>
-            <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; text-align: right;">{{ $p2Stats['percentage'] }}% proficiency</p>
-          </div>
         </div>
       </div>
     </div>
@@ -163,11 +217,24 @@
             <div style="display: flex; flex-direction: column; gap: 1rem;">
               @foreach($part1Questions as $index => $question)
                 @php
-                  $userAnswerKey = $allAnswers[$question->id] ?? null;
-                  $correctKey = $question->correct_answer;
-                  $isCorrect = $userAnswerKey === $correctKey;
-                  $userAnswerText = $question->options[$userAnswerKey] ?? 'No Answer';
-                  $correctAnswerText = $question->options[$correctKey] ?? 'Unknown';
+                  $rawUserAnswerKey = $allAnswers[$question->id] ?? null;
+                  $rawCorrectKey = $question->correct_answer;
+                  
+                  // Map to letters if numeric
+                  $userAnswerKey = is_numeric($rawUserAnswerKey) ? chr(65 + (int)$rawUserAnswerKey) : ($rawUserAnswerKey ? strtoupper($rawUserAnswerKey) : null);
+                  $correctKey = is_numeric($rawCorrectKey) ? chr(65 + (int)$rawCorrectKey) : strtoupper($rawCorrectKey);
+                  
+                  $isCorrect = $userAnswerKey !== null && $userAnswerKey === $correctKey;
+                  
+                  // Normalize options to letter keys for consistent lookup
+                  $normalizedOptions = [];
+                  foreach ($question->options as $k => $v) {
+                    $lk = is_numeric($k) ? chr(65 + (int)$k) : strtoupper($k);
+                    $normalizedOptions[$lk] = $v;
+                  }
+                  
+                  $userAnswerText = $userAnswerKey ? ($normalizedOptions[$userAnswerKey] ?? 'No Answer') : 'No Answer';
+                  $correctAnswerText = $normalizedOptions[$correctKey] ?? 'Unknown';
                 @endphp
                 <div style="border: 1px solid {{ $isCorrect ? '#bbf7d0' : '#fecaca' }}; border-radius: 0.5rem; padding: 1rem; background-color: {{ $isCorrect ? '#f0fdf4' : '#fef2f2' }};">
                   <div style="display: flex; gap: 1rem; align-items: flex-start;">
@@ -175,7 +242,15 @@
                       {{ $loop->iteration }}
                     </div>
                     <div style="flex-grow: 1;">
-                      <p style="font-weight: 500; color: #1f2937; margin-bottom: 0.5rem;">{!! nl2br(e($question->question_text)) !!}</p>
+                      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; padding: 0.1rem 0.5rem; border-radius: 0.25rem; background-color: {{ $question->skill_category === 'required' ? '#fee2e2' : ($question->skill_category === 'preferred' ? '#fef3c7' : '#d1fae5') }}; color: {{ $question->skill_category === 'required' ? '#b91c1c' : ($question->skill_category === 'preferred' ? '#b45309' : '#047857') }};">
+                            {{ $question->skill_category ?? 'required' }}
+                        </span>
+                        <span style="font-size: 0.7rem; font-weight: 600; color: #9ca3af;">Difficulty: {{ ucfirst($question->difficulty) }}</span>
+                      </div>
+                      <p style="font-weight: 500; color: #1f2937; margin-bottom: 0.5rem;">
+                        {!! preg_replace('/```(?:php)?(.*?)```/s', '<pre style="background-color: #1f2937; color: #f9fafb; padding: 0.75rem; border-radius: 0.375rem; margin-top: 0.5rem; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; font-size: 0.875rem;"><code>$1</code></pre>', e($question->question_text)) !!}
+                      </p>
                       
                       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; font-size: 0.875rem;">
                         <!-- User Answer -->
@@ -222,11 +297,24 @@
               <div style="display: flex; flex-direction: column; gap: 1rem;">
                 @foreach($part2Questions as $index => $question)
                   @php
-                    $userAnswerKey = $allAnswers[$question->id] ?? null;
-                    $correctKey = $question->correct_answer;
-                    $isCorrect = $userAnswerKey === $correctKey;
-                    $userAnswerText = $question->options[$userAnswerKey] ?? 'No Answer';
-                    $correctAnswerText = $question->options[$correctKey] ?? 'Unknown';
+                    $rawUserAnswerKey = $allAnswers[$question->id] ?? null;
+                    $rawCorrectKey = $question->correct_answer;
+                    
+                    // Map to letters if numeric
+                    $userAnswerKey = is_numeric($rawUserAnswerKey) ? chr(65 + (int)$rawUserAnswerKey) : ($rawUserAnswerKey ? strtoupper($rawUserAnswerKey) : null);
+                    $correctKey = is_numeric($rawCorrectKey) ? chr(65 + (int)$rawCorrectKey) : strtoupper($rawCorrectKey);
+                    
+                    $isCorrect = $userAnswerKey !== null && $userAnswerKey === $correctKey;
+                    
+                    // Normalize options to letter keys for consistent lookup
+                    $normalizedOptions = [];
+                    foreach ($question->options as $k => $v) {
+                      $lk = is_numeric($k) ? chr(65 + (int)$k) : strtoupper($k);
+                      $normalizedOptions[$lk] = $v;
+                    }
+                    
+                    $userAnswerText = $userAnswerKey ? ($normalizedOptions[$userAnswerKey] ?? 'No Answer') : 'No Answer';
+                    $correctAnswerText = $normalizedOptions[$correctKey] ?? 'Unknown';
                   @endphp
                   <div style="border: 1px solid {{ $isCorrect ? '#bbf7d0' : '#fecaca' }}; border-radius: 0.5rem; padding: 1rem; background-color: {{ $isCorrect ? '#f0fdf4' : '#fef2f2' }};">
                     <div style="display: flex; gap: 1rem; align-items: flex-start;">
@@ -234,7 +322,9 @@
                         {{ $loop->iteration }}
                       </div>
                       <div style="flex-grow: 1;">
-                        <p style="font-weight: 500; color: #1f2937; margin-bottom: 0.5rem;">{!! nl2br(e($question->question_text)) !!}</p>
+                        <p style="font-weight: 500; color: #1f2937; margin-bottom: 0.5rem;">
+                          {!! preg_replace('/```(?:php)?(.*?)```/s', '<pre style="background-color: #1f2937; color: #f9fafb; padding: 0.75rem; border-radius: 0.375rem; margin-top: 0.5rem; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; font-size: 0.875rem;"><code>$1</code></pre>', e($question->question_text)) !!}
+                        </p>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; font-size: 0.875rem;">
                           <!-- User Answer -->

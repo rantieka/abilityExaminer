@@ -31,6 +31,7 @@ class Application extends Model
     'email_sent_at',
     'email_type',
     'rejection_reason',
+    'test_details',
   ];
 
   protected $casts = [
@@ -41,6 +42,7 @@ class Application extends Model
     'part2_started_at' => 'datetime',
     'test_completed_at' => 'datetime',
     'token_expires_at' => 'datetime',
+    'test_details' => 'array',
   ];
 
   public function jobVacancy(): BelongsTo

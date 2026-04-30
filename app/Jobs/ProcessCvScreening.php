@@ -18,8 +18,8 @@ class ProcessCvScreening implements ShouldQueue
 {
   use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-  public $tries = 1; // Set to 1 to avoid repeated failed requests
-  public $backoff = [10];
+  public $tries = 5; 
+  public $backoff = [30, 60, 120, 300];
   public $application;
   public function __construct(Application $application)
   {
@@ -225,12 +225,13 @@ class ProcessCvScreening implements ShouldQueue
         {$cvText}
 
         Evaluation Rules:
-        1. Parse the CV and identify which of the EXACT REQUIRED, PREFERRED, and BONUS skills are explicitly or implicitly present. Use synonyms intelligently (e.g. 'React.js' counts for 'React').
-        2. Extract any other relevant technical skills into 'other_technical_skills'.
-        3. Evaluate if the candidate meets the 'General Qualifications'. Provide a short label for each rule (e.g. 'Willing to work on-site') and state 'is_met': true/false.
-        4. Accurately extract the candidate's total years of professional experience (decimals allowed).
-        5. Extract their latest/highest education degree and major.
-        6. Provide 2-3 qualitative 'key_strengths'. Focus on specific expertise, software mastery, or soft skills (e.g., 'Expertise in building scalable microservices' or 'Strong background in Financial Systems') instead of just job titles.
+        1. mapping: identify which of the REQUIRED, PREFERRED, and BONUS skills are present. use synonyms intelligently (e.g., 'react.js' = 'react'). only map skills that are explicitly mentioned or strongly evidenced in the cv.\n
+        2. extract: extract any other relevant technical skills found in the cv into 'other_technical_skills'.\n
+        3. general qualifications: evaluate if the candidate meets each qualification. for SOFT SKILLS (e.g., teamwork, learning ability), infer 'true' if the candidate has successful professional history. for HARD requirements, default to 'false' if not mentioned.\n
+        4. experience: accurately extract total years of formal professional work experience (decimals allowed).\n
+        5. education: extract their latest/highest education degree and major.\n
+        6. strengths: provide 2-3 qualitative 'key_strengths'. focus on concrete technical depth or software mastery.\n
+        7. output: respond with valid JSON only. do not include markdown or explanations. \n
 
         Format JSON strictly like this:
         {
@@ -251,6 +252,8 @@ class ProcessCvScreening implements ShouldQueue
           \"key_strengths\": [\"Descriptive strength 1\", \"Descriptive strength 2\"]
         }
     ";
+
+    Log::error($userPrompt);
 
     return [
       ['role' => 'system', 'content' => $systemMessage],

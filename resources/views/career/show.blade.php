@@ -33,20 +33,32 @@
       @if($job->required_skills || $job->preferred_skills || $job->bonus_skills)
       <div class="mb-4">
         <h5 class="fw-bold mb-3">Technical Skills</h5>
+        
         @if($job->required_skills)
-          @foreach($job->required_skills as $skill)
-            <span class="badge bg-light text-dark border me-1 mb-1">{{ $skill }}</span>
-          @endforeach
+          <div class="mb-3">
+             <div class="skill-label">Main Stack (Required)</div>
+             @foreach($job->required_skills as $skill)
+               <span class="badge bg-light text-dark border me-1 mb-1 px-3 py-2 fw-medium rounded-pill">{{ $skill }}</span>
+             @endforeach
+          </div>
         @endif
+
         @if($job->preferred_skills)
-          @foreach($job->preferred_skills as $skill)
-            <span class="badge bg-light text-dark border me-1 mb-1">{{ $skill }}</span>
-          @endforeach
+          <div class="mb-3">
+             <div class="skill-label">Nice to Have (Preferred)</div>
+             @foreach($job->preferred_skills as $skill)
+               <span class="badge bg-light text-dark border me-1 mb-1 px-3 py-2 fw-medium rounded-pill">{{ $skill }}</span>
+             @endforeach
+          </div>
         @endif
+
         @if($job->bonus_skills)
-          @foreach($job->bonus_skills as $skill)
-            <span class="badge bg-light text-dark border me-1 mb-1">{{ $skill }}</span>
-          @endforeach
+          <div class="mb-3">
+             <div class="skill-label">Bonus / Tools</div>
+             @foreach($job->bonus_skills as $skill)
+               <span class="badge bg-light text-dark border me-1 mb-1 px-3 py-2 fw-medium rounded-pill">{{ $skill }}</span>
+             @endforeach
+          </div>
         @endif
       </div>
       @endif

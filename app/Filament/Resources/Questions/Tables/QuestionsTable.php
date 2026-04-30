@@ -43,6 +43,22 @@ class QuestionsTable
           ])
           ->sortable(),
         TextColumn::make('correct_answer'),
+        TextColumn::make('difficulty')
+          ->badge()
+          ->colors([
+            'success' => 'easy',
+            'warning' => 'medium',
+            'danger'  => 'hard',
+          ])
+          ->sortable(),
+        TextColumn::make('skill_category')
+          ->badge()
+          ->colors([
+            'danger'  => 'required',
+            'warning' => 'preferred',
+            'success' => 'bonus',
+          ])
+          ->sortable(),
         ToggleColumn::make('is_active')
           ->label('Active')
           ->afterStateUpdated(function ($state) {
@@ -62,6 +78,12 @@ class QuestionsTable
           ->options([
             'knowledge' => 'Knowledge & Foundation',
             'technical' => 'Technical & Case Study',
+          ]),
+        SelectFilter::make('skill_category')
+          ->options([
+            'required'  => 'Required',
+            'preferred' => 'Preferred',
+            'bonus'     => 'Bonus',
           ]),
       ])
       ->headerActions([

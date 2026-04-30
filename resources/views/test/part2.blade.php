@@ -52,20 +52,21 @@
                 <div class="d-flex mb-3">
                     <span class="flex-shrink-0 bg-light text-dark fw-bold rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">{{ $index + 1 }}</span>
                     <h5 class="fw-bold mb-0 pt-1" style="line-height: 1.6;">
-                      {!! preg_replace('/```(?:php)?(.*?)```/s', '<pre class="bg-dark text-light p-3 rounded-3 mt-2 shadow-sm"><code>$1</code></pre>', e($question->question_text)) !!}
+                      {!! preg_replace('/```(?:php)?(.*?)```/s', '<pre class="bg-dark text-light p-3 rounded-3 mt-2 shadow-sm" style="overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;"><code>$1</code></pre>', e($question->question_text)) !!}
                     </h5>
                 </div>
                 
                 <div class="options-list ps-5">
                 @foreach($question->options as $key => $option)
+                  @php $letter = is_numeric($key) ? chr(65 + (int)$key) : $key; @endphp
                   <div class="mb-2">
                     <input class="btn-check" type="radio" 
                       name="answers[{{ $question->id }}]" 
-                      id="q{{ $question->id }}_{{ $key }}" 
-                      value="{{ $key }}" required>
+                      id="q{{ $question->id }}_{{ $letter }}" 
+                      value="{{ $letter }}" required>
                     
-                     <label class="btn btn-outline-light text-dark w-100 text-start p-3 rounded-3 d-flex align-items-center border" for="q{{ $question->id }}_{{ $key }}" style="border-color: #dee2e6;">
-                        <span class="badge bg-secondary-subtle text-secondary me-3 rounded px-2" style="min-width: 30px;">{{ $key }}</span>
+                     <label class="btn btn-outline-light text-dark w-100 text-start p-3 rounded-3 d-flex align-items-center border" for="q{{ $question->id }}_{{ $letter }}" style="border-color: #dee2e6;">
+                        <span class="badge bg-secondary-subtle text-secondary me-3 rounded px-2" style="min-width: 30px;">{{ $letter }}</span>
                         <span>{{ $option }}</span>
                     </label>
                   </div>

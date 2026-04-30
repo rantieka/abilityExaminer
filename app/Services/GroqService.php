@@ -21,8 +21,10 @@ class GroqService
   /**
    * Send a prompt to Groq and get the response.
    */
-  public function chat(array $messages, float $temperature = 0.5, int $maxTokens = 4096)
+  public function chat(array $messages, float $temperature = 0.5, int $maxTokens = 4096, ?string $model = null)
   {
+      // Use override model if provided, otherwise fall back to config default
+      $selectedModel = $model ?? $this->model;
 
       // Bypass SSL verification for local development (Windows/Laragon SSL cert issue)
       // TODO: Remove this in production - SSL should be verified on live servers
@@ -33,7 +35,7 @@ class GroqService
           'Content-Type' => 'application/json',
         ])
         ->post("{$this->baseUrl}/chat/completions", [
-          'model' => $this->model,
+          'model' => $selectedModel,
           'messages' => $messages,
           'temperature' => $temperature,
           'max_tokens' => $maxTokens,

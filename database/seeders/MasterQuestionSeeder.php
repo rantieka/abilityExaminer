@@ -17,15 +17,15 @@ class MasterQuestionSeeder extends Seeder
         'text' => 'Apabila a=7, b=12, jika diberikan instruksi ```a=b; b=a;``` maka akan mengakibatkan nilai...',
         'options' => ['A' => 'a=7, b=12', 'B' => 'a=12, b=7', 'C' => 'a=12, b=12', 'D' => 'a=7, b=7'],
         'correct' => 'C',
-        'tags' => ['backend', 'general'],
-        'difficulty' => 'easy'
+        'tags' => ['backend'],
+        'difficulty' => 'medium'
       ],
       [
         'section' => 'technical',
         'text' => 'Diberikan algoritma ```P=12; P=P+5; Q=P;``` Berapakah nilai P dan Q masing-masing?',
         'options' => ['A' => '12 dan 17', 'B' => '17 dan 12', 'C' => '17 dan 17', 'D' => '12 dan 12'],
         'correct' => 'C',
-        'tags' => ['backend', 'general'],
+        'tags' => ['backend'],
         'difficulty' => 'easy'
       ],
       [
@@ -38,7 +38,7 @@ class MasterQuestionSeeder extends Seeder
           'D' => 'MERGE t1, t2, t3'
         ],
         'correct' => 'B',
-        'tags' => ['backend', 'general', 'SQL'],
+        'tags' => ['backend', 'MySQL'],
         'difficulty' => 'medium'
       ],
       [
@@ -46,7 +46,7 @@ class MasterQuestionSeeder extends Seeder
         'text' => 'Dalam IF Bersarang, jika $x=15: ```if($x>10){ if($x<20){ echo "A"; } } else { echo "B"; }``` Apa outputnya?',
         'options' => ['A' => 'A', 'B' => 'B', 'C' => 'AB', 'D' => 'Tidak ada output'],
         'correct' => 'A',
-        'tags' => ['backend', 'general'],
+        'tags' => ['backend'],
         'difficulty' => 'easy'
       ],
       [
@@ -59,8 +59,8 @@ class MasterQuestionSeeder extends Seeder
           'D' => 'Main Video Core - Untuk multimedia'
         ],
         'correct' => 'B',
-        'tags' => ['backend', 'general'],
-        'difficulty' => 'medium'
+        'tags' => ['backend'],
+        'difficulty' => 'easy'
       ],
 
       // PHP specific
@@ -75,31 +75,34 @@ class MasterQuestionSeeder extends Seeder
         ],
         'correct' => 'B',
         'tags' => ['PHP'],
-        'difficulty' => 'medium'
-      ],
-      [
-        'section' => 'knowledge',
-        'text' => 'Manakah contoh Looping Dinamis yang benar menggunakan foreach di PHP?',
-        'options' => [
-          'A' => 'for($i=0; $i<10; $i++)',
-          'B' => 'foreach($items as $item) { ... }',
-          'C' => 'while($a < 10)',
-          'D' => 'do { ... } while($a)'
-        ],
-        'correct' => 'B',
-        'tags' => ['PHP'],
-        'difficulty' => 'medium'
+        'difficulty' => 'easy'
       ],
       [
         'section' => 'technical',
-        'text' => 'Jika Laravel menampilkan error 500, file log mana yang harus dicek pertama kali?',
-        'options' => ['A' => 'storage/logs/laravel.log', 'B' => '.env', 'C' => 'public/index.php', 'D' => 'config/app.php'],
+        'text' => 'Perintah PHP manakah yang paling tepat digunakan untuk menampilkan semua jenis error (termasuk notice dan warning) saat proses development?',
+        'options' => [
+          'A' => "error_reporting(E_ALL); ini_set('display_errors', 1);",
+          'B' => "display_errors = On;",
+          'C' => "show_errors(true);",
+          'D' => "debug_mode(true);"
+        ],
         'correct' => 'A',
-        'tags' => ['PHP', 'Laravel'],
+        'tags' => ['PHP'],
+        'difficulty' => 'easy'
+      ],
+      [
+        'section' => 'technical',
+        'text' => "Diberikan kode PHP berikut: \n```php\n\$arr = [1, 2, 3];\nforeach (\$arr as &\$val) {}\nforeach (\$arr as \$val) {}\necho implode(',', \$arr);\n``` \nApa output dari kode tersebut?",
+        'options' => [
+          'A' => '1,2,3',
+          'B' => '1,2,2',
+          'C' => '1,1,1',
+          'D' => '3,3,3'
+        ],
+        'correct' => 'B',
+        'tags' => ['PHP'],
         'difficulty' => 'hard'
       ],
-
-      // New questions from Google Form conversion
       [
         'section' => 'knowledge',
         'text' => 'Apa yang dimaksud dengan konsep Inheritance (Pewarisan) dalam OOP?',
@@ -110,7 +113,7 @@ class MasterQuestionSeeder extends Seeder
           'D' => 'Teknik menyembunyikan logika program'
         ],
         'correct' => 'B',
-        'tags' => ['backend', 'OOP'],
+        'tags' => ['backend'],
         'difficulty' => 'medium'
       ],
       [
@@ -118,7 +121,7 @@ class MasterQuestionSeeder extends Seeder
         'text' => 'Keyword apa yang digunakan di PHP untuk membuat sebuah Class mewarisi (inherit) dari Class lain?',
         'options' => ['A' => 'implements', 'B' => 'extends', 'C' => 'requires', 'D' => 'includes'],
         'correct' => 'B',
-        'tags' => ['backend', 'PHP', 'OOP'],
+        'tags' => ['PHP'],
         'difficulty' => 'easy'
       ],
       [
@@ -131,7 +134,7 @@ class MasterQuestionSeeder extends Seeder
           'D' => 'Hanya menghapus primary key saja'
         ],
         'correct' => 'C',
-        'tags' => ['backend', 'SQL'],
+        'tags' => ['backend', 'MySQL'],
         'difficulty' => 'medium'
       ],
       [
@@ -144,7 +147,7 @@ class MasterQuestionSeeder extends Seeder
           'D' => 'Membuat tampilan website menjadi lebih bagus'
         ],
         'correct' => 'B',
-        'tags' => ['backend', 'general'],
+        'tags' => ['backend'],
         'difficulty' => 'easy'
       ],
       [
@@ -157,7 +160,28 @@ class MasterQuestionSeeder extends Seeder
           'D' => 'UPDATE users VALUES("Budi") WHERE id=1'
         ],
         'correct' => 'B',
-        'tags' => ['backend', 'SQL'],
+        'tags' => ['backend', 'MySQL'],
+        'difficulty' => 'medium'
+      ],
+      [
+        'section' => 'technical',
+        'text' => 'Diberikan sebuah tabel `orders` yang memiliki **Composite Index** pada kolom `(user_id, order_date, status)`. Manakah query di bawah ini yang **TIDAK** akan menggunakan indeks tersebut secara optimal (akan melakukan Full Table Scan)?',
+        'options' => [
+          'A' => 'SELECT * FROM orders WHERE user_id = 5 AND order_date = "2023-01-01"',
+          'B' => 'SELECT * FROM orders WHERE user_id = 5',
+          'C' => 'SELECT * FROM orders WHERE order_date = "2023-01-01" AND status = "shipped"',
+          'D' => 'SELECT * FROM orders WHERE user_id = 5 AND status = "pending"'
+        ],
+        'correct' => 'C',
+        'tags' => ['backend', 'MySQL'],
+        'difficulty' => 'hard'
+      ],
+      [
+        'section' => 'knowledge',
+        'text' => 'Manakah HTTP Method yang paling tepat digunakan dalam REST API untuk memperbarui data yang sudah ada secara keseluruhan?',
+        'options' => ['A' => 'GET', 'B' => 'POST', 'C' => 'PUT', 'D' => 'DELETE'],
+        'correct' => 'C',
+        'tags' => ['backend', 'REST API'],
         'difficulty' => 'medium'
       ],
 
@@ -167,7 +191,7 @@ class MasterQuestionSeeder extends Seeder
         'text' => 'Tag manakah yang digunakan untuk mendeklarasikan bahwa sebuah file HTML adalah versi HTML5?',
         'options' => ['A' => '<html>', 'B' => '<!DOCTYPE html>', 'C' => '<head>', 'D' => '<meta html5>'],
         'correct' => 'B',
-        'tags' => ['frontend', 'general', 'HTML'],
+        'tags' => ['frontend'],
         'difficulty' => 'easy'
       ],
       [
@@ -180,15 +204,20 @@ class MasterQuestionSeeder extends Seeder
           'D' => '<font>, <center>, <big>, <strike>'
         ],
         'correct' => 'A',
-        'tags' => ['frontend', 'general', 'HTML'],
+        'tags' => ['frontend'],
         'difficulty' => 'medium'
       ],
       [
         'section' => 'knowledge',
-        'text' => 'Manakah properti CSS yang digunakan untuk menyembunyikan elemen namun tetap memakan ruang (space) di layout?',
-        'options' => ['A' => 'display: none;', 'B' => 'visibility: hidden;', 'C' => 'opacity: 1;', 'D' => 'margin-top: -999px;'],
+        'text' => 'Manakah properti CSS yang digunakan untuk menyembunyikan elemen secara visual, namun elemen tersebut tetap mempertahankan ruang (space) yang ditempatinya pada tata letak halaman?',
+        'options' => [
+          'A' => 'display: none;',
+          'B' => 'visibility: hidden;',
+          'C' => 'display: hidden;',
+          'D' => 'visibility: none;'
+        ],
         'correct' => 'B',
-        'tags' => ['frontend', 'general', 'CSS'],
+        'tags' => ['frontend'],
         'difficulty' => 'medium'
       ],
       [
@@ -196,29 +225,29 @@ class MasterQuestionSeeder extends Seeder
         'text' => 'Manakah kumpulan framework CSS yang umum digunakan?',
         'options' => [
           'A' => 'Tailwind, Bootstrap, Bulma',
-          'B' => 'Laravel, Symfony, CodeIgniter',
+          'B' => 'Yii, Symfony, CodeIgniter',
           'C' => 'MySQL, MongoDB, Oracle',
           'D' => 'React, Vue, Angular'
         ],
         'correct' => 'A',
-        'tags' => ['frontend', 'general'],
+        'tags' => ['frontend'],
         'difficulty' => 'easy'
       ],
       [
         'section' => 'knowledge',
         'text' => 'Properti Flexbox untuk mengatur perataan elemen secara horizontal (main-axis) adalah?',
-        'options' => ['A' => 'align-items', 'B' => 'justify-content', 'C' => 'flex-direction', 'D' => 'display-flex'],
+        'options' => ['A' => 'align-items', 'B' => 'justify-content', 'C' => 'flex-direction', 'D' => 'display: flex'],
         'correct' => 'B',
-        'tags' => ['frontend', 'general', 'CSS'],
+        'tags' => ['frontend'],
         'difficulty' => 'medium'
       ],
       [
         'section' => 'technical',
-        'text' => 'Diberikan kode JS: var purchase_total = 235000; Berapa total yang harus dibayarkan jika mendapatkan diskon 20% (belanja min 200rb)?',
+        'text' => 'Diberikan variabel JavaScript `var purchase_total = 235000;`. Jika terdapat ketentuan diskon sebesar 20% untuk minimal pembelian Rp 200.000, berapakah total akhir yang harus dibayarkan?',
         'options' => ['A' => '235.000', 'B' => '188.000', 'C' => '47.000', 'D' => '210.000'],
         'correct' => 'B',
-        'tags' => ['frontend', 'general', 'JavaScript'],
-        'difficulty' => 'hard'
+        'tags' => ['JavaScript'],
+        'difficulty' => 'easy'
       ],
       [
         'section' => 'knowledge',
@@ -230,25 +259,51 @@ class MasterQuestionSeeder extends Seeder
           'D' => 'const bisa diubah-ubah nilainya'
         ],
         'correct' => 'A',
-        'tags' => ['frontend', 'general', 'JavaScript'],
+        'tags' => ['frontend', 'JavaScript'],
         'difficulty' => 'medium'
       ],
       [
         'section' => 'technical',
-        'text' => 'Bagaimana cara memilih elemen dengan class "features__item" yang memiliki data-id="7" dan menambahkan class "highlighted" menggunakan jQuery?',
+        'text' => 'Bagaimana cara memilih elemen dengan class "features__item" yang memiliki data-id="7" dan menambahkan class "highlighted" menggunakan Vanilla JavaScript?',
         'options' => [
-          'A' => "$('.features__item[data-id=\"7\"]').addClass('highlighted');",
-          'B' => "$('#features__item').attr('id', '7').addClass('highlighted');",
-          'C' => "$('.features__item').data('id', 7).class('highlighted');",
-          'D' => "getElementByClass('.features__item').setData('id', 7).add('highlighted');"
+          'A' => "document.querySelector('.features__item[data-id=\"7\"]').classList.add('highlighted');",
+          'B' => "document.getElementById('features__item').setAttribute('id', '7').classList.add('highlighted');",
+          'C' => "document.getElementsByClassName('features__item').dataset.id = 7; document.classList.add('highlighted');",
+          'D' => "document.getElementByClass('.features__item').setData('id', 7).add('highlighted');"
         ],
         'correct' => 'A',
-        'tags' => ['frontend', 'jQuery', 'JavaScript'],
+        'tags' => ['frontend', 'JavaScript'],
+        'difficulty' => 'medium'
+      ],
+      [
+        'section' => 'technical',
+        'text' => "Apa output dari kode JavaScript berikut?\n```javascript\nconsole.log('A');\nsetTimeout(() => console.log('B'), 0);\nPromise.resolve().then(() => console.log('C'));\nconsole.log('D');\n```",
+        'options' => [
+          'A' => 'A, B, C, D',
+          'B' => 'A, D, B, C',
+          'C' => 'A, D, C, B',
+          'D' => 'A, C, D, B'
+        ],
+        'correct' => 'C',
+        'tags' => ['frontend', 'JavaScript'],
         'difficulty' => 'hard'
       ],
       [
+        'section' => 'technical',
+        'text' => "Diberikan kode berikut:\n```javascript\nfor (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 100);\n}\n```\nApa yang akan muncul di console setelah 100ms?",
+        'options' => [
+          'A' => '0, 1, 2',
+          'B' => '3, 3, 3',
+          'C' => '2, 1, 0',
+          'D' => 'Error: i is not defined'
+        ],
+        'correct' => 'B',
+        'tags' => ['frontend', 'JavaScript'],
+        'difficulty' => 'medium'
+      ],
+      [
         'section' => 'knowledge',
-        'text' => 'Berapakah nilai breakpoint (lebar layar) yang paling umum digunakan dalam framework CSS (seperti Bootstrap) untuk memisahkan tampilan Tablet dan Desktop (Large devices)?',
+        'text' => 'Dalam desain web responsif, manakah nilai breakpoint (media query) yang secara umum digunakan sebagai batas awal untuk ukuran layar Desktop (Large Devices)?',
         'options' => [
           'A' => '320px',
           'B' => '576px',
@@ -256,7 +311,7 @@ class MasterQuestionSeeder extends Seeder
           'D' => '992px'
         ],
         'correct' => 'D',
-        'tags' => ['frontend', 'CSS', 'Responsive'],
+        'tags' => ['frontend', 'Responsive'],
         'difficulty' => 'medium'
       ],
       [
@@ -264,7 +319,7 @@ class MasterQuestionSeeder extends Seeder
         'text' => 'Manakah di bawah ini yang merupakan kumpulan framework atau library JavaScript yang populer untuk membangun User Interface (UI)?',
         'options' => [
           'A' => 'React, Vue, Angular',
-          'B' => 'Laravel, Django, Ruby on Rails',
+          'B' => 'Yii, Django, Ruby on Rails',
           'C' => 'MySQL, PostgreSQL, MongoDB',
           'D' => 'Apache, Nginx, Docker'
         ],
@@ -282,8 +337,21 @@ class MasterQuestionSeeder extends Seeder
           'D' => 'float'
         ],
         'correct' => 'B',
-        'tags' => ['frontend', 'CSS'],
+        'tags' => ['frontend'],
         'difficulty' => 'medium'
+      ],
+      [
+        'section' => 'technical',
+        'text' => 'Mengapa sebuah elemen dengan properti `z-index: 9999;` terkadang tetap muncul di belakang elemen lain yang hanya memiliki `z-index: 10;`?',
+        'options' => [
+          'A' => 'Karena elemen dengan z-index 10 memiliki position: fixed.',
+          'B' => 'Karena elemen dengan z-index 9999 berada di dalam elemen induk (parent) yang membentuk Stacking Context baru dengan nilai z-index yang lebih rendah.',
+          'C' => 'Karena browser membatasi nilai maksimal z-index hanya sampai 1000.',
+          'D' => 'Karena properti z-index hanya berfungsi jika elemen tersebut memiliki display: flex.'
+        ],
+        'correct' => 'B',
+        'tags' => ['frontend', 'CSS'],
+        'difficulty' => 'hard'
       ]
     ];
 
@@ -316,6 +384,7 @@ class MasterQuestionSeeder extends Seeder
               'correct_answer' => $q['correct'],
               'section' => $q['section'],
               'difficulty' => $q['difficulty'] ?? 'medium',
+              'skill_category' => 'required', // All master questions are fundamental/required
               'is_active' => true
             ]
           );

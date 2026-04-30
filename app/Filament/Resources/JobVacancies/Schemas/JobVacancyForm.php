@@ -101,6 +101,7 @@ class JobVacancyForm
         // SECTION 3: DESKRIPSI & KUALIFIKASI
         Section::make('Description & General Qualifications')
             ->columnSpanFull()
+            ->columns(2)
             ->disabled(fn ($record) => $record?->status === 'approved')
             ->schema([
                 Textarea::make('description')
@@ -132,9 +133,10 @@ class JobVacancyForm
                       'Django' => 'Django',
                   ],
                   'Frontend Developer' => [
+                      'HTML5' => 'HTML5',
+                      'CSS3' => 'CSS3',
                       'JavaScript' => 'JavaScript',
-                      'HTML' => 'HTML',
-                      'CSS' => 'CSS',
+                      'Responsive Design' => 'Responsive Design',
                   ],
                   default => [],
               })
@@ -169,7 +171,6 @@ class JobVacancyForm
                   ],
                   'Frontend Developer' => [
                       'Git' => 'Git',
-                      'Responsive Design' => 'Responsive Design',
                       'API Integration' => 'API Integration',
                       'Bootstrap' => 'Bootstrap',
                       'Jquery' => 'Jquery',

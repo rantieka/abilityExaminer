@@ -89,19 +89,27 @@ class QuestionForm
               ->addActionAlignment('end')
               ->deletable(false)
               ->afterStateHydrated(function ($component, $state) {
-                  if (is_array($state) && !isset($state[0])) {
-                      $results = [];
-                      foreach ($state as $key => $value) {
-                          $results[] = ['key' => $key, 'value' => $value];
+                  if (is_array($state) && !empty($state)) {
+                      $firstItem = reset($state);
+                      
+                      if (!is_array($firstItem)) {
+                          $results = [];
+                          foreach ($state as $key => $value) {
+                              // Map numeric keys to A, B, C, D for the Admin UI input boxes
+                              $letterKey = is_numeric($key) ? chr(65 + (int)$key) : strtoupper($key);
+                              $results[] = ['key' => $letterKey, 'value' => $value];
+                          }
+                          $component->state($results);
                       }
-                      $component->state($results);
                   }
               })
               ->dehydrateStateUsing(function ($state) {
                   $results = [];
-                  foreach ($state as $item) {
+                  foreach ($state as $index => $item) {
                       if (isset($item['key'])) {
-                        $results[$item['key']] = $item['value'];
+                        // Force conversion to A, B, C, D if numeric, or ensure uppercase if letter
+                        $key = is_numeric($item['key']) ? chr(65 + (int)$item['key']) : strtoupper(trim($item['key']));
+                        $results[$key] = $item['value'];
                       }
                   }
                   return $results;
@@ -111,6 +119,26 @@ class QuestionForm
                 ->label('Correct Answer Label (e.g., A)')
                 ->placeholder('A')
                 ->required(),
+
+            Select::make('difficulty')
+                ->label('Difficulty Level')
+                ->options([
+                    'easy'   => 'Easy',
+                    'medium' => 'Medium',
+                    'hard'   => 'Hard',
+                ])
+                ->required()
+                ->default('medium'),
+
+            Select::make('skill_category')
+                ->label('Skill Category')
+                ->options([
+                    'required'  => 'Required Skills',
+                    'preferred' => 'Preferred Skills',
+                    'bonus'     => 'Bonus Skills',
+                ])
+                ->required()
+                ->default('required'),
           ]),
 
         Toggle::make('is_active')

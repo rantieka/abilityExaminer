@@ -33,24 +33,7 @@ class QuestionsRelationManager extends RelationManager
 
   public function form(Schema $schema): Schema
   {
-    return $schema
-      ->components([
-        TextInput::make('question_text')
-          ->required()
-          ->maxLength(255),
-        \Filament\Forms\Components\KeyValue::make('options')
-          ->keyLabel('Option Label (A, B, C...)')
-          ->valueLabel('Answer Text')
-          ->reorderable(),
-        TextInput::make('correct_answer')
-          ->required(),
-        Select::make('section')
-          ->options([
-            'knowledge' => 'Part 1: Knowledge',
-            'technical' => 'Part 2: Technical'
-          ]),
-        Toggle::make('is_active')
-      ]);
+    return \App\Filament\Resources\Questions\Schemas\QuestionForm::configure($schema);
   }
 
   public function table(Table $table): Table

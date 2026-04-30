@@ -28,13 +28,14 @@
               <div class="mb-4">
                 <p class="font-weight-bold">{{ $index + 1 }}. {{ $question->question_text }}</p>
                 @foreach($question->options as $key => $option)
+                  @php $letter = is_numeric($key) ? chr(65 + (int)$key) : $key; @endphp
                   <div class="form-check">
                     <input class="form-check-input" type="radio" 
                       name="answers[{{ $question->id }}]" 
-                      id="q{{ $question->id }}_{{ $key }}" 
-                      value="{{ $key }}" required>
-                    <label class="form-check-label" for="q{{ $question->id }}_{{ $key }}">
-                      {{ $key }}. {{ $option }}
+                      id="q{{ $question->id }}_{{ $letter }}" 
+                      value="{{ $letter }}" required>
+                    <label class="form-check-label" for="q{{ $question->id }}_{{ $letter }}">
+                      {{ $letter }}. {{ $option }}
                     </label>
                   </div>
                 @endforeach

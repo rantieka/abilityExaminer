@@ -14,6 +14,7 @@ class Question extends Model
     'is_active',
     'section',
     'difficulty',
+    'skill_category',
   ];
 
   protected $casts = [

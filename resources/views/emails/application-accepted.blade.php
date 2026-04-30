@@ -9,7 +9,7 @@ You are invited to take an **Online Test** as the next stage of our recruitment 
 
 ### Important Information:
 - **Position**: {{ $application->jobVacancy->title }}
-- **Test Duration**: Approximately 30-45 minutes
+- **Test Duration**: 60 minutes
 - **Deadline**: 7 days from the receipt of this email
 
 <x-mail::button :url="url('/test/access/' . $application->test_token)">

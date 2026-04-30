@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\JobVacancy;
 use App\Models\Question;
+use App\Services\GeminiService;
 use App\Services\GroqService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -27,7 +28,7 @@ class GenerateExamQuestions
   /**
    * Execute the job.
    */
-  public function handle(GroqService $groq): void
+  public function handle(GroqService $groq, GeminiService $gemini): void
   {
     try {
       // 1. Check existing master questions from database (seeded earlier)
@@ -55,7 +56,10 @@ class GenerateExamQuestions
             'bonus'     => Question::where('job_vacancy_id', $this->jobVacancy->id)->where('section', 'knowledge')->where('skill_category', 'bonus')->count(),
         ];
         
-        $currentKnowledgeCount = array_sum($counts);
+        $currentKnowledgeCount = Question::where('job_vacancy_id', $this->jobVacancy->id)
+          ->where('section', 'knowledge')
+          ->count();
+
         $neededKnowledge = $target - $currentKnowledgeCount;
         if ($neededKnowledge <= 0) break;
 
@@ -79,13 +83,13 @@ class GenerateExamQuestions
         $existingTexts = Question::where('job_vacancy_id', $this->jobVacancy->id)
           ->where('section', 'knowledge')
           ->latest()
-          ->limit(10)
+          ->limit(40)
           ->pluck('question_text')
           ->toArray();
 
         $batchSize = min(5, $neededForFocus, $neededKnowledge);
         $promptPart1 = $this->buildPart1Prompt($batchSize, $focus, $existingTexts);
-        $this->generateBatch($groq, $promptPart1, 'knowledge', $batchSize, 8192, 'llama-3.3-70b-versatile');
+        $this->generateBatch($groq, $promptPart1, 'knowledge', $batchSize, $focus, 8192);
         
         sleep(20);
       }
@@ -98,7 +102,10 @@ class GenerateExamQuestions
             'bonus'     => Question::where('job_vacancy_id', $this->jobVacancy->id)->where('section', 'technical')->where('skill_category', 'bonus')->count(),
         ];
 
-        $currentTechnicalCount = array_sum($counts);
+        $currentTechnicalCount = Question::where('job_vacancy_id', $this->jobVacancy->id)
+          ->where('section', 'technical')
+          ->count();
+
         $neededTechnical = $target - $currentTechnicalCount;
         if ($neededTechnical <= 0) break;
 
@@ -122,13 +129,13 @@ class GenerateExamQuestions
         $existingTexts = Question::where('job_vacancy_id', $this->jobVacancy->id)
           ->where('section', 'technical')
           ->latest()
-          ->limit(10)
+          ->limit(40)
           ->pluck('question_text')
           ->toArray();
 
         $batchSize = min(5, $neededForFocus, $neededTechnical);
         $promptPart2 = $this->buildPart2TechPrompt($batchSize, $focus, $existingTexts);
-        $this->generateBatch($groq, $promptPart2, 'technical', $batchSize, 8192, 'llama-3.3-70b-versatile');
+        $this->generateBatch($gemini, $promptPart2, 'technical', $batchSize, $focus, 8192);
         
         sleep(20);
       }
@@ -191,25 +198,27 @@ class GenerateExamQuestions
       - SECONDARY (Preferred): {$pref} (Should be Easy or Medium only)
       - BONUS SKILLS: {$bonus} (MUST be Easy only)
       
-      FOCUS FOR THIS BATCH: Prioritize generating questions for '{$focusCategory}' skills.
+      STRICT FOCUS FOR THIS BATCH: You MUST only generate questions for the '{$focusCategory}' category.
       
       Qualification Description: " . strip_tags($this->jobVacancy->qualifications) . "
       {$context}
 
       RULES:
-      1. LANGUAGE: All question text and options MUST be in Indonesian (Bahasa Indonesia).
-      2. STRICTLY THEORY ONLY: ABSOLUTELY NO code snippets, NO variable assignment calculations (e.g., a=b), NO logic tracing, and NO technical symbols. Questions must focus on definitions, functions, concepts, and best practices.
-      3. DIFFICULTY DISTRIBUTION: {$diff['distribution']}.
+      1. LANGUAGE: All question text and options MUST be in Indonesian (Bahasa Indonesia).\n
+      2. STRICTLY THEORY ONLY: ABSOLUTELY NO code snippets, NO variable assignment calculations (e.g., a=b), NO logic tracing, and NO technical symbols. Questions must focus on definitions, functions, concepts, and best practices.\n
+      3. DIFFICULTY DISTRIBUTION: {$diff['distribution']}.\n
       4. MAPPING RULES: 
-         - Required skills can be Easy, Medium, or Hard.
-         - Preferred skills should be Easy or Medium.
-         - Bonus skills MUST be Easy.
-      5. CONTENT FOCUS: {$diff['focus']} related to the skills above.
-      6. STRICT UNIQUENESS: EVERY question MUST cover a completely different topic or concept. DO NOT generate similar questions with slightly different wording. If a concept (e.g., Encapsulation, MVC, Middleware) is already in the EXISTING QUESTIONS list below, DO NOT generate another question about it. Focus on breadth of knowledge.
-      7. RANDOMIZE CORRECT ANSWER: Distribute the correct answer letter (A, B, C, D) randomly across the set of questions. Do not bias towards 'A'.
-      8. QUALITY OPTIONS: Ensure answer options are descriptive, professional, and clear. Avoid overly short or repetitive phrases. Each option should be a plausible but distinct explanation of the concept.
+         - Required skills can be Easy, Medium, or Hard.\n
+         - Preferred skills should be Easy or Medium.\n
+         - Bonus skills MUST be Easy.\n
+      5. CONTENT FOCUS: {$diff['focus']} related to the skills above.\n
+      6. STRICT UNIQUENESS: EVERY question MUST cover a completely different topic or concept. DO NOT generate similar questions with slightly different wording. If a concept (e.g., Encapsulation, MVC, Middleware) is already in the EXISTING QUESTIONS list below, DO NOT generate another question about it. Focus on breadth of knowledge. DO NOT just rephrase existing questions; they must be conceptually different.\n
+      7. RANDOMIZE CORRECT ANSWER: Distribute the correct answer letter (A, B, C, D) randomly across the set of questions. Do not bias towards 'A'.\n
+      8. QUALITY OPTIONS: Ensure answer options are descriptive, professional, and clear. Avoid overly short or repetitive phrases. Each option should be a plausible but distinct explanation of the concept.\n
+      9. DIVERSITY RULES: Use unique numerical values (avoid 10, 50, 100 repeatedly). If a concept (like MVC or OOP) is already mentioned, explore sub-topics or different technologies.\n
+      10. CATEGORY TAGGING: Every question in this response MUST be tagged as 'category': '{$focusCategory}'.\n
       
-      JSON Format: {\"questions\": [{\"text\":\"Question text...\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"C\",\"difficulty\":\"easy\",\"category\":\"required/preferred/bonus\"}]}
+      JSON Format: {\"questions\": [{\"text\":\"Question text...\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"C\",\"difficulty\":\"easy\",\"category\":\"{$focusCategory}\"}]}
       Output ONLY JSON. Exactly {$count} UNIQUE questions. No duplicates.";
   }
 
@@ -237,27 +246,28 @@ class GenerateExamQuestions
       - PREFERRED: {$pref} (Easy or Medium only)
       - BONUS/OPTIONAL: {$bonus} (MUST be Easy only)
       
-      FOCUS FOR THIS BATCH: Prioritize generating questions for '{$focusCategory}' skills.
+      STRICT FOCUS FOR THIS BATCH: You MUST only generate questions for the '{$focusCategory}' category.
       
       {$context}
 
       RULES:
-      1. LANGUAGE: All question text and analysis MUST be in Indonesian (Bahasa Indonesia). Use original syntax for code snippets (e.g., PHP, JavaScript).
-      2. CASE STUDY & LOGIC: Every question MUST include a code snippet wrapped in triple backticks (```) and focus on technical case studies, logic tracing, syntax analysis, bug detection, or predicting output.
-      3. MATHEMATICAL ACCURACY: If the question involves calculations (e.g., discounts, taxes, loop iterations), you MUST double-check the math. Ensure the 'correct' answer exactly matches the result of the code snippet provided.
-      4. DIFFICULTY DISTRIBUTION: {$diff['distribution']}.
-      5. MAPPING RULES:
-         - Required skills (Main Focus) can be any difficulty.
-         - Preferred skills should be Easy or Medium.
-         - Bonus skills MUST be Easy.
-      6. CONTENT FOCUS: {$diff['tech_focus']}.
-      7. STRICT UNIQUENESS: Ensure technical logic, bug types, and snippets are COMPLETELY DIFFERENT. DO NOT repeat the same logic pattern. If one question is about array filtering, make the next about data validation, session handling, or regex—avoid repetition of logic categories.
-      8. DATA DIVERSITY: Use descriptive variable names (e.g., \$total_price, \$item_count, \$is_validated) and avoid repetitive simple values like 5 or 10. Use a variety of realistic numbers and scenarios.
-      9. RANDOMIZE CORRECT ANSWER: Use ONLY UPPERCASE letters (A, B, C, D) for keys. Distribute the correct answer letter randomly.
-      10. QUALITY OPTIONS: Answer options for technical questions should be precise. If predicting output, explain why that output occurs in the options if possible, or provide distinct alternative logic paths.
-      11. MATHEMATICAL PRECISION: For average (rata-rata) or division calculations, ensure the result is exact. If the result is a decimal (e.g., 81.25), you MUST include the exact decimal value in the options. DO NOT round unless explicitly stated in the question text.
+      1. LANGUAGE: All question text and analysis MUST be in Indonesian (Bahasa Indonesia). Use original syntax for code snippets (e.g., PHP, JavaScript).\n
+      2. CASE STUDY & LOGIC: Every question MUST include a code snippet wrapped in triple backticks (```) and focus on technical case studies, logic tracing, syntax analysis, bug detection, or predicting output.\n
+      3. MATHEMATICAL ACCURACY: If the question involves calculations (e.g., discounts, taxes, loop iterations), you MUST double-check the math. Ensure the 'correct' answer exactly matches the result of the code snippet provided.\n
+      4. DIFFICULTY DISTRIBUTION: {$diff['distribution']}.\n
+      5. MAPPING RULES:\n
+         - Required skills (Main Focus) can be any difficulty.\n
+         - Preferred skills should be Easy or Medium.\n
+         - Bonus skills MUST be Easy.\n
+      6. CONTENT FOCUS: {$diff['tech_focus']}.\n
+      7. STRICT UNIQUENESS: Ensure technical logic, bug types, and snippets are COMPLETELY DIFFERENT. DO NOT repeat the same logic pattern. If one question is about array filtering, make the next about data validation, session handling, or regex—avoid repetition of logic categories. DO NOT just change variable names or add/remove the word 'JavaScript' to make a duplicate look unique. It must be a new logic scenario.\n
+      8. DATA DIVERSITY: Use descriptive variable names (e.g., \$total_price, \$item_count, \$is_validated) and avoid repetitive simple values like 5 or 10. Use a variety of realistic numbers and scenarios.\n
+      9. RANDOMIZE CORRECT ANSWER: Use ONLY UPPERCASE letters (A, B, C, D) for keys. Distribute the correct answer letter randomly.\n
+      10. QUALITY OPTIONS: Answer options for technical questions should be precise. If predicting output, explain why that output occurs in the options if possible, or provide distinct alternative logic paths.\n
+      11. DIVERSITY RULES: Use realistic and diverse numerical values (e.g., 127.50, 43500, 0.085). AVOID repeating logic like 'calculate 15% discount' if it already exists. Instead, use logic like 'calculate tax + shipping', 'find max in array', 'check string length', or 'nested conditions'.\n
+      12. CATEGORY TAGGING: Every question in this response MUST be tagged as 'category': '{$focusCategory}'.\n
       
-      JSON Format: {\"questions\": [{\"text\":\"Question text... ```code here```\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"B\",\"difficulty\":\"medium\",\"category\":\"required/preferred/bonus\"}]}
+      JSON Format: {\"questions\": [{\"text\":\"Question text... ```code here```\",\"options\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"correct\":\"B\",\"difficulty\":\"medium\",\"category\":\"{$focusCategory}\"}]}
       
       CONTOH AKURASI MATEMATIKA (IKUTI STANDAR INI):
       Soal: ```\$p = 10000; \$d = 0.1; \$res = \$p * (1-\$d);``` Berapakah \$res?
@@ -272,14 +282,15 @@ class GenerateExamQuestions
 
   /**
    * Process AI response and save to database.
+   * Can accept either GroqService or GeminiService.
    */
-  protected function generateBatch(GroqService $groq, string $prompt, string $sectionTag, int $countRequested, int $maxTokens = 4096, string $model = null)
+  protected function generateBatch($aiService, string $prompt, string $sectionTag, int $countRequested, string $forcedCategory, int $maxTokens = 4096, string $model = null)
   {
     $maxAttempts = 3;
 
     for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
       try {
-        $response = $groq->chat(
+        $response = $aiService->chat(
           [
             [
               'role' => 'system',
@@ -299,13 +310,14 @@ class GenerateExamQuestions
         );
 
         $questions = array_slice($response['questions'] ?? [], 0, $countRequested);
-        $count = count($questions);
+        $countFetched = count($questions);
+        $countSaved = 0;
 
-        Log::info("Attempt {$attempt} for {$sectionTag}: Successfully fetched {$count} questions.");
+        Log::info("Attempt {$attempt} for {$sectionTag}: Successfully fetched {$countFetched} questions.");
 
-        if ($count < ($countRequested - 2) && $attempt < $maxAttempts) {
-          Log::warning("Under-generated {$sectionTag}: {$count}/{$countRequested}. Retrying in 22 seconds (attempt {$attempt})...");
-          sleep(22); // Rate limit protection for Groq
+        if ($countFetched < ($countRequested - 2) && $attempt < $maxAttempts) {
+          Log::warning("Under-generated {$sectionTag}: {$countFetched}/{$countRequested}. Retrying in 22 seconds (attempt {$attempt})...");
+          sleep(22); // Rate limit protection for Gemini free tier
           continue;
         }
 
@@ -333,7 +345,7 @@ class GenerateExamQuestions
           }
 
           // Use firstOrCreate to prevent identical questions within the same vacancy
-          Question::firstOrCreate(
+          $question = Question::firstOrCreate(
             [
               'job_vacancy_id' => $this->jobVacancy->id,
               'question_text'  => $trimmedText,
@@ -344,12 +356,16 @@ class GenerateExamQuestions
               'is_active'      => false,
               'section'        => $sectionTag,
               'difficulty'     => $q['difficulty'] ?? 'medium',
-              'skill_category' => $q['category'] ?? 'required',
+              'skill_category' => $forcedCategory, // Use forced category to maintain strict distribution
             ]
           );
+
+          if ($question->wasRecentlyCreated) {
+            $countSaved++;
+          }
         }
 
-        Log::info("Successfully saved {$count} questions to the '{$sectionTag}' section.");
+        Log::info("Successfully saved {$countSaved} NEW questions to the '{$sectionTag}' section (Category: {$forcedCategory}).");
         return;
 
       } catch (\Exception $e) {

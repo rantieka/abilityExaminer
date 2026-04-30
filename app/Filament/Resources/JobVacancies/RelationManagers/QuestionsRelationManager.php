@@ -59,7 +59,7 @@ class QuestionsRelationManager extends RelationManager
         CreateAction::make(),
         // Tombol Generate Soal Background
         Action::make('generate')
-          ->label('Generate 35 Exam Questions')
+          ->label('Generate Exam Questions')
           ->icon('heroicon-o-cloud-arrow-down')
           ->color('primary')
           ->action(fn($livewire) => $this->dispatchGeneration($livewire->ownerRecord)),

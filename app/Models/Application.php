@@ -21,6 +21,7 @@ class Application extends Model
     'token_expires_at',
     'ai_score',
     'ai_analysis',
+    'experience_level',
     'test_score',
     'part1_answers',
     'part2_answers', // Added

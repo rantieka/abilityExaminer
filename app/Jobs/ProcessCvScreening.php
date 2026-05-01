@@ -102,16 +102,18 @@ class ProcessCvScreening implements ShouldQueue
       $generalReqs = $result['general_requirements_analysis'];
       $expYearsRaw = $result['experience_years'];
       $expYears    = (float) $expYearsRaw;
+      $expLevel    = $this->getExperienceLevel($expYears);
       $pros = [];
       $cons = [];
 
       // Required Skills
       $allRequired = $job->required_skills ?? [];
       $foundRequiredLower = array_map('strtolower', $skillsFound['required']);
+      $allRequiredNorm = array_map(fn($s) => $this->normalizeSkill($s), $allRequired);
       $missingRequired = [];
-      foreach ($allRequired as $req) {
-        if (!in_array(strtolower($req), $foundRequiredLower)) {
-          $missingRequired[] = $req;
+      foreach ($allRequiredNorm as $index => $req) {
+        if (!in_array($req, $foundRequiredLower)) {
+          $missingRequired[] = $allRequired[$index]; // keep original name for display
         }
       }
 
@@ -131,17 +133,22 @@ class ProcessCvScreening implements ShouldQueue
         $pros[] = "Brings additional value with expertise in: " . implode(', ', $skillsFound['bonus']) . ".";
       }
 
-      // Experience & Education
+      // Experience & Education - use text-based description without decimal-to-months conversion
+      Log::info("DEBUG displayExpPros [App ID: {$this->application->id}]: expYearsRaw={$expYearsRaw}, expYears={$expYears}");
+      $displayExpPros = $expYears < 1
+          ? "less than 1 year"
+          : (($expYears == 1) ? "1 year" : round($expYears, 1) . " years");
+
       if ($expYears >= 5) {
-        $pros[] = "Extensive professional background with {$expYears} years of experience.";
+        $pros[] = "Extensive professional background with {$displayExpPros} of experience.";
       } elseif ($expYears >= 2) {
-        $pros[] = "Solid career foundation with {$expYears} years in the industry.";
+        $pros[] = "Solid career foundation with {$displayExpPros} in the industry.";
       } elseif ($expYears > 0) {
-        $pros[] = "Possesses {$expYears} years of practical work experience.";
+        $pros[] = "Possesses practical work experience ({$displayExpPros}).";
       }
       
       if (!empty($result['education_level'])) {
-        $pros[] = "Academic background: {$result['education_level']} " . ($result['education_major'] ?? '') . ".";
+        $pros[] = "Academic background: {$result['education_level']} ". ($result['education_major'] ?? '') . ".";
       }
 
       // General Requirements
@@ -165,10 +172,15 @@ class ProcessCvScreening implements ShouldQueue
       }
 
       $expFormatted = (float) $expYearsRaw;
-      $summary = "Identified " . count($skillsFound['required']) . " required skills and " . count($skillsFound['preferred']) . " preferred skills with " . $expFormatted . " years of experience.";
+      $displayExp = $expFormatted < 1
+        ? "less than 1 year"
+        : (($expFormatted == 1) ? "1 year" : round($expFormatted, 1) . " years");
+
+      $summary = "Identified " . count($skillsFound['required']) . " required skills and " . count($skillsFound['preferred']) . " preferred skills with " . $displayExp . " of experience.";
 
       $this->application->update([
         'ai_score'    => $calculatedScore,
+        'experience_level' => $expLevel,
         'ai_analysis' => [
           'summary'        => $summary,
           'pros'           => $pros,
@@ -273,6 +285,9 @@ class ProcessCvScreening implements ShouldQueue
   protected function normalizeSkill(string $skill): string {
     $skill = strtolower(trim($skill));
 
+    // Strip version numbers/suffixes first (e.g. "Laravel 5.*" → "Laravel", "Codeigniter 3.*" → "codeigniter")
+    $skill = preg_replace('/(\s*[\d\.]+\.\*|\s*[\d\.]+|[\d\.]+(\.\*)?)$/', '', $skill);
+
     // Common aliases normalization
     $aliases = [
       // Version Control
@@ -344,6 +359,15 @@ class ProcessCvScreening implements ShouldQueue
       'restful api'   => 'rest-api',
       'restfull api'  => 'rest-api',
       'rest api'      => 'rest-api',
+
+      // PHP Frameworks
+      'codeigniter'  => 'ci',
+      'ci'           => 'ci',
+      'laravel'      => 'laravel',
+      'ci4'          => 'ci',
+      'codeigniter4' => 'ci',
+      'codeigniter3' => 'ci',
+      'ci3'          => 'ci',
     ];
 
     if (isset($aliases[$skill])) {
@@ -374,6 +398,22 @@ class ProcessCvScreening implements ShouldQueue
     return $normalizedJob === $normalizedFound
       || str_contains($normalizedJob, $normalizedFound)
       || str_contains($normalizedFound, $normalizedJob);
+  }
+
+  /**
+   * Convert numeric experience years to categorical level.
+   * Used for C4.5 training features (no noise, consistent).
+   */
+  protected function getExperienceLevel(float $expYears): string {
+    $normalizedYear = floor($expYears); // Normalize to kill decimal noise (2.0 vs 2.5 → both 2)
+    return match (true) {
+      $normalizedYear == 0 => 'fresher',
+      $normalizedYear <= 0.5 => 'newcomer',
+      $normalizedYear <= 1 => 'junior',
+      $normalizedYear <= 2 => 'early_career',
+      $normalizedYear <= 5 => 'mid_level',
+      default => 'senior',
+    };
   }
 
   protected function validateAiResponse(array $result): array
@@ -413,6 +453,7 @@ class ProcessCvScreening implements ShouldQueue
   protected function calculateScore(array &$extractedData, \App\Models\JobVacancy $job): int {
     $rawScore = 0;
     $expYears   = min(15, (float)($extractedData['experience_years'] ?? 0)); // Cap at 15
+    $expYears   = floor($expYears); // Normalize to kill decimal noise (2.0 vs 2.5 → both 2)
     $confidence = (float)($extractedData['confidence'] ?? 0.5);
     $genReqs    = $extractedData['general_requirements_analysis'] ?? [];
 

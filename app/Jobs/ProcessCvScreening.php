@@ -50,12 +50,15 @@ class ProcessCvScreening implements ShouldQueue
 
       $cvText = $this->parsePdf($parser, $path);
       $cvText = preg_replace('/\s+/', ' ', $cvText);
-      $cvText = mb_substr($cvText, 0, 4000); 
+      
+      $originalLength = strlen($cvText);
+      $cvText = mb_substr($cvText, 0, 12000); 
+      Log::info("CV Processing [App ID: {$this->application->id}]: Original Length: {$originalLength}, Sent Length: " . strlen($cvText));
 
       // Data Guard: Check if text is suspiciously short AND lacks common structure
       $trimmedText = trim($cvText);
       if (strlen($trimmedText) < 200 && str_word_count($trimmedText) < 25) {
-          throw new \LogicException("CV content is too sparse. This might be a scanned image or an invalid PDF. Please review manually.");
+        throw new \LogicException("CV content is too sparse. This might be a scanned image or an invalid PDF. Please review manually.");
       }
 
       // Anonymize CV before sending to AI
@@ -76,7 +79,7 @@ class ProcessCvScreening implements ShouldQueue
       $messages = $this->buildPrompt($job, $anonymizedCvText);
 
       // Add a 30-second delay to prevent Groq TPM (Tokens Per Minute) Rate Limit
-      sleep(15);
+      sleep(30);
 
       // Low temperature for deterministic, structured extraction
       $rawResult = $groq->chat($messages, 0.1);
@@ -99,7 +102,6 @@ class ProcessCvScreening implements ShouldQueue
       $generalReqs = $result['general_requirements_analysis'];
       $expYearsRaw = $result['experience_years'];
       $expYears    = (float) $expYearsRaw;
-
       $pros = [];
       $cons = [];
 
@@ -108,52 +110,58 @@ class ProcessCvScreening implements ShouldQueue
       $foundRequiredLower = array_map('strtolower', $skillsFound['required']);
       $missingRequired = [];
       foreach ($allRequired as $req) {
-          if (!in_array(strtolower($req), $foundRequiredLower)) {
-              $missingRequired[] = $req;
-          }
+        if (!in_array(strtolower($req), $foundRequiredLower)) {
+          $missingRequired[] = $req;
+        }
       }
 
       if (count($missingRequired) === 0 && count($allRequired) > 0) {
-          $pros[] = "Matches all mandatory core requirements.";
+        $pros[] = "Matches core skill requirements.";
       } elseif (count($missingRequired) > 0) {
-          $cons[] = "Missing required skills: " . implode(', ', $missingRequired) . ".";
+        $cons[] = "Mandatory skills not explicitly found: " . implode(', ', $missingRequired) . ".";
       }
 
-      // Preferred/Bonus (Deduplicate against what AI already highlighted in strengths)
-      $strengthsRaw = implode(' ', $result['key_strengths']);
-      
-      $filteredPreferred = array_filter($skillsFound['preferred'], fn($s) => !str_contains(strtolower($strengthsRaw), strtolower($s)));
+      // Preferred/Bonus
+      $filteredPreferred = array_filter($skillsFound['preferred'], fn($s) => true);
       if (count($filteredPreferred) > 0) {
-          $pros[] = "Possesses preferred skills: " . implode(', ', $filteredPreferred) . ".";
+        $pros[] = "Demonstrates proficiency in: " . implode(', ', $filteredPreferred) . ".";
       }
 
-      $filteredBonus = array_filter($skillsFound['bonus'], fn($s) => !str_contains(strtolower($strengthsRaw), strtolower($s)));
-      if (count($filteredBonus) > 0) {
-          $pros[] = "Has bonus qualifications in: " . implode(', ', $filteredBonus) . ".";
+      if (count($skillsFound['bonus']) > 0) {
+        $pros[] = "Brings additional value with expertise in: " . implode(', ', $skillsFound['bonus']) . ".";
       }
 
       // Experience & Education
-      if ($expYears >= 2) {
-          $pros[] = "Solid professional experience ({$expYears} years).";
+      if ($expYears >= 5) {
+        $pros[] = "Extensive professional background with {$expYears} years of experience.";
+      } elseif ($expYears >= 2) {
+        $pros[] = "Solid career foundation with {$expYears} years in the industry.";
+      } elseif ($expYears > 0) {
+        $pros[] = "Possesses {$expYears} years of practical work experience.";
       }
       
       if (!empty($result['education_level'])) {
-          $pros[] = "Educational background: {$result['education_level']} " . ($result['education_major'] ?? '');
+        $pros[] = "Academic background: {$result['education_level']} " . ($result['education_major'] ?? '') . ".";
       }
 
       // General Requirements
       foreach ($generalReqs as $item) {
-          $reqTextLower = strtolower($item['requirement'] ?? '');
-          $isMet        = $item['is_met'] ?? true;
+        $reqTextLower = strtolower($item['requirement'] ?? '');
+        $isMet        = $item['is_met'] ?? true;
 
-          // If fresh graduate but candidate has experience, skip (do not display in pros/cons)
-          if (str_contains($reqTextLower, 'fresh') && $expYears >= 1) {
-              continue;
+        // If fresh graduate but candidate has experience, handle based on years
+        if (str_contains($reqTextLower, 'fresh')) {
+          if ($expYears > 2) {
+            $cons[] = "Candidate may be overqualified (More than 2 years of experience for a Fresh Graduate role).";
           }
+          if ($expYears >= 1) {
+            continue; // Do not show as "No explicit evidence" if they have experience
+          }
+        }
 
-          if (!$isMet) {
-              $cons[] = "Failed general qualification: " . ($item['requirement'] ?? 'Unknown');
-          }
+        if (!$isMet) {
+          $cons[] = "No explicit evidence found for: " . ($item['requirement'] ?? 'Unknown');
+        }
       }
 
       $expFormatted = (float) $expYearsRaw;
@@ -163,10 +171,7 @@ class ProcessCvScreening implements ShouldQueue
         'ai_score'    => $calculatedScore,
         'ai_analysis' => [
           'summary'        => $summary,
-          'pros'           => array_merge(
-              $result['key_strengths'] ?? [],
-              $pros
-          ),
+          'pros'           => $pros,
           'cons'           => array_slice(array_filter($cons), 0, 5),
           'extracted_data' => $result,
         ],
@@ -224,7 +229,7 @@ class ProcessCvScreening implements ShouldQueue
   }
 
   protected function buildPrompt(\App\Models\JobVacancy $job, string $cvText): array {
-    $systemMessage = 'You are an HR Evaluation AI. You extract structured data. Output valid JSON ONLY without markdown formatting blocks.';
+    $systemMessage = 'You are an HR Evaluation AI. You extract structured data. Output valid JSON ONLY without markdown formatting blocks. Output all text in English.';
 
     $reqSkills = is_array($job->required_skills) ? implode(', ', $job->required_skills) : '';
     $qualifications = strip_tags($job->qualifications ?? '');
@@ -233,12 +238,12 @@ class ProcessCvScreening implements ShouldQueue
       ## CV Content (Anonymized)
       {$cvText}
 
-      ## TASK:
+      ## Rules:
       Extract structured data from the CV above with EXTREME precision. 
       Follow these rules:
-      1. SKILLS: Extract ALL technical skills, programming languages, and tools explicitly mentioned (limit to max 50 items).
-      2. EXPERIENCE: Calculate total years of professional work experience based on dates.
-      3. EDUCATION: Extract highest education level (SMK/D3/S1/etc) and major.
+      1. SKILLS: Extract ALL technical skills, tools, and methodologies explicitly mentioned in the text (ensure you check project descriptions and work experience).
+      2. EXPERIENCE: Calculate total years of experience ONLY where the role OR project involves Software Development or Coding. Ignore System Administration, Technician, or Support roles. Return 0 if none found.
+      3. EDUCATION: Extract highest education level (SMK/D3/D4/S1/etc) and major.
       4. REQUIREMENTS: Check these specific labels from the CV:
          - {$qualifications}
          Determine if they are met based ONLY on the CV text.
@@ -250,12 +255,11 @@ class ProcessCvScreening implements ShouldQueue
         \"experience_years\": 0.0,
         \"confidence\": 0.0,
         \"education_level\": \"\",
-        \"education_major\": \"\",
-        \"key_strengths\": []
+        \"education_major\": \"\"
       }
     ";
 
-    Log::info("=== AI SCREENING PROMPT (App ID: {$this->application->id}) ===\n" . $userPrompt . "\n==================================================");
+    Log::info("AI SCREENING PROMPT (App ID: {$this->application->id})\n" . $userPrompt . "\n");
 
     return [
       ['role' => 'system', 'content' => $systemMessage],
@@ -268,15 +272,108 @@ class ProcessCvScreening implements ShouldQueue
    */
   protected function normalizeSkill(string $skill): string {
     $skill = strtolower(trim($skill));
+
+    // Common aliases normalization
+    $aliases = [
+      // Version Control
+      'github'        => 'git',
+      'gitlab'        => 'git',
+      'bitbucket'     => 'git',
+
+      // JavaScript ecosystem
+      'javascript'    => 'js',
+      'ecmascript'    => 'js',
+      'es6'           => 'js',
+      'reactjs'       => 'react',
+      'react.js'      => 'react',
+      'vuejs'         => 'vue',
+      'vue.js'        => 'vue',
+      'angularjs'     => 'angular',
+      'nextjs'        => 'next',
+      'next.js'       => 'next',
+      'nuxtjs'        => 'nuxt',
+      'nuxt.js'       => 'nuxt',
+      'node.js'       => 'node',
+
+      // CSS
+      'css3'          => 'css',
+      'html5'         => 'html',
+      'scss'          => 'sass',
+
+      // Database
+      'postgresql'    => 'postgres',
+      'mariadb'       => 'mysql',
+      'mongo'         => 'mongodb',
+      'mssql'         => 'sqlserver',
+      'ms sql'        => 'sqlserver',
+
+      // Cloud
+      'amazon web services' => 'aws',
+      'google cloud'        => 'gcp',
+      'google cloud platform' => 'gcp',
+      'azure'               => 'azure',
+      'microsoft azure'     => 'azure',
+
+      // Mobile
+      'react native'  => 'reactnative',
+      'flutter'       => 'flutter',
+      'ios'           => 'ios',
+
+      // Python
+      'python3'       => 'python',
+      'py'            => 'python',
+
+      // DevOps
+      'k8s'           => 'kubernetes',
+      'docker compose' => 'docker',
+
+      // Others
+      'golang'        => 'go',
+      'c sharp'       => 'csharp',
+      'c#'            => 'csharp',
+      'dot net'       => 'dotnet',
+      '.net'          => 'dotnet',
+      'springboot'    => 'spring',
+      'spring boot'   => 'spring',
+      'ruby on rails' => 'rails',
+      'ror'           => 'rails',
+      'rest api'      => 'rest-api',
+      'restapi'       => 'rest-api',
+      'restful'       => 'rest-api',
+      'restfull'      => 'rest-api',
+      'restful api'   => 'rest-api',
+      'restfull api'  => 'rest-api',
+      'rest api'      => 'rest-api',
+    ];
+
+    if (isset($aliases[$skill])) {
+        $skill = $aliases[$skill];
+    }
+
     $replacements = [
-        '.js' => '',
-        ' framework' => '',
-        ' library' => '',
-        ' language' => '',
-        'postgresql' => 'postgres',
-        'nodejs' => 'node',
+      '.js' => '',
+      ' framework' => '',
+      ' library' => '',
+      ' language' => '',
+      'postgresql' => 'postgres',
+      'nodejs' => 'node',
+      // Strip spaces, dashes, underscores — catches AI extraction typos
+      // e.g. "mysq l" → "mysql", "postgre sql" → "postgresql", "react .js" → "react"
+      ' ' => '',
+      '-' => '',
+      '_' => '',
     ];
     return str_replace(array_keys($replacements), array_values($replacements), $skill);
+  }
+
+  /**
+   * Fuzzy match two skills — case-insensitive substring match.
+   * Returns true if one skill is contained within the other (or they're identical).
+   */
+  protected function skillMatches(string $normalizedJob, string $normalizedFound): bool {
+    return $normalizedJob === $normalizedFound
+      || str_contains($normalizedJob, $normalizedFound)
+      || str_contains($normalizedFound, $normalizedJob);
   }
 
   protected function validateAiResponse(array $result): array
@@ -286,14 +383,14 @@ class ProcessCvScreening implements ShouldQueue
     $reqAnalysis = $result['general_requirements_analysis'] ?? [];
     $sanitizedReqs = [];
     if (is_array($reqAnalysis)) {
-        foreach ($reqAnalysis as $item) {
-            if (is_array($item)) {
-                $sanitizedReqs[] = [
-                    'requirement' => trim((string)($item['requirement'] ?? 'Unknown')),
-                    'is_met'      => (bool)($item['is_met'] ?? false),
-                ];
-            }
+      foreach ($reqAnalysis as $item) {
+        if (is_array($item)) {
+          $sanitizedReqs[] = [
+            'requirement' => trim((string)($item['requirement'] ?? 'Unknown')),
+            'is_met'      => (bool)($item['is_met'] ?? false),
+          ];
         }
+      }
     }
 
     $sanitized = [
@@ -303,12 +400,11 @@ class ProcessCvScreening implements ShouldQueue
       'confidence'                    => is_numeric($result['confidence'] ?? null) ? max(0, min(1, (float)$result['confidence'])) : 0.5,
       'education_level'               => is_string($result['education_level'] ?? null) ? trim($result['education_level']) : '',
       'education_major'               => is_string($result['education_major'] ?? null) ? trim($result['education_major']) : '',
-      'key_strengths'                 => is_array($result['key_strengths'] ?? null) ? array_slice(array_unique(array_map(fn($val) => is_array($val) ? json_encode($val) : (string)$val, $result['key_strengths'])), 0, 3) : [],
     ];
 
     // Final Guard: If no skills found at all, it's likely a bad extraction or invalid CV
     if (empty($sanitized['all_extracted_skills'])) {
-        Log::warning("Validation Guard: No skills extracted for Application ID: " . $this->application->id);
+      Log::warning("Validation Guard: No skills extracted for Application ID: " . $this->application->id);
     }
 
     return $sanitized;
@@ -318,106 +414,194 @@ class ProcessCvScreening implements ShouldQueue
     $rawScore = 0;
     $expYears   = min(15, (float)($extractedData['experience_years'] ?? 0)); // Cap at 15
     $confidence = (float)($extractedData['confidence'] ?? 0.5);
+    $genReqs    = $extractedData['general_requirements_analysis'] ?? [];
 
-    // 0. Hallucination & Logic Guard
+    // Hallucination & Logic Guard
     // If experience > 20 years (unlikely for most roles) or confidence is critical
     if ($expYears > 20 || $confidence < 0.3) {
-        $confidence = 0.1; // Mark as unreliable
+      $confidence = 0.1; // Mark as unreliable
     }
 
-    $reqSkills   = array_map([$this, 'normalizeSkill'], (is_array($job->required_skills) ? $job->required_skills : []));
-    $prefSkills  = array_map([$this, 'normalizeSkill'], (is_array($job->preferred_skills) ? $job->preferred_skills : []));
-    $bonusSkills = array_map([$this, 'normalizeSkill'], (is_array($job->bonus_skills) ? $job->bonus_skills : []));
+    $reqSkillsJob   = is_array($job->required_skills) ? $job->required_skills : [];
+    $prefSkillsJob  = is_array($job->preferred_skills) ? $job->preferred_skills : [];
+    $bonusSkillsJob = is_array($job->bonus_skills) ? $job->bonus_skills : [];
 
-    $reqCount   = count($reqSkills);
-    $prefCount  = count($prefSkills);
-    $bonusCount = count($bonusSkills);
+    $reqSkillsNorm   = array_map([$this, 'normalizeSkill'], $reqSkillsJob);
+    $prefSkillsNorm  = array_map([$this, 'normalizeSkill'], $prefSkillsJob);
+    $bonusSkillsNorm = array_map([$this, 'normalizeSkill'], $bonusSkillsJob);
+
+    $reqCount   = count($reqSkillsNorm);
+    $prefCount  = count($prefSkillsNorm);
+    $bonusCount = count($bonusSkillsNorm);
 
     // Normalize found skills
-    $allFound = array_map([$this, 'normalizeSkill'], ($extractedData['all_extracted_skills'] ?? []));
+    $allFoundNorm = array_map([$this, 'normalizeSkill'], ($extractedData['all_extracted_skills'] ?? []));
 
-    // Intersection (PURE PHP MATCHING)
-    $matchedReq   = count(array_intersect($reqSkills, $allFound));
-    $matchedPref  = count(array_intersect($prefSkills, $allFound));
-    $matchedBonus = count(array_intersect($bonusSkills, $allFound));
+    // Fuzzy intersection using substring match (case-insensitive)
+    $matchedReq   = [];
+    $matchedPref  = [];
+    $matchedBonus = [];
+    foreach ($reqSkillsNorm as $req) {
+      foreach ($allFoundNorm as $found) {
+        if ($this->skillMatches($req, $found)) {
+          $matchedReq[] = $req;
+          break;
+        }
+      }
+    }
+    foreach ($prefSkillsNorm as $pref) {
+      foreach ($allFoundNorm as $found) {
+        if ($this->skillMatches($pref, $found)) {
+          $matchedPref[] = $pref;
+          break;
+        }
+      }
+    }
+    foreach ($bonusSkillsNorm as $bonus) {
+      foreach ($allFoundNorm as $found) {
+        if ($this->skillMatches($bonus, $found)) {
+          $matchedBonus[] = $bonus;
+          break;
+        }
+      }
+    }
+
+    $matchedReqCount   = count($matchedReq);
+    $matchedPrefCount  = count($matchedPref);
+    $matchedBonusCount = count($matchedBonus);
 
     // Store categorized skills back into extractedData for the summary generator
     $extractedData['skills_found'] = [
-        'required'  => array_values(array_intersect($reqSkills, $allFound)),
-        'preferred' => array_values(array_intersect($prefSkills, $allFound)),
-        'bonus'     => array_values(array_intersect($bonusSkills, $allFound)),
+      'required'  => array_values($matchedReq),
+      'preferred' => array_values($matchedPref),
+      'bonus'     => array_values($matchedBonus),
     ];
-    $extractedData['other_technical_skills'] = array_values(array_diff($allFound, $reqSkills, $prefSkills, $bonusSkills));
+      // Other technical skills: found skills NOT in any job-skill bucket (using fuzzy match)
+    $jobSkillNorms = array_merge($reqSkillsNorm, $prefSkillsNorm, $bonusSkillsNorm);
+    $otherSkills = [];
+    foreach ($allFoundNorm as $found) {
+      $isJobSkill = false;
+      foreach ($jobSkillNorms as $jobNorm) {
+        if ($this->skillMatches($jobNorm, $found)) {
+          $isJobSkill = true;
+          break;
+        }
+      }
+      if (!$isJobSkill) {
+        $otherSkills[] = $found;
+      }
+    }
+    $extractedData['other_technical_skills'] = array_values(array_unique($otherSkills));
 
-    // 1. Core Required Skills (Max 60 points)
+    // Core Required Skills (Max 60 points)
     $corePoints = 0;
     if ($reqCount > 0) {
-        $matchRatio = $matchedReq / $reqCount;
+        $matchRatio = $matchedReqCount / $reqCount;
         $corePoints = (int) round($matchRatio * 60);
     }
     $rawScore += $corePoints;
 
-    // 2. Preferred & Bonus Skills (Max 10 points)
+    // Preferred & Bonus Skills (Max 10 points)
     $prefWeight  = 7;
     $bonusWeight = 3;
-    
-    $prefRatio  = $prefCount  > 0 ? $matchedPref  / $prefCount  : 0;
-    $bonusRatio = $bonusCount > 0 ? $matchedBonus / $bonusCount : 0;
+
+    $prefRatio   = $prefCount   > 0 ? $matchedPrefCount  / $prefCount  : 0;
+    $bonusRatio  = $bonusCount > 0 ? $matchedBonusCount / $bonusCount : 0;
     
     $optPoints  = ($prefRatio * $prefWeight) + ($bonusRatio * $bonusWeight);
     $optPointsFinal = (int) round($optPoints);
     $rawScore += $optPointsFinal;
 
-    // 3. Experience (Max 20 points)
+    // Experience (Max 20 points)
+    // Check if this is specifically a Fresh Graduate targeted job
+    $isFreshGradJob = false;
+    foreach ($genReqs as $item) {
+      $reqLabel = strtolower($item['requirement'] ?? '');
+      if (preg_match('/fresh/i', $reqLabel)) {
+        $isFreshGradJob = true;
+        break;
+      }
+    }
+      
+    Log::info("Fresh Grad Job Detection [App ID: {$this->application->id}]: " . ($isFreshGradJob ? 'YES' : 'NO'));
+
     $expScore = match (true) {
-        $expYears >= 5 => 20,
-        $expYears >= 3 => 18,
-        $expYears >= 2 => 15,
-        $expYears >= 1 => 10,
-        $expYears >= 0.5 => 5,
-        $expYears > 0  => 2,
-        default        => 0,
+      $expYears >= 5 => 20,
+      $expYears >= 3 => 18,
+      $expYears >= 2 => 15,
+      $expYears >= 1 => 10,
+      $expYears >= 0.5 => 5,
+      $expYears > 0  => 2,
+      default        => 0,
     };
+
+    // OVERQUALIFIED LOGIC 
+    // Based on user provided table for Fresh Grad vacancies (scaled x2 to maintain 20pts max)
+    if ($isFreshGradJob) {
+      $expScore = match (true) {
+        $expYears >= 6 => 6,
+        $expYears >= 4 => 10,
+        $expYears > 2  => 14,
+        default        => 20, // 0-2 years get full score
+      };
+    }
+
     $rawScore += $expScore;
 
-    // 4. General Requirements (Max 10 points)
-    $genReqs   = $extractedData['general_requirements_analysis'] ?? [];
+    // General Requirements (Max 10 points)
     $genPoints = 10;
+    
+    // Soft skill keywords to avoid punishing lack of "vague" traits in a technical CV
+    $softSkillKeywords = ['teamwork', 'collaboration', 'communication', 'learning', 'growth', 'interpersonal', 'leadership', 'eagerness', 'attitude', 'bersedia', 'jujur'];
+
     foreach ($genReqs as $item) {
       $reqTextLower = strtolower($item['requirement'] ?? '');
       $isMet        = $item['is_met'] ?? true;
 
+      // Special Case: If requirement is "fresh graduate" and candidate has experience, they pass.
       if (str_contains($reqTextLower, 'fresh') && $expYears >= 1) {
         $isMet = true;
       }
 
       if (!$isMet) {
-        $genPoints -= 3;
+        $isSoftSkill = false;
+        foreach ($softSkillKeywords as $keyword) {
+          if (str_contains($reqTextLower, $keyword)) {
+            $isSoftSkill = true;
+            break;
+          }
+        }
+        
+        // Only penalize Hard Requirements (Education, Experience levels, Certification, etc.)
+        // Soft skills (Teamwork, etc.) will NOT reduce the score but will still show in 'cons' for interviewers.
+        if (!$isSoftSkill) {
+          $genPoints -= 5; 
+        }
       }
     }
     $genPointsFinal = max(0, $genPoints);
     $rawScore += $genPointsFinal;
 
-    // 5. FIRST-CLASS CONFIDENCE (The Multiplier)
+    // FIRST-CLASS CONFIDENCE (The Multiplier)
     // If AI is very confident (>= 0.8), don't penalize the score.
     // Otherwise, multiply by confidence to account for uncertainty.
     $appliedConfidence = ($confidence >= self::HIGH_CONFIDENCE_THRESHOLD) ? 1.0 : $confidence;
     $finalScore = (int) round($rawScore * $appliedConfidence);
 
-    // 6. Hard Fail Threshold
+    // Hard Fail Threshold
     // If confidence is extremely low (< 0.4), force score to 0 to trigger manual review flag
     if ($confidence < self::LOW_CONFIDENCE_THRESHOLD) {
-        $finalScore = 0;
+      $finalScore = 0;
     }
 
     Log::info("Scoring Detail [App ID: {$this->application->id}]:");
-    Log::info("- Core Skills (Max 60): {$corePoints}");
-    Log::info("- Optional Skills (Max 10): {$optPointsFinal}");
-    Log::info("- Experience (Max 20): {$expScore}");
-    Log::info("- General Reqs (Max 10): {$genPointsFinal}");
-    Log::info("- Raw Total (Max 100): {$rawScore}");
-    Log::info("- Confidence: {$confidence} (Applied: {$appliedConfidence})");
-    Log::info("- FINAL SCORE: {$finalScore}");
+    Log::info("Core Skills (Max 60): {$corePoints}");
+    Log::info("Optional Skills (Max 10): {$optPointsFinal}");
+    Log::info("Experience (Max 20): {$expScore}");
+    Log::info("General Reqs (Max 10): {$genPointsFinal}");
+    Log::info("Raw Total (Max 100): {$rawScore}");
+    Log::info("Confidence: {$confidence} (Applied: {$appliedConfidence})");
+    Log::info("FINAL SCORE: {$finalScore}");
 
     // Safeguard bounds
     return max(0, min(100, $finalScore));
@@ -432,6 +616,9 @@ class ProcessCvScreening implements ShouldQueue
     if ($app->email) {
       $masked = str_ireplace($app->email, '[EMAIL_REDACTED]', $masked);
     }
+
+    // URL: Mask URLs to prevent AI distraction (portfolio links, etc)
+    $masked = preg_replace('/(https?:\/\/[^\s]+|www\.[^\s]+)/i', '[URL_REDACTED]', $masked);
 
     // Phone: regex
     $masked = preg_replace(

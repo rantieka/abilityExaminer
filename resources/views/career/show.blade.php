@@ -69,6 +69,11 @@
           <h5 class="fw-bold mb-3">Apply</h5>
           <form action="{{ route('career.apply', $job->slug) }}" method="POST" enctype="multipart/form-data">
             @csrf
+            
+            <div id="file-error-alert" class="alert alert-danger d-none small py-2">
+                File too large! Maximum CV size is 2MB.
+            </div>
+
             <div class="mb-3">
               <label class="form-label">Full Name</label>
               <input type="text" name="full_name" class="form-control" value="{{ old('full_name') }}" required>
@@ -83,8 +88,11 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Upload CV</label>
-              <input type="file" name="cv" class="form-control mb-2" accept=".pdf" required>
-              <small class="text-danger fst-italic">*Only PDF files are allowed</small>
+              <input type="file" name="cv" id="cv_input" class="form-control mb-2 @error('cv') is-invalid @enderror" accept=".pdf" required>
+              @error('cv')
+                <div class="text-danger small mb-1">{{ $message }}</div>
+              @enderror
+              <small class="text-danger fst-italic d-block">*PDF format, Maximum 2MB</small>
             </div>
             <button type="submit" class="btn btn-apply">Send</button>
           </form>
@@ -93,8 +101,9 @@
     </div>
   </div>
 </div>
+
 @endsection
 
 @push('scripts')
-    @vite(['resources/js/test-background.js'])
+    @vite(['resources/js/test-background.js', 'resources/js/cv-upload.js'])
 @endpush

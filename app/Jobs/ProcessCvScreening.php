@@ -79,7 +79,7 @@ class ProcessCvScreening implements ShouldQueue
       $messages = $this->buildPrompt($job, $anonymizedCvText);
 
       // Add a 30-second delay to prevent Groq TPM (Tokens Per Minute) Rate Limit
-      sleep(30);
+      sleep(60);
 
       // Low temperature for deterministic, structured extraction
       $rawResult = $groq->chat($messages, 0.1);
@@ -92,13 +92,22 @@ class ProcessCvScreening implements ShouldQueue
       // Validate & sanitize AI JSON structure before processing
       $result = $this->validateAiResponse($rawResult);
 
+      // NEW HYBRID CALCULATION
+      // 1. Calculate refined experience years from structured history
+      $calculatedExp = $this->calculateRefinedExperience($result['work_experiences'] ?? []);
+      $result['experience_years'] = $calculatedExp;
+      Log::info("Refined Experience [App ID: {$this->application->id}]: {$calculatedExp} years");
+
+      // 2. Calculate score AND populate skills_found & other_technical_skills
+      // NOTE: calculateScore() modifies $result by reference
       $calculatedScore = $this->calculateScore($result, $job);
       Log::info("Skills Found [App ID: {$this->application->id}]:\n" . json_encode($result['skills_found'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
       Log::info("Calculated PHP Score: {$calculatedScore}");
 
       // Build human-readable summary from the requirements analysis
-      $skillsFound = $result['skills_found'];
-      $otherSkills = $result['other_technical_skills'];
+      // NOTE: skills_found & other_technical_skills are populated by calculateScore() above
+      $skillsFound = $result['skills_found'] ?? ['required' => [], 'preferred' => [], 'bonus' => []];
+      $otherSkills = $result['other_technical_skills'] ?? [];
       $generalReqs = $result['general_requirements_analysis'];
       $expYearsRaw = $result['experience_years'];
       $expYears    = (float) $expYearsRaw;
@@ -178,10 +187,14 @@ class ProcessCvScreening implements ShouldQueue
 
       $summary = "Identified " . count($skillsFound['required']) . " required skills and " . count($skillsFound['preferred']) . " preferred skills with " . $displayExp . " of experience.";
 
+      // Determine screening label based on score (2-class for C4.5)
+      $screeningLabel = $calculatedScore >= 51 ? 'suitable' : 'not_suitable';
+
       $this->application->update([
-        'ai_score'    => $calculatedScore,
-        'experience_level' => $expLevel,
-        'ai_analysis' => [
+        'ai_score'          => $calculatedScore,
+        'experience_level'  => $expLevel,
+        'screening_label'   => $screeningLabel,
+        'ai_analysis'       => [
           'summary'        => $summary,
           'pros'           => $pros,
           'cons'           => array_slice(array_filter($cons), 0, 5),
@@ -254,7 +267,9 @@ class ProcessCvScreening implements ShouldQueue
       Extract structured data from the CV above with EXTREME precision. 
       Follow these rules:
       1. SKILLS: Extract ALL technical skills, tools, and methodologies explicitly mentioned in the text (ensure you check project descriptions and work experience).
-      2. EXPERIENCE: Calculate total years of experience ONLY where the role OR project involves Software Development or Coding. Ignore System Administration, Technician, or Support roles. Return 0 if none found.
+      2. EXPERIENCE: Extract work history as a structured list. Include: company, role, start_date, end_date (Format: YYYY-MM or YYYY, use 'Present' if current). 
+         Identify if the role is 'relevant' to software development/IT based on the job description.
+         CRITICAL: Do NOT include education periods, university studies, or school projects in this list.
       3. EDUCATION: Extract highest education level (SMK/D3/D4/S1/etc) and major.
       4. REQUIREMENTS: Check these specific labels from the CV:
          - {$qualifications}
@@ -264,7 +279,15 @@ class ProcessCvScreening implements ShouldQueue
       {
         \"all_extracted_skills\": [],
         \"general_requirements_analysis\": [{\"requirement\": \"label\", \"is_met\": false}],
-        \"experience_years\": 0.0,
+        \"work_experiences\": [
+          {
+            \"company\": \"\",
+            \"role\": \"\",
+            \"start_date\": \"\",
+            \"end_date\": \"\",
+            \"is_relevant\": true
+          }
+        ],
         \"confidence\": 0.0,
         \"education_level\": \"\",
         \"education_major\": \"\"
@@ -407,12 +430,12 @@ class ProcessCvScreening implements ShouldQueue
   protected function getExperienceLevel(float $expYears): string {
     $normalizedYear = floor($expYears); // Normalize to kill decimal noise (2.0 vs 2.5 → both 2)
     return match (true) {
-      $normalizedYear == 0 => 'fresher',
-      $normalizedYear <= 0.5 => 'newcomer',
-      $normalizedYear <= 1 => 'junior',
-      $normalizedYear <= 2 => 'early_career',
-      $normalizedYear <= 5 => 'mid_level',
-      default => 'senior',
+      $normalizedYear == 0   => 'fresher',
+      $normalizedYear <= 1  => 'newcomer',
+      $normalizedYear <= 2  => 'junior',
+      $normalizedYear <= 5  => 'early_career',
+      $normalizedYear <= 10 => 'mid_level',
+      default                => 'senior',
     };
   }
 
@@ -436,7 +459,7 @@ class ProcessCvScreening implements ShouldQueue
     $sanitized = [
       'all_extracted_skills'          => is_array($result['all_extracted_skills'] ?? null) ? array_unique(array_map(fn($val) => is_array($val) ? json_encode($val) : (string)$val, $result['all_extracted_skills'])) : [],
       'general_requirements_analysis' => $sanitizedReqs,
-      'experience_years'              => is_numeric($result['experience_years'] ?? null) ? round(max(0, min(15, (float)$result['experience_years'])), 1) : 0.0,
+      'work_experiences'              => is_array($result['work_experiences'] ?? null) ? $result['work_experiences'] : [],
       'confidence'                    => is_numeric($result['confidence'] ?? null) ? max(0, min(1, (float)$result['confidence'])) : 0.5,
       'education_level'               => is_string($result['education_level'] ?? null) ? trim($result['education_level']) : '',
       'education_major'               => is_string($result['education_major'] ?? null) ? trim($result['education_major']) : '',
@@ -681,5 +704,140 @@ class ProcessCvScreening implements ShouldQueue
     }
 
     return $masked;
+  }
+
+  /**
+   * REFINED EXPERIENCE CALCULATION
+   * Steps: Validate -> Sort -> Merge Overlaps -> Weighting -> Final Years
+   */
+  protected function calculateRefinedExperience(array $experiences): float 
+  {
+    if (empty($experiences)) return 0.0;
+
+    $intervals = [];
+    $currentDate = now();
+
+    foreach ($experiences as $exp) {
+      try {
+        // Validate Dates & Skip Academic Roles
+        $role = strtolower($exp['role'] ?? '');
+        $company = strtolower($exp['company'] ?? '');
+        
+        // Skip if it looks like a degree or university status
+        $academicKeywords = ['student', 'mahasiswa', 'university', 'universitas', 'school', 'sekolah', 'college', 'degree', 'undergraduate'];
+        $isAcademic = false;
+        foreach ($academicKeywords as $kw) {
+          if (str_contains($role, $kw) || str_contains($company, $kw)) {
+            $isAcademic = true;
+            break;
+          }
+        }
+        if ($isAcademic) continue;
+
+        $startStr = $exp['start_date'] ?? null;
+        $endStr   = $exp['end_date'] ?? 'Present';
+
+        $start = $this->parseFlexibleDate($startStr);
+        $end   = $this->parseFlexibleDate($endStr);
+
+        if (!$start) continue;
+        if (!$end) $end = $currentDate;
+
+        // Ensure start is before end
+        if ($start->gt($end)) continue;
+
+        // 2. PHP Weighting (Only count relevant roles fully)
+        $isRelevant = (bool) ($exp['is_relevant'] ?? true);
+        
+        // Logic: Non-relevant roles count only 20% (e.g. Sales during CS degree)
+        $weight = $isRelevant ? 1.0 : 0.2;
+
+        $intervals[] = [
+          'start'  => $start,
+          'end'    => $end,
+          'weight' => $weight
+        ];
+      } catch (\Exception $e) {
+        continue;
+      }
+    }
+
+    if (empty($intervals)) return 0.0;
+
+    // Merge Overlap Logic
+    // Sort intervals by start date
+    usort($intervals, fn($a, $b) => $a['start']->timestamp <=> $b['start']->timestamp);
+
+    $merged = [];
+    if (!empty($intervals)) {
+      $current = $intervals[0];
+      
+      for ($i = 1; $i < count($intervals); $i++) {
+        $next = $intervals[$i];
+
+        // If overlaps
+        if ($next['start']->lte($current['end'])) {
+          // Extend the current end if the next one is further
+          if ($next['end']->gt($current['end'])) {
+            $current['end'] = $next['end'];
+          }
+          // Use the highest weight if overlapping
+          $current['weight'] = max($current['weight'], $next['weight']);
+        } else {
+          $merged[] = $current;
+          $current = $next;
+        }
+      }
+      $merged[] = $current;
+    }
+
+    // Calculate Months & Final Years
+    $totalMonths = 0;
+    foreach ($merged as $m) {
+      $months = $m['start']->diffInMonths($m['end']) + 1; // +1 to include starting month
+      $totalMonths += ($months * $m['weight']);
+    }
+
+    $finalYears = round($totalMonths / 12, 1);
+    
+    // Cap at 15 years to avoid noise
+    return min(15.0, (float) $finalYears);
+  }
+
+  /**
+   * Helper to parse various date formats from AI
+   */
+  protected function parseFlexibleDate($dateStr): ?\Illuminate\Support\Carbon 
+  {
+    if (!$dateStr) return null;
+    
+    $dateStr = trim(strtolower($dateStr));
+    if (in_array($dateStr, ['present', 'now', 'current', 'sekarang'])) {
+      return now();
+    }
+
+    // Try YYYY-MM-DD
+    if (preg_match('/^\d{4}-\d{1,2}-\d{1,2}$/', $dateStr)) {
+      try { return \Illuminate\Support\Carbon::parse($dateStr)->startOfDay(); } catch (\Exception $e) {}
+    }
+
+    // Try YYYY-MM
+    if (preg_match('/^\d{4}-\d{1,2}$/', $dateStr)) {
+      try { return \Illuminate\Support\Carbon::createFromFormat('Y-m', $dateStr)->startOfMonth(); } catch (\Exception $e) {}
+    }
+
+    // Try YYYY
+    if (preg_match('/^\d{4}$/', $dateStr)) {
+      try { return \Illuminate\Support\Carbon::createFromFormat('Y', $dateStr)->startOfYear(); } catch (\Exception $e) {}
+    }
+
+    // Final fallback for any other readable format (e.g. "May 2023", "20-10-2022")
+    try {
+      return \Illuminate\Support\Carbon::parse($dateStr);
+    } catch (\Exception $e) {
+      return null;
+    }
+
+    return null;
   }
 }

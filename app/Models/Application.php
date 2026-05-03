@@ -22,6 +22,7 @@ class Application extends Model
     'ai_score',
     'ai_analysis',
     'experience_level',
+    'screening_label',
     'test_score',
     'part1_answers',
     'part2_answers', // Added

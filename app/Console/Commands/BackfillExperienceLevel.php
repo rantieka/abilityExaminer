@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 class BackfillExperienceLevel extends Command
 {
   protected $signature = 'app:backfill-experience-level {--dry-run : Show what would be updated without making changes}';
-  protected $description = 'Backfill experience_level column from existing ai_analysis data';
+  protected $description = 'Backfill experience_level and screening_label columns from existing ai_analysis data';
 
   public function handle(): int
   {
@@ -30,13 +30,16 @@ class BackfillExperienceLevel extends Command
 
     foreach ($applications as $app) {
       $expYears = $app->ai_analysis['extracted_data']['experience_years'] ?? 0;
+      $aiScore = $app->ai_analysis['extracted_data']['ai_score'] ?? $app->ai_score ?? 0;
       $expLevel = $this->computeExpLevel((float) $expYears);
+      $screeningLabel = $aiScore >= 51 ? 'suitable' : 'not_suitable';
 
       if ($dryRun) {
-          $this->line("App ID {$app->id}: {$expYears} years -> {$expLevel}");
+        $this->line("App ID {$app->id}: exp={$expYears}y → {$expLevel} | score={$aiScore} → {$screeningLabel}");
       } else {
-          $app->experience_level = $expLevel;
-          $app->save();
+        $app->experience_level = $expLevel;
+        $app->screening_label = $screeningLabel;
+        $app->save();
       }
 
       $updated++;
@@ -59,12 +62,12 @@ class BackfillExperienceLevel extends Command
   private function computeExpLevel(float $expYears): string {
     $normalizedYear = floor($expYears); // Normalize to kill decimal noise
     return match (true) {
-      $normalizedYear == 0   => 'fresher',
-      $normalizedYear <= 0.5 => 'newcomer',
-      $normalizedYear <= 1   => 'junior',
-      $normalizedYear <= 2   => 'early_career',
-      $normalizedYear <= 5   => 'mid_level',
-      default          => 'senior',
+      $normalizedYear == 0  => 'fresher',
+      $normalizedYear <= 1  => 'newcomer',
+      $normalizedYear <= 2  => 'junior',
+      $normalizedYear <= 5  => 'early_career',
+      $normalizedYear <= 10 => 'mid_level',
+      default                => 'senior',
     };
   }
 }

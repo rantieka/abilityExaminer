@@ -78,7 +78,7 @@ class ProcessCvScreening implements ShouldQueue
       // Send to AI for structured data extraction
       $messages = $this->buildPrompt($job, $anonymizedCvText);
 
-      // Add a 30-second delay to prevent Groq TPM (Tokens Per Minute) Rate Limit
+      // Add a 60-second delay to prevent Groq TPM (Tokens Per Minute) Rate Limit
       sleep(60);
 
       // Low temperature for deterministic, structured extraction
@@ -91,6 +91,9 @@ class ProcessCvScreening implements ShouldQueue
 
       // Validate & sanitize AI JSON structure before processing
       $result = $this->validateAiResponse($rawResult);
+
+      // FALLBACK: Scan CV text for critical skills Groq likely missed
+      $result = $this->extractCriticalSkillsFromText($result, $anonymizedCvText);
 
       // NEW HYBRID CALCULATION
       // 1. Calculate refined experience years from structured history
@@ -306,9 +309,14 @@ class ProcessCvScreening implements ShouldQueue
    * Safe skill normalization. Focus on trimming and common variants only.
    */
   protected function normalizeSkill(string $skill): string {
-    $skill = strtolower(trim($skill));
+    $skill = trim($skill);
 
-    // Strip version numbers/suffixes first (e.g. "Laravel 5.*" → "Laravel", "Codeigniter 3.*" → "codeigniter")
+    // Handle CI/CD variations (ci/cd, ci-cd, ci_cd, cicd, etc.) early to normalize to 'cicd'
+    if (preg_match('/ci[\/\-\s_]?cd/i', $skill)) {
+      $skill = preg_replace('/ci[\/\-\s_]?cd/i', 'cicd', $skill);
+    }
+
+    $skill = strtolower($skill);
     $skill = preg_replace('/(\s*[\d\.]+\.\*|\s*[\d\.]+|[\d\.]+(\.\*)?)$/', '', $skill);
 
     // Common aliases normalization
@@ -383,14 +391,13 @@ class ProcessCvScreening implements ShouldQueue
       'restfull api'  => 'rest-api',
       'rest api'      => 'rest-api',
 
-      // PHP Frameworks
-      'codeigniter'  => 'ci',
-      'ci'           => 'ci',
-      'laravel'      => 'laravel',
-      'ci4'          => 'ci',
-      'codeigniter4' => 'ci',
-      'codeigniter3' => 'ci',
-      'ci3'          => 'ci',
+      // PHP Frameworks — 'ci' now safe to map because CI/CD variants are handled early
+      'codeigniter'  => 'codeigniter',
+      'ci'           => 'codeigniter',
+      'ci4'          => 'codeigniter',
+      'codeigniter4' => 'codeigniter',
+      'codeigniter3' => 'codeigniter',
+      'ci3'          => 'codeigniter',
     ];
 
     if (isset($aliases[$skill])) {
@@ -409,26 +416,116 @@ class ProcessCvScreening implements ShouldQueue
       ' ' => '',
       '-' => '',
       '_' => '',
+      '(' => '',
+      ')' => '',
+      '.' => '',
+      ',' => '',
+      '/' => '',
     ];
-    return str_replace(array_keys($replacements), array_values($replacements), $skill);
+    $skill = str_replace(array_keys($replacements), array_values($replacements), $skill);
+
+    // Normalize cloud provider shorthand (EC2, S3, ES6, ES5, etc.)
+    // These should NOT become single-char after stripping. Map to full form.
+    if (preg_match('/^(ec2|s3|es6|es5|es7)$/', $skill)) {
+      return $skill; // keep as-is, length > 1 so skillMatches won't reject
+    }
+
+    // Drop any remaining single-char results (noisy — e.g. "S" from malformed "S3" extraction)
+    if (strlen($skill) <= 1) {
+      return '';
+    }
+
+    return $skill;
+  }
+
+  /**
+   * Fallback: Scan raw CV text for technical skills that Groq likely missed.
+   */
+  protected function extractCriticalSkillsFromText(array $result, string $cvText): array {
+    $existingLower = array_map(fn($s) => strtolower(trim($s)), $result['all_extracted_skills'] ?? []);
+
+    // list skills that often missed by AI
+    // Sort by length DESC to ensure multi-word keywords (e.g. "machine learning") match first
+    $keywords = [
+      'grape api' => 'rest-api', 'grape' => 'rest-api', 'api framework' => 'rest-api',
+      'restful api' => 'rest-api', 'rest api' => 'rest-api', 'rest' => 'rest-api', 'restful' => 'rest-api',
+      'postgresql' => 'postgres', 'postgre sql' => 'postgres',
+      'mysql' => 'mysql', 'mariadb' => 'mysql', 'mongodb' => 'mongodb',
+      'redis' => 'redis', 'elasticsearch' => 'elasticsearch',
+      'docker' => 'docker', 'kubernetes' => 'kubernetes', 'k8s' => 'kubernetes',
+      'aws' => 'aws', 'gcp' => 'gcp', 'azure' => 'azure',
+      'python' => 'python', 'flutter' => 'flutter', 'react native' => 'reactnative',
+      'git' => 'git', 'cicd' => 'cicd', 'ci/cd' => 'cicd', 'postman' => 'postman', 'machine learning' => 'ml', 'deep learning' => 'deep-learning'
+    ];
+    uksort($keywords, fn($a, $b) => strlen($b) - strlen($a));
+
+    $found = [];
+    // fixed-length lookbehind chains (PCRE2 requirement: each branch must be same length).
+    $negLookbehinds = [
+      '(?<!no\s)',    // preceded by "no "
+      '(?<!not\s)',
+      '(?<!tanpa\s)',
+      '(?<!bukan\s)',
+      '(?<!tidak\s)',
+      '(?<!belum\s)'
+    ];
+    $negLookbehind = implode('', $negLookbehinds);
+
+    foreach ($keywords as $key => $normalized) {
+      $escapedKey = preg_quote($key, '/');
+      $pattern = '/' . $negLookbehind . '\b' . $escapedKey . '\b/i';
+
+      if (@preg_match($pattern, $cvText)) {
+        // Use fuzzy matching to avoid semantic duplicates (e.g. "rest" exists → don't add "rest-api")
+        $alreadyExists = false;
+        foreach ($existingLower as $existingSkill) {
+          if ($this->skillMatches($normalized, $existingSkill)) {
+            $alreadyExists = true;
+            break;
+          }
+        }
+        if (!$alreadyExists) {
+          $found[] = $normalized;
+        }
+      }
+    }
+
+    if (!empty($found)) {
+      $result['all_extracted_skills'] = array_unique(array_merge($result['all_extracted_skills'] ?? [], $found));
+      Log::info("CRITICAL_SKILLS_FALLBACK [App ID: {$this->application->id}]: Added -> " . implode(', ', $found));
+    }
+
+    return $result;
   }
 
   /**
    * Fuzzy match two skills — case-insensitive substring match.
    * Returns true if one skill is contained within the other (or they're identical).
+   * Includes special-case guards to prevent false positives (e.g. "s" matching "mysql").
    */
   protected function skillMatches(string $normalizedJob, string $normalizedFound): bool {
-    return $normalizedJob === $normalizedFound
-      || str_contains($normalizedJob, $normalizedFound)
+    if ($normalizedJob === $normalizedFound) return true;
+
+    // Length guard: Reject single-char or empty strings (e.g. "s" from "S3")
+    if (strlen($normalizedFound) <= 1 || strlen($normalizedJob) <= 1) return false;
+
+    // Special cases: Prevent "Java" from matching "JavaScript" or "SQL" from matching "MySQL"
+    if ($normalizedJob === 'java' && $normalizedFound === 'js') return false;
+    if ($normalizedJob === 'sql' && in_array($normalizedFound, ['mysql', 'postgres', 'sqlserver'])) return false;
+    // Reverse check: Specific job tool should not match generic 'sql'
+    if (in_array($normalizedJob, ['mysql', 'postgres']) && $normalizedFound === 'sql') return false;
+
+    // Otherwise, allow fuzzy matching (e.g., "Git" matches "Git (Expert)")
+    return str_contains($normalizedJob, $normalizedFound)
       || str_contains($normalizedFound, $normalizedJob);
   }
 
   /**
    * Convert numeric experience years to categorical level.
-   * Used for C4.5 training features (no noise, consistent).
+   * Used for C4.5 training features.
    */
   protected function getExperienceLevel(float $expYears): string {
-    $normalizedYear = floor($expYears); // Normalize to kill decimal noise (2.0 vs 2.5 → both 2)
+    $normalizedYear = floor($expYears);
     return match (true) {
       $normalizedYear == 0   => 'fresher',
       $normalizedYear <= 1  => 'newcomer',
@@ -500,18 +597,30 @@ class ProcessCvScreening implements ShouldQueue
 
     // Normalize found skills
     $allFoundNorm = array_map([$this, 'normalizeSkill'], ($extractedData['all_extracted_skills'] ?? []));
+    $allFoundNorm = array_values(array_filter($allFoundNorm)); // re-index and remove empty
+
+    // DEBUG: Log normalization details for skill matching
+    Log::info("DEBUG allFoundNorm [App ID: {$this->application->id}]: " . json_encode($allFoundNorm));
+    Log::info("DEBUG reqSkillsNorm [App ID: {$this->application->id}]: " . json_encode($reqSkillsNorm));
+    Log::info("DEBUG prefSkillsNorm [App ID: {$this->application->id}]: " . json_encode($prefSkillsNorm));
+    Log::info("DEBUG bonusSkillsNorm [App ID: {$this->application->id}]: " . json_encode($bonusSkillsNorm));
 
     // Fuzzy intersection using substring match (case-insensitive)
     $matchedReq   = [];
     $matchedPref  = [];
     $matchedBonus = [];
     foreach ($reqSkillsNorm as $req) {
+      $didMatch = false;
+      $matchWhy = null;
       foreach ($allFoundNorm as $found) {
         if ($this->skillMatches($req, $found)) {
           $matchedReq[] = $req;
+          $didMatch = true;
+          $matchWhy = $found;
           break;
         }
       }
+      Log::info("DEBUG reqMatch [App ID: {$this->application->id}]: '{$req}' → " . ($didMatch ? "MATCHED (vs '{$matchWhy}')" : "NO MATCH"));
     }
     foreach ($prefSkillsNorm as $pref) {
       foreach ($allFoundNorm as $found) {
@@ -719,7 +828,6 @@ class ProcessCvScreening implements ShouldQueue
 
     foreach ($experiences as $exp) {
       try {
-        // Validate Dates & Skip Academic Roles
         $role = strtolower($exp['role'] ?? '');
         $company = strtolower($exp['company'] ?? '');
         
@@ -746,16 +854,34 @@ class ProcessCvScreening implements ShouldQueue
         // Ensure start is before end
         if ($start->gt($end)) continue;
 
-        // 2. PHP Weighting (Only count relevant roles fully)
-        $isRelevant = (bool) ($exp['is_relevant'] ?? true);
-        
-        // Logic: Non-relevant roles count only 20% (e.g. Sales during CS degree)
+        // Determine if role is IT/Dev — skip non-dev entirely
+        $isRelevant = (bool) ($exp['is_relevant'] ?? false);
+
+        // Override: if role contains non-dev keywords, skip it completely
+        $nonDevKeywords = ['teknisi', 'teknik', 'helpdesk', 'support', 'admin', 'sales',
+                           'kasir', 'call center', 'customer service', 'qc ', 'quality control',
+                           'packaging', 'apotek', 'dokter', 'guru', 'staff', 'operational',
+                           'operator', 'technician', 'repair', 'maintenance', 'warnet', 'laboratorium', 'asisten'];
+        $isDevRole = true;
+        foreach ($nonDevKeywords as $kw) {
+          if (str_contains($role, $kw)) {
+            $isDevRole = false;
+            break;
+          }
+        }
+        if (!$isDevRole) {
+          Log::info("DEBUG ExpCalc [App ID: {$this->application->id}]: SKIPPED (non-dev) -> {$role}");
+          continue; // skip this role entirely
+        }
+
+        // For IT/Dev roles: use AI's is_relevant as-is (true = full weight, false = 20%)
         $weight = $isRelevant ? 1.0 : 0.2;
 
         $intervals[] = [
           'start'  => $start,
           'end'    => $end,
-          'weight' => $weight
+          'weight' => $weight,
+          'role'   => $role, // keep for debug logging
         ];
       } catch (\Exception $e) {
         continue;
@@ -775,15 +901,14 @@ class ProcessCvScreening implements ShouldQueue
       for ($i = 1; $i < count($intervals); $i++) {
         $next = $intervals[$i];
 
-        // If overlaps
-        if ($next['start']->lte($current['end'])) {
+        // Only merge if overlap AND weight is the same (0.01 epsilon for float compare)
+        if ($next['start']->lte($current['end']) && abs($next['weight'] - $current['weight']) < 0.01) {
           // Extend the current end if the next one is further
           if ($next['end']->gt($current['end'])) {
             $current['end'] = $next['end'];
           }
-          // Use the highest weight if overlapping
-          $current['weight'] = max($current['weight'], $next['weight']);
         } else {
+          // Different weight = separate interval, don't merge
           $merged[] = $current;
           $current = $next;
         }
@@ -793,13 +918,24 @@ class ProcessCvScreening implements ShouldQueue
 
     // Calculate Months & Final Years
     $totalMonths = 0;
+    $debugDetails = [];
     foreach ($merged as $m) {
       $months = $m['start']->diffInMonths($m['end']) + 1; // +1 to include starting month
-      $totalMonths += ($months * $m['weight']);
+      $weighted = $months * $m['weight'];
+      $totalMonths += $weighted;
+
+      $startStr = $m['start']->format('Y-m');
+      $endStr = $m['end']->format('Y-m');
+      $roleStr = $m['role'];
+      $weightVal = $m['weight'];
+
+      $debugDetails[] = "{$roleStr}: {$startStr} -> {$endStr} (weight={$weightVal}, months={$months}, weighted={$weighted})";
     }
 
     $finalYears = round($totalMonths / 12, 1);
-    
+    $debugMsg = implode(' | ', $debugDetails) . " | totalMonths={$totalMonths}, finalYears={$finalYears}";
+    Log::info("DEBUG ExpCalc [App ID: {$this->application->id}]: " . $debugMsg);
+
     // Cap at 15 years to avoid noise
     return min(15.0, (float) $finalYears);
   }

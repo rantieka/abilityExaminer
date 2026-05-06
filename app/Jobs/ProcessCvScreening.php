@@ -270,9 +270,10 @@ class ProcessCvScreening implements ShouldQueue
       Extract structured data from the CV above with EXTREME precision. 
       Follow these rules:
       1. SKILLS: Extract ALL technical skills, tools, and methodologies explicitly mentioned in the text (ensure you check project descriptions and work experience).
-      2. EXPERIENCE: Extract work history as a structured list. Include: company, role, start_date, end_date (Format: YYYY-MM or YYYY, use 'Present' if current). 
+      2. EXPERIENCE: Extract work history as a structured list. Include: company, role, start_date, end_date (Format: YYYY-MM or YYYY, use 'Present' if current).
          Identify if the role is 'relevant' to software development/IT based on the job description.
          CRITICAL: Do NOT include education periods, university studies, or school projects in this list.
+         CRITICAL: Only include actual paid employment or formal internship with a company. Sertifikat, Certificate, Incubator, Bootcamp, Award, Scholarship, Workshop are NOT work experience.
       3. EDUCATION: Extract highest education level (SMK/D3/D4/S1/etc) and major.
       4. REQUIREMENTS: Check these specific labels from the CV:
          - {$qualifications}
@@ -514,6 +515,13 @@ class ProcessCvScreening implements ShouldQueue
     if ($normalizedJob === 'sql' && in_array($normalizedFound, ['mysql', 'postgres', 'sqlserver'])) return false;
     // Reverse check: Specific job tool should not match generic 'sql'
     if (in_array($normalizedJob, ['mysql', 'postgres']) && $normalizedFound === 'sql') return false;
+
+    // Semantic equivalence: responsive design / web design
+    $designEquivalents = ['bootstrap', 'tailwindcss', 'tailwind', 'css', 'flexbox', 'grid', 'mediaquery', 'mediaqueries'];
+    $isJobDesign = $normalizedJob === 'responsivedesign' || $normalizedJob === 'webdesign';
+    if ($isJobDesign && in_array($normalizedFound, $designEquivalents)) {
+      return true;
+    }
 
     // Otherwise, allow fuzzy matching (e.g., "Git" matches "Git (Expert)")
     return str_contains($normalizedJob, $normalizedFound)
@@ -819,9 +827,17 @@ class ProcessCvScreening implements ShouldQueue
    * REFINED EXPERIENCE CALCULATION
    * Steps: Validate -> Sort -> Merge Overlaps -> Weighting -> Final Years
    */
-  protected function calculateRefinedExperience(array $experiences): float 
+  protected function calculateRefinedExperience(array $experiences): float
   {
     if (empty($experiences)) return 0.0;
+
+    Log::info("DEBUG ExpCalc Input [App ID: {$this->application->id}]: " . json_encode(array_map(fn($e) => [
+      'role' => $e['role'] ?? '',
+      'company' => $e['company'] ?? '',
+      'start' => $e['start_date'] ?? '',
+      'end' => $e['end_date'] ?? '',
+      'is_relevant' => $e['is_relevant'] ?? false
+    ], $experiences)));
 
     $intervals = [];
     $currentDate = now();
@@ -841,6 +857,24 @@ class ProcessCvScreening implements ShouldQueue
           }
         }
         if ($isAcademic) continue;
+
+        // Skip suspicious non-employment entries (AI might wrongly parse these as work experience)
+        $suspiciousKeywords = ['incubator', 'bootcamp', 'sertifikat', 'certificate',
+                               'award', 'penghargaan', 'training program', 'digital talent',
+                               'scholarship', 'fellowship', 'workshop', 'seminar'];
+        $isSuspicious = false;
+        $suspiciousReason = null;
+        foreach ($suspiciousKeywords as $kw) {
+          if (str_contains($role, $kw) || str_contains($company, $kw)) {
+            $isSuspicious = true;
+            $suspiciousReason = $kw;
+            break;
+          }
+        }
+        if ($isSuspicious) {
+          Log::info("DEBUG ExpCalc [App ID: {$this->application->id}]: SKIPPED (suspicious: '{$suspiciousReason}') -> {$role} @ {$company}");
+          continue;
+        }
 
         $startStr = $exp['start_date'] ?? null;
         $endStr   = $exp['end_date'] ?? 'Present';
@@ -877,11 +911,14 @@ class ProcessCvScreening implements ShouldQueue
         // For IT/Dev roles: use AI's is_relevant as-is (true = full weight, false = 20%)
         $weight = $isRelevant ? 1.0 : 0.2;
 
+        Log::info("DEBUG ExpCalc Parse [App ID: {$this->application->id}]: {$role} @ {$company} | {$startStr} → {$endStr} | parsed: {$start->format('Y-m-d')} → {$end->format('Y-m-d')} | weight={$weight}");
+
         $intervals[] = [
           'start'  => $start,
           'end'    => $end,
           'weight' => $weight,
           'role'   => $role, // keep for debug logging
+          'company' => $company
         ];
       } catch (\Exception $e) {
         continue;
@@ -903,6 +940,7 @@ class ProcessCvScreening implements ShouldQueue
 
         // Only merge if overlap AND weight is the same (0.01 epsilon for float compare)
         if ($next['start']->lte($current['end']) && abs($next['weight'] - $current['weight']) < 0.01) {
+          Log::info("DEBUG ExpCalc Merge [App ID: {$this->application->id}]: MERGING {$next['role']} @ {$next['company']} INTO {$current['role']} @ {$current['company']} | overlap: {$next['start']->format('Y-m')} <= {$current['end']->format('Y-m')}");
           // Extend the current end if the next one is further
           if ($next['end']->gt($current['end'])) {
             $current['end'] = $next['end'];

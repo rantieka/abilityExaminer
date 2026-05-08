@@ -210,18 +210,15 @@ class ProcessCvScreening implements ShouldQueue
 
     } catch (\RuntimeException $e) {
       // Infrastructure errors
-      Log::error("CV Screening Infrastructure Error [Application ID: {$this->application->id}]: " . $e->getMessage());
       $this->failWithMessage("Service temporarily unavailable: " . $e->getMessage());
       throw $e;
 
     } catch (\LogicException $e) {
       // Logic/data errors
-      Log::error("CV Screening Logic Error [Application ID: {$this->application->id}]: " . $e->getMessage());
       $this->failWithMessage($e->getMessage());
 
     } catch (\Throwable $e) {
       // Unexpected errors
-      Log::error("CV Screening Unexpected Error [Application ID: {$this->application->id}]: " . $e->getMessage());
       $this->failWithMessage("An unexpected error occurred: " . $e->getMessage());
     }
   }
@@ -413,7 +410,7 @@ class ProcessCvScreening implements ShouldQueue
       'postgresql' => 'postgres',
       'nodejs' => 'node',
       // Strip spaces, dashes, underscores — catches AI extraction typos
-      // e.g. "mysq l" → "mysql", "postgre sql" → "postgresql", "react .js" → "react"
+
       ' ' => '',
       '-' => '',
       '_' => '',
@@ -426,7 +423,6 @@ class ProcessCvScreening implements ShouldQueue
     $skill = str_replace(array_keys($replacements), array_values($replacements), $skill);
 
     // Normalize cloud provider shorthand (EC2, S3, ES6, ES5, etc.)
-    // These should NOT become single-char after stripping. Map to full form.
     if (preg_match('/^(ec2|s3|es6|es5|es7)$/', $skill)) {
       return $skill; // keep as-is, length > 1 so skillMatches won't reject
     }
@@ -493,7 +489,6 @@ class ProcessCvScreening implements ShouldQueue
 
     if (!empty($found)) {
       $result['all_extracted_skills'] = array_unique(array_merge($result['all_extracted_skills'] ?? [], $found));
-      Log::info("CRITICAL_SKILLS_FALLBACK [App ID: {$this->application->id}]: Added -> " . implode(', ', $found));
     }
 
     return $result;
@@ -585,7 +580,7 @@ class ProcessCvScreening implements ShouldQueue
     $confidence = (float)($extractedData['confidence'] ?? 0.5);
     $genReqs    = $extractedData['general_requirements_analysis'] ?? [];
 
-    // Hallucination & Logic Guard
+    // Guard
     // If experience > 20 years (unlikely for most roles) or confidence is critical
     if ($expYears > 20 || $confidence < 0.3) {
       $confidence = 0.1; // Mark as unreliable
@@ -608,10 +603,10 @@ class ProcessCvScreening implements ShouldQueue
     $allFoundNorm = array_values(array_filter($allFoundNorm)); // re-index and remove empty
 
     // DEBUG: Log normalization details for skill matching
-    Log::info("DEBUG allFoundNorm [App ID: {$this->application->id}]: " . json_encode($allFoundNorm));
-    Log::info("DEBUG reqSkillsNorm [App ID: {$this->application->id}]: " . json_encode($reqSkillsNorm));
-    Log::info("DEBUG prefSkillsNorm [App ID: {$this->application->id}]: " . json_encode($prefSkillsNorm));
-    Log::info("DEBUG bonusSkillsNorm [App ID: {$this->application->id}]: " . json_encode($bonusSkillsNorm));
+    Log::info("allFoundNorm [App ID: {$this->application->id}]: " . json_encode($allFoundNorm));
+    Log::info("reqSkillsNorm [App ID: {$this->application->id}]: " . json_encode($reqSkillsNorm));
+    Log::info("prefSkillsNorm [App ID: {$this->application->id}]: " . json_encode($prefSkillsNorm));
+    Log::info("bonusSkillsNorm [App ID: {$this->application->id}]: " . json_encode($bonusSkillsNorm));
 
     // Fuzzy intersection using substring match (case-insensitive)
     $matchedReq   = [];
@@ -628,7 +623,7 @@ class ProcessCvScreening implements ShouldQueue
           break;
         }
       }
-      Log::info("DEBUG reqMatch [App ID: {$this->application->id}]: '{$req}' → " . ($didMatch ? "MATCHED (vs '{$matchWhy}')" : "NO MATCH"));
+      Log::info("reqMatch [App ID: {$this->application->id}]: '{$req}' → " . ($didMatch ? "MATCHED (vs '{$matchWhy}')" : "NO MATCH"));
     }
     foreach ($prefSkillsNorm as $pref) {
       foreach ($allFoundNorm as $found) {
@@ -693,8 +688,7 @@ class ProcessCvScreening implements ShouldQueue
     $optPointsFinal = (int) round($optPoints);
     $rawScore += $optPointsFinal;
 
-    // Experience (Max 20 points)
-    // Check if this is specifically a Fresh Graduate targeted job
+    // Experience (Max 20 points) - Check if this is specifically a Fresh Graduate targeted job
     $isFreshGradJob = false;
     foreach ($genReqs as $item) {
       $reqLabel = strtolower($item['requirement'] ?? '');
@@ -775,14 +769,14 @@ class ProcessCvScreening implements ShouldQueue
       $finalScore = 0;
     }
 
-    Log::info("Scoring Detail [App ID: {$this->application->id}]:");
+    Log::info("Scoring Detail [{$this->application->id}]:");
     Log::info("Core Skills (Max 60): {$corePoints}");
     Log::info("Optional Skills (Max 10): {$optPointsFinal}");
     Log::info("Experience (Max 20): {$expScore}");
     Log::info("General Reqs (Max 10): {$genPointsFinal}");
     Log::info("Raw Total (Max 100): {$rawScore}");
     Log::info("Confidence: {$confidence} (Applied: {$appliedConfidence})");
-    Log::info("FINAL SCORE: {$finalScore}");
+    Log::info("Final ScoreE: {$finalScore}");
 
     // Safeguard bounds
     return max(0, min(100, $finalScore));
@@ -888,37 +882,32 @@ class ProcessCvScreening implements ShouldQueue
         // Ensure start is before end
         if ($start->gt($end)) continue;
 
-        // Determine if role is IT/Dev — skip non-dev entirely
         $isRelevant = (bool) ($exp['is_relevant'] ?? false);
+        if (!$isRelevant) {
+          Log::info("DEBUG ExpCalc [App ID: {$this->application->id}]: SKIPPED (is_relevant=false) -> {$role} @ {$company}");
+          continue;
+        }
 
-        // Override: if role contains non-dev keywords, skip it completely
-        $nonDevKeywords = ['teknisi', 'teknik', 'helpdesk', 'support', 'admin', 'sales',
-                           'kasir', 'call center', 'customer service', 'qc ', 'quality control',
-                           'packaging', 'apotek', 'dokter', 'guru', 'staff', 'operational',
-                           'operator', 'technician', 'repair', 'maintenance', 'warnet', 'laboratorium', 'asisten'];
-        $isDevRole = true;
-        foreach ($nonDevKeywords as $kw) {
+        // Safety net: skip roles that are clearly NOT IT/Dev regardless of is_relevant
+        $clearlyNonDev = ['sales', 'marketing', 'kasir', 'apotek', 'dokter', 'guru',
+                          'driver', 'cleaning service', 'security', 'security guard'];
+        foreach ($clearlyNonDev as $kw) {
           if (str_contains($role, $kw)) {
-            $isDevRole = false;
-            break;
+            Log::info("DEBUG ExpCalc [App ID: {$this->application->id}]: SKIPPED (clearly non-dev) -> {$role}");
+            continue 2; // continue to next $exp in foreach
           }
         }
-        if (!$isDevRole) {
-          Log::info("DEBUG ExpCalc [App ID: {$this->application->id}]: SKIPPED (non-dev) -> {$role}");
-          continue; // skip this role entirely
-        }
 
-        // For IT/Dev roles: use AI's is_relevant as-is (true = full weight, false = 20%)
-        $weight = $isRelevant ? 1.0 : 0.2;
-
+        // Passed both checks: is_relevant=true AND not clearly non-dev
+        $weight = 1.0;
         Log::info("DEBUG ExpCalc Parse [App ID: {$this->application->id}]: {$role} @ {$company} | {$startStr} → {$endStr} | parsed: {$start->format('Y-m-d')} → {$end->format('Y-m-d')} | weight={$weight}");
 
         $intervals[] = [
-          'start'  => $start,
-          'end'    => $end,
-          'weight' => $weight,
-          'role'   => $role, // keep for debug logging
-          'company' => $company
+          'start'   => $start,
+          'end'     => $end,
+          'weight'  => $weight,
+          'role'    => $role,
+          'company' => $company,
         ];
       } catch (\Exception $e) {
         continue;

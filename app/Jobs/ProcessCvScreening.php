@@ -147,9 +147,9 @@ class ProcessCvScreening implements ShouldQueue
 
       // Experience & Education - use text-based description without decimal-to-months conversion
       Log::info("DEBUG displayExpPros [App ID: {$this->application->id}]: expYearsRaw={$expYearsRaw}, expYears={$expYears}");
-      $displayExpPros = $expYears < 1
-          ? "less than 1 year"
-          : (($expYears == 1) ? "1 year" : round($expYears, 1) . " years");
+      $displayExpPros = ($expYears == 0)
+          ? "no relevant experience"
+          : ($expYears < 1 ? "less than 1 year" : (($expYears == 1) ? "1 year" : round($expYears, 1) . " years"));
 
       if ($expYears >= 5) {
         $pros[] = "Extensive professional background with {$displayExpPros} of experience.";
@@ -184,14 +184,14 @@ class ProcessCvScreening implements ShouldQueue
       }
 
       $expFormatted = (float) $expYearsRaw;
-      $displayExp = $expFormatted < 1
-        ? "less than 1 year"
-        : (($expFormatted == 1) ? "1 year" : round($expFormatted, 1) . " years");
+      $displayExp = ($expFormatted == 0)
+        ? "no relevant experience"
+        : ($expFormatted < 1 ? "less than 1 year" : (($expFormatted == 1) ? "1 year" : round($expFormatted, 1) . " years"));
 
-      $summary = "Identified " . count($skillsFound['required']) . " required skills and " . count($skillsFound['preferred']) . " preferred skills with " . $displayExp . " of experience.";
+      $summary = "Identified " . count($skillsFound['required']) . " required skills and " . count($skillsFound['preferred']) . " preferred skills with " . $displayExp . ".";
 
       // Determine screening label based on score (2-class for C4.5)
-      $screeningLabel = $calculatedScore >= 51 ? 'suitable' : 'not_suitable';
+      $screeningLabel = $calculatedScore >= 60 ? 'suitable' : 'not_suitable';
 
       $this->application->update([
         'ai_score'          => $calculatedScore,
@@ -210,15 +210,18 @@ class ProcessCvScreening implements ShouldQueue
 
     } catch (\RuntimeException $e) {
       // Infrastructure errors
+      Log::error("CV Screening Infrastructure Error [Application ID: {$this->application->id}]: " . $e->getMessage());
       $this->failWithMessage("Service temporarily unavailable: " . $e->getMessage());
       throw $e;
 
     } catch (\LogicException $e) {
       // Logic/data errors
+      Log::error("CV Screening Logic Error [Application ID: {$this->application->id}]: " . $e->getMessage());
       $this->failWithMessage($e->getMessage());
 
     } catch (\Throwable $e) {
       // Unexpected errors
+      Log::error("CV Screening Unexpected Error [Application ID: {$this->application->id}]: " . $e->getMessage());
       $this->failWithMessage("An unexpected error occurred: " . $e->getMessage());
     }
   }
@@ -842,20 +845,27 @@ class ProcessCvScreening implements ShouldQueue
         $company = strtolower($exp['company'] ?? '');
         
         // Skip if it looks like a degree or university status
-        $academicKeywords = ['student', 'mahasiswa', 'university', 'universitas', 'school', 'sekolah', 'college', 'degree', 'undergraduate'];
+        $academicKeywords = ['student', 'mahasiswa', 'university', 'universitas', 'school', 'sekolah', 'college', 'degree', 'undergraduate', 'smk', 'sma', 'smp', 'sd', 'smkn'];
         $isAcademic = false;
         foreach ($academicKeywords as $kw) {
-          if (str_contains($role, $kw) || str_contains($company, $kw)) {
+          $pattern = "/\b" . preg_quote($kw, '/') . "\b/i";
+          if (preg_match($pattern, $role) || preg_match($pattern, $company)) {
             $isAcademic = true;
             break;
           }
         }
-        if ($isAcademic) continue;
+        if ($isAcademic) {
+          Log::info("DEBUG ExpCalc [App ID: {$this->application->id}]: SKIPPED (academic) -> {$role} @ {$company}");
+          continue;
+        }
 
         // Skip suspicious non-employment entries (AI might wrongly parse these as work experience)
         $suspiciousKeywords = ['incubator', 'bootcamp', 'sertifikat', 'certificate',
                                'award', 'penghargaan', 'training program', 'digital talent',
-                               'scholarship', 'fellowship', 'workshop', 'seminar'];
+                               'scholarship', 'fellowship', 'workshop', 'seminar', 'pelatihan',
+                               'admin online', 'staff administrasi', 'admin media sosial',
+                               'admin sosial media', 'admin gudang', 'admin marketplace',
+                               'admin toko', 'admin penjualan', 'admin sales', 'customer service'];
         $isSuspicious = false;
         $suspiciousReason = null;
         foreach ($suspiciousKeywords as $kw) {
@@ -876,13 +886,30 @@ class ProcessCvScreening implements ShouldQueue
         $start = $this->parseFlexibleDate($startStr);
         $end   = $this->parseFlexibleDate($endStr);
 
-        if (!$start) continue;
+        $isRelevant = (bool) ($exp['is_relevant'] ?? false);
+
+        // If start can't be parsed — decide what to do based on relevance
+        if (!$start) {
+          if ($isRelevant) {
+            // Dates unclear but role is relevant → estimate minimum 6 months
+            $fallbackStart = $currentDate->copy()->subMonths(6);
+            $fallbackEnd   = $currentDate;
+            Log::info("DEBUG ExpCalc [App ID: {$this->application->id}]: ESTIMATED 0.5yr (dates unknown) -> {$role} @ {$company}");
+            $intervals[] = [
+              'start'   => $fallbackStart,
+              'end'     => $fallbackEnd,
+              'weight'  => 0.5, // lower than fully-known experiences (1.0)
+              'role'    => $role,
+              'company' => $company,
+            ];
+          }
+          continue;
+        }
         if (!$end) $end = $currentDate;
 
         // Ensure start is before end
         if ($start->gt($end)) continue;
 
-        $isRelevant = (bool) ($exp['is_relevant'] ?? false);
         if (!$isRelevant) {
           Log::info("DEBUG ExpCalc [App ID: {$this->application->id}]: SKIPPED (is_relevant=false) -> {$role} @ {$company}");
           continue;

@@ -34,6 +34,15 @@ class Application extends Model
     'email_type',
     'rejection_reason',
     'test_details',
+    'c45_decision',
+    'hrd_decision',
+    'hrd_notes',
+    'hrd_decided_at',
+    'supervisor_decision',
+    'supervisor_notes',
+    'supervisor_decided_at',
+    'announcement_status',
+    'announcement_published_at',
   ];
 
   protected $casts = [

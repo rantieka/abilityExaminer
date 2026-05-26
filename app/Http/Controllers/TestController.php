@@ -241,11 +241,65 @@ class TestController extends Controller
 
     $score = $totalPossiblePoints > 0 ? round(($earnedPoints / $totalPossiblePoints) * 100) : 0;
 
+    // Fetch live C4.5 prediction on test completion via PHP local C45Predictor (Weka J48 86% Accuracy)
+    $c45Decision = \App\Services\C45Predictor::predict(
+        (float) $application->ai_score,
+        (float) $score
+    );
+
+    // Generate AI explanation rationale for Explainable AI (XAI)
+    $c45Explanation = null;
+    try {
+        $aiThreshold = \App\Models\Setting::get('c45_ai_threshold', 57.0);
+        $testThreshold = \App\Models\Setting::get('c45_test_threshold', 63.0);
+
+        $groq = resolve(\App\Services\GroqService::class);
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => 'You are an expert HR evaluation assistant. Analyze the candidate C4.5 classification decision and explain the result. Respond with JSON format only: {"explanation": "your explanation in Indonesian"}',
+            ],
+            [
+                'role' => 'user',
+                'content' => "Candidate Name: {$application->full_name}\n" .
+                             "AI Score (CV Screening): {$application->ai_score}\n" .
+                             "Test Score (Exam): {$score}\n" .
+                             "C4.5 Decision Result: {$c45Decision}\n\n" .
+                             "Rules: Write a professional, encouraging, and clear 2-3 sentence explanation in Indonesian explaining why the C4.5 decision is {$c45Decision} berdasarkan aturan Weka berikut:\n" .
+                             "1. Jika AI Score <= {$aiThreshold}, maka REJECTED.\n" .
+                             "2. Jika AI Score > {$aiThreshold} dan Test Score <= {$testThreshold}, maka REJECTED.\n" .
+                             "3. Jika AI Score > {$aiThreshold} dan Test Score > {$testThreshold}, maka ACCEPTED.\n" .
+                             "Sebutkan nilai skor pelamar secara alami.",
+            ]
+        ];
+        
+        $aiResult = $groq->chat($messages, 0.5);
+        $c45Explanation = $aiResult['explanation'] ?? null;
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::error("Groq AI failed to generate C4.5 explanation: " . $e->getMessage());
+    }
+
+    if (empty($c45Explanation)) {
+        $aiThreshold = \App\Models\Setting::get('c45_ai_threshold', 57.0);
+        $testThreshold = \App\Models\Setting::get('c45_test_threshold', 63.0);
+        
+        if ($c45Decision === 'ACCEPTED') {
+            $c45Explanation = "Berdasarkan analisis algoritma C4.5 Weka, kandidat {$application->full_name} direkomendasikan untuk diterima (ACCEPTED) karena AI Score (" . ($application->ai_score ?? 0) . ") melebihi {$aiThreshold} dan Test Score ({$score}) melebihi {$testThreshold}.";
+        } else {
+            $c45Explanation = "Berdasarkan analisis algoritma C4.5 Weka, kandidat {$application->full_name} belum direkomendasikan (REJECTED) karena akumulasi nilai AI Score dan Test Score belum memenuhi batas minimal kelulusan.";
+        }
+    }
+
+    $aiAnalysis = $application->ai_analysis ?? [];
+    $aiAnalysis['c45_explanation'] = $c45Explanation;
+
     $application->update([
         'test_score' => $score,
         'test_details' => $breakdown,
         'part2_answers' => $part2Answers,
-        'test_completed_at' => now()
+        'test_completed_at' => now(),
+        'c45_decision' => $c45Decision,
+        'ai_analysis' => $aiAnalysis,
     ]);
 
     // Don't show score to user

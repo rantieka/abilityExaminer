@@ -41,6 +41,10 @@ class AdminPanelProvider extends PanelProvider
       ->colors([
         'primary' => Color::Amber,
       ])
+      ->navigationGroups([
+          'Recruitment',
+          'Settings',
+      ])
       ->plugins([
         // Register Filament Shield plugin to show Roles & Permissions menu
         FilamentShieldPlugin::make(),

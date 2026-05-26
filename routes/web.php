@@ -45,6 +45,16 @@ Route::get('/email-preview/rejected/{application}', function ($id) {
   return new \App\Mail\ApplicationRejected($application);
 })->name('email.preview.rejected');
 
+Route::get('/email-preview/hired/{application}', function ($id) {
+  $application = \App\Models\Application::findOrFail($id);
+  return new \App\Mail\SelectionResultHired($application);
+})->name('email.preview.hired');
+
+Route::get('/email-preview/selection-rejected/{application}', function ($id) {
+  $application = \App\Models\Application::findOrFail($id);
+  return new \App\Mail\SelectionResultRejected($application);
+})->name('email.preview.selection_rejected');
+
 // UI Preview Routes (Development Only)
 Route::get('/test-preview/part1', function () {
   $application = new \App\Models\Application();

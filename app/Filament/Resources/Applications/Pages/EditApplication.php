@@ -69,7 +69,7 @@ class EditApplication extends EditRecord
               ->send();
           }
         })
-        ->visible(fn () => !in_array($this->record->status, ['accepted', 'rejected'])),
+        ->visible(fn () => !in_array($this->record->status, ['accepted', 'rejected']) && auth()->user()->hasRole(['hr', 'super_admin'])),
 
       // Action: Send Rejection Email
       Action::make('send_rejected_email')
@@ -126,7 +126,7 @@ class EditApplication extends EditRecord
               ->send();
           }
         })
-        ->visible(fn () => !in_array($this->record->status, ['accepted', 'rejected'])),
+        ->visible(fn () => !in_array($this->record->status, ['accepted', 'rejected']) && auth()->user()->hasRole(['hr', 'super_admin'])),
     ];
   }
 

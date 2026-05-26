@@ -41,6 +41,18 @@ class CareerController extends Controller
           'phone' => 'required|string',
           'cv' => 'required|file|mimes:pdf|max:2048', // Max 2MB
       ]);
+
+      // Check for existing application for this job
+      $existingApplication = Application::where('job_vacancy_id', $job->id)
+        ->where(function($query) use ($validated) {
+          $query->where('email', $validated['email'])
+            ->orWhere('phone', $validated['phone']);
+        })->exists();
+
+      if ($existingApplication) {
+          return back()->with('error', 'You have already submitted an application for this position.')->withInput();
+      }
+
       // Upload CV
       $cvPath = $request->file('cv')->store('applications/cvs', 'public');
       

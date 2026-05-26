@@ -32,6 +32,28 @@
       // Calculate stats using merged answers
       $p1Stats = $calculate($part1Questions, $allAnswers);
       $p2Stats = $calculate($part2Questions, $allAnswers);
+
+      // Load C4.5 decision from database (Database-first optimization)
+      $c45Decision = $record->c45_decision;
+      $c45Error = null;
+
+      // Fallback: If c45_decision is null (e.g. old record),
+      // calculate it via local PHP predictor and automatically save to database.
+      if ($c45Decision === null) {
+        try {
+          $c45Decision = \App\Services\C45Predictor::predict(
+            (float) $record->ai_score,
+            (float) $testScore
+          );
+          // Permanently save to database
+          $record->update(['c45_decision' => $c45Decision]);
+        } catch (\Throwable $e) {
+          \Illuminate\Support\Facades\Log::error("Failed to calculate C4.5 decision in Blade fallback: " . $e->getMessage());
+        }
+      }
+
+      // C4.5 Decision Prediction Engine
+      $aiSummary = null;
     }
   }
 @endphp
@@ -196,6 +218,7 @@
         </div>
       </div>
     </div>
+
 
     <!-- Detailed Breakdown (Collapsible) -->
     <div x-data="{ expanded: false }" style="margin-top: 1.5rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; background-color: white; overflow: hidden;">

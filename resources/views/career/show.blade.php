@@ -70,6 +70,12 @@
           <form action="{{ route('career.apply', $job->slug) }}" method="POST" enctype="multipart/form-data">
             @csrf
             
+            @if(session('error'))
+            <div class="alert alert-danger py-2 small mb-3">
+              {{ session('error') }}
+            </div>
+            @endif
+            
             <div id="file-error-alert" class="alert alert-danger d-none small py-2">
                 File too large! Maximum CV size is 2MB.
             </div>

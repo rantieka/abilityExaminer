@@ -109,7 +109,7 @@ class ViewApplication extends ViewRecord {
               ->send();
           }
         })
-        ->visible(fn () => !in_array($this->record->status, ['accepted', 'rejected'])),
+        ->visible(fn () => !in_array($this->record->status, ['accepted', 'rejected']) && auth()->user()->hasRole(['hr', 'super_admin'])),
 
       // Action: Resend Test Invitation
       Action::make('resend_accepted_email')
@@ -168,7 +168,7 @@ class ViewApplication extends ViewRecord {
               ->send();
           }
         })
-        ->visible(fn () => $this->record->status === 'accepted'),
+        ->visible(fn () => $this->record->status === 'accepted' && auth()->user()->hasRole(['hr', 'super_admin'])),
 
       // Action: Send Rejection Email
       Action::make('send_rejected_email')
@@ -221,7 +221,7 @@ class ViewApplication extends ViewRecord {
               ->send();
           }
         })
-        ->visible(fn () => $this->record->status !== 'rejected'),
+        ->visible(fn () => $this->record->status !== 'rejected' && auth()->user()->hasRole(['hr', 'super_admin'])),
     ];
     }
 }

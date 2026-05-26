@@ -21,6 +21,8 @@ class JobVacancyResource extends Resource
 
   protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-briefcase';
 
+  protected static string | \UnitEnum | null $navigationGroup = 'Recruitment';
+
   protected static ?string $recordTitleAttribute = 'title';
 
   public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool

@@ -168,7 +168,7 @@ class ViewApplication extends ViewRecord {
               ->send();
           }
         })
-        ->visible(fn () => $this->record->status === 'accepted' && auth()->user()->hasRole(['hr', 'super_admin'])),
+        ->visible(fn () => $this->record->status === 'accepted' && $this->record->test_completed_at === null && auth()->user()->hasRole(['hr', 'super_admin'])),
 
       // Action: Send Rejection Email
       Action::make('send_rejected_email')
@@ -221,7 +221,7 @@ class ViewApplication extends ViewRecord {
               ->send();
           }
         })
-        ->visible(fn () => $this->record->status !== 'rejected' && auth()->user()->hasRole(['hr', 'super_admin'])),
+        ->visible(fn () => $this->record->status !== 'rejected' && $this->record->test_completed_at === null && auth()->user()->hasRole(['hr', 'super_admin'])),
     ];
     }
 }

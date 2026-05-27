@@ -56,7 +56,7 @@
                 @endif
             </div>
             
-            <p class="text-xs text-gray-500 mb-3">Recruiter evaluates C4.5 tree prediction and AI summary to submit hiring recommendation.</p>
+            <p class="text-xs text-gray-500 mb-3">Recruiter evaluates decision recommendation and AI summary to submit hiring recommendation.</p>
             
             @if($app->hrd_decision !== 'pending')
                 <div class="bg-white border border-gray-100 rounded-lg p-2.5 mt-2 shadow-xs">

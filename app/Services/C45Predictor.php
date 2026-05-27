@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
+
 class C45Predictor
 {
   /**
@@ -47,6 +49,17 @@ class C45Predictor
     // Fetch settings parameters dynamically
     $aiThreshold = (float) \App\Models\Setting::get('c45_ai_threshold', 57.0);
     $testThreshold = (float) \App\Models\Setting::get('c45_test_threshold', 63.0);
+
+    Log::info("Debugging C4.5:", [
+      'candidate_scores' => [
+        'aiScore' => $aiScore,
+        'testScore' => $testScore,
+      ],
+      'active_thresholds' => [
+        'aiThreshold' => $aiThreshold,
+        'testThreshold' => $testThreshold,
+      ]
+    ]);
     
     $leaf1Confidence = (float) \App\Models\Setting::get('c45_leaf1_confidence', 88.2);
     $leaf2Confidence = (float) \App\Models\Setting::get('c45_leaf2_confidence', 79.4);

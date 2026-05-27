@@ -337,7 +337,7 @@ class ApplicationResource extends Resource
                                       ->title('Action Required: Missing Test Questions')
                                       ->body("HR is trying to generate a test token for '{$record->jobVacancy->title}' but no test questions are available. Please create them immediately.")
                                       ->actions([
-                                        \Filament\Notifications\Actions\Action::make('create_questions')
+                                        \Filament\Actions\Action::make('create_questions')
                                           ->label('Create Questions')
                                           ->button()
                                           ->url(\App\Filament\Resources\Questions\QuestionResource::getUrl('index', ['job_id' => $record->jobVacancy->id])),
@@ -369,8 +369,8 @@ class ApplicationResource extends Resource
               \Filament\Schemas\Components\Tabs\Tab::make('Selection & Approvals')
                 ->icon('heroicon-o-check-badge')
                 ->schema([
-                  \Filament\Schemas\Components\Section::make('C4.5 Algorithm Recommendation')
-                    ->description('Machine Learning Predictive Classification')
+                  \Filament\Schemas\Components\Section::make('Decision Recommendation')
+                    ->description('Predictive recommendation based on candidate scores')
                     ->schema([
                       \Filament\Forms\Components\ViewField::make('c45_selection_summary')
                         ->view('filament.forms.components.c45-selection-summary'),
@@ -378,15 +378,15 @@ class ApplicationResource extends Resource
                     ->columnSpanFull(),
 
                   \Filament\Schemas\Components\Section::make('HRD Selection Decision')
-                    ->description('Step 1: HRD Recruiter Recommendation')
+                    ->description('HRD Recruiter Recommendation')
                     ->visible(fn ($record) => $record?->test_completed_at !== null)
                     ->schema([
                       \Filament\Forms\Components\Placeholder::make('hrd_decision_summary')
                         ->label('HRD Recommendation')
                         ->content(fn ($record) => new \Illuminate\Support\HtmlString(
                           $record->hrd_decision === 'recommended' 
-                            ? '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-200">🟢 Recommended for Hire</span>'
-                            : '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-green-200">🔴 Rejected</span>'
+                            ? '<span style="color: #16a34a; font-weight: bold; font-size: 0.875rem;">Recommended for Hire</span>'
+                            : '<span style="color: #dc2626; font-weight: bold; font-size: 0.875rem;">Rejected</span>'
                         ))
                         ->visible(fn ($record) => $record?->hrd_decision !== 'pending'),
 
@@ -399,8 +399,9 @@ class ApplicationResource extends Resource
                         \Filament\Actions\Action::make('recommend_hrd')
                           ->label('Recommend for Hire')
                           ->color('success')
-                          ->icon('heroicon-m-check')
                           ->requiresConfirmation()
+                          ->modalIcon('heroicon-o-check-circle')
+                          ->modalIconColor('success')
                           ->modalHeading('Recommend Candidate')
                           ->modalDescription('Are you sure you want to recommend this candidate to the Supervisor?')
                           ->form([
@@ -410,24 +411,48 @@ class ApplicationResource extends Resource
                               ->rows(3)
                               ->required(),
                           ])
-                          ->action(function ($record, array $data) {
+                          ->action(function ($record, array $data, $livewire) {
                             $record->update([
                               'hrd_decision' => 'recommended',
                               'hrd_notes' => $data['notes'],
                               'hrd_decided_at' => now(),
                             ]);
+
+                            // Send notification to Supervisor (Job Vacancy creator)
+                            $recipient = $record->jobVacancy?->createdBy;
+                            if ($recipient) {
+                              try {
+                                \Filament\Notifications\Notification::make()
+                                  ->info()
+                                  ->title('Candidate Recommended for Review')
+                                  ->body("HRD has recommended candidate '{$record->full_name}' for position '{$record->jobVacancy->title}'. Please review and make the final decision.")
+                                  ->actions([
+                                    \Filament\Actions\Action::make('view_candidate')
+                                      ->label('Review Candidate')
+                                      ->button()
+                                      ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record->id])),
+                                  ])
+                                  ->sendToDatabase($recipient);
+                              } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error("Failed to notify supervisor: " . $e->getMessage());
+                              }
+                            }
+
                             \Filament\Notifications\Notification::make()
                               ->success()
                               ->title('Candidate Recommended')
                               ->body('Candidate has been successfully recommended to the Supervisor.')
                               ->send();
+
+                            $livewire->js("window.location.reload();");
                           }),
 
                         \Filament\Actions\Action::make('reject_hrd')
                           ->label('Reject Candidate')
                           ->color('danger')
-                          ->icon('heroicon-m-x-mark')
                           ->requiresConfirmation()
+                          ->modalIcon('heroicon-o-x-circle')
+                          ->modalIconColor('danger')
                           ->modalHeading('Reject Candidate')
                           ->modalDescription('Are you sure you want to reject this candidate? This will end their recruitment process.')
                           ->form([
@@ -437,18 +462,33 @@ class ApplicationResource extends Resource
                               ->rows(3)
                               ->required(),
                           ])
-                          ->action(function ($record, array $data) {
+                          ->action(function ($record, array $data, $livewire) {
                             $record->update([
                               'hrd_decision' => 'rejected',
                               'hrd_notes' => $data['notes'],
                               'hrd_decided_at' => now(),
                               'status' => 'rejected',
+                              'rejection_reason' => $data['notes'],
                             ]);
+
+                            // Send rejection email immediately
+                            try {
+                              \Illuminate\Support\Facades\Mail::to($record->email)
+                                ->send(new \App\Mail\SelectionResultRejected($record));
+                            } catch (\Throwable $e) {
+                              \Illuminate\Support\Facades\Log::error("Email failed to send for HRD rejection: " . $e->getMessage());
+                            }
+
+                            $url = route('email.preview.selection_rejected', $record->id);
+
                             \Filament\Notifications\Notification::make()
                               ->success()
                               ->title('Candidate Rejected')
-                              ->body('Candidate has been rejected by HRD.')
+                              ->body(new \Illuminate\Support\HtmlString("Candidate has been rejected by HRD and notified via email.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
+                              ->persistent()
                               ->send();
+
+                            $livewire->js("window.open('{$url}', '_blank'); window.location.reload();");
                           }),
                       ])
                       ->visible(fn ($record) => $record?->hrd_decision === 'pending' && auth()->user()->hasRole(['hr', 'super_admin']))
@@ -457,15 +497,15 @@ class ApplicationResource extends Resource
                     ->columns(2),
 
                   \Filament\Schemas\Components\Section::make('Supervisor Final Approval')
-                    ->description('Step 2: Technical / Management Approval')
+                    ->description('Technical / Management Approval')
                     ->visible(fn ($record) => $record?->hrd_decision === 'recommended')
                     ->schema([
                       \Filament\Forms\Components\Placeholder::make('supervisor_decision_summary')
                         ->label('Supervisor Decision')
                         ->content(fn ($record) => new \Illuminate\Support\HtmlString(
                           $record->supervisor_decision === 'approved' 
-                            ? '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">🔵 Approved for Hire</span>'
-                            : '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">🔴 Disapproved / Rejected</span>'
+                            ? '<span style="color: #2563eb; font-weight: bold; font-size: 0.875rem;">Approved for Hire</span>'
+                            : '<span style="color: #dc2626; font-weight: bold; font-size: 0.875rem;">Disapproved / Rejected</span>'
                         ))
                         ->visible(fn ($record) => $record?->supervisor_decision !== 'pending'),
 
@@ -477,9 +517,10 @@ class ApplicationResource extends Resource
                       \Filament\Schemas\Components\Actions::make([
                         \Filament\Actions\Action::make('approve_spv')
                           ->label('Approve for Hire')
-                          ->color('primary')
-                          ->icon('heroicon-m-check-badge')
+                          ->color('success')
                           ->requiresConfirmation()
+                          ->modalIcon('heroicon-o-check-circle')
+                          ->modalIconColor('success')
                           ->modalHeading('Approve Candidate for Hire')
                           ->modalDescription('Are you sure you want to approve this candidate? This will authorize HRD to issue an official offering letter.')
                           ->form([
@@ -489,24 +530,48 @@ class ApplicationResource extends Resource
                               ->rows(3)
                               ->required(),
                           ])
-                          ->action(function ($record, array $data) {
+                          ->action(function ($record, array $data, $livewire) {
                             $record->update([
                               'supervisor_decision' => 'approved',
                               'supervisor_notes' => $data['notes'],
                               'supervisor_decided_at' => now(),
                             ]);
+
+                            // Notify HRD users
+                            $hrUsers = \App\Models\User::role(['hr', 'super_admin'])->get();
+                            foreach ($hrUsers as $hrUser) {
+                              try {
+                                \Filament\Notifications\Notification::make()
+                                  ->success()
+                                  ->title('Candidate Approved by Supervisor')
+                                  ->body("Supervisor has approved candidate '{$record->full_name}' for '{$record->jobVacancy->title}'. Ready for announcement.")
+                                  ->actions([
+                                    \Filament\Actions\Action::make('view_candidate')
+                                      ->label('Review & Publish')
+                                      ->button()
+                                      ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record->id])),
+                                  ])
+                                  ->sendToDatabase($hrUser);
+                              } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error("Failed to notify HRD of SPV approval: " . $e->getMessage());
+                              }
+                            }
+
                             \Filament\Notifications\Notification::make()
                               ->success()
                               ->title('Hiring Approved')
                               ->body('Final selection approval has been processed successfully.')
                               ->send();
+
+                            $livewire->js("window.location.reload();");
                           }),
 
                         \Filament\Actions\Action::make('reject_spv')
                           ->label('Disapprove / Reject')
                           ->color('danger')
-                          ->icon('heroicon-m-x-circle')
                           ->requiresConfirmation()
+                          ->modalIcon('heroicon-o-x-circle')
+                          ->modalIconColor('danger')
                           ->modalHeading('Disapprove Candidate')
                           ->modalDescription('Are you sure you want to disapprove and reject this candidate?')
                           ->form([
@@ -516,17 +581,40 @@ class ApplicationResource extends Resource
                               ->rows(3)
                               ->required(),
                           ])
-                          ->action(function ($record, array $data) {
+                          ->action(function ($record, array $data, $livewire) {
                             $record->update([
                               'supervisor_decision' => 'rejected',
                               'supervisor_notes' => $data['notes'],
                               'supervisor_decided_at' => now(),
                             ]);
+
+                            // Notify HRD users
+                            $hrUsers = \App\Models\User::role(['hr', 'super_admin'])->get();
+                            foreach ($hrUsers as $hrUser) {
+                              try {
+                                \Filament\Notifications\Notification::make()
+                                  ->danger()
+                                  ->title('Candidate Rejected by Supervisor')
+                                  ->body("Supervisor has rejected candidate '{$record->full_name}' for '{$record->jobVacancy->title}'. Ready for announcement.")
+                                  ->actions([
+                                    \Filament\Actions\Action::make('view_candidate')
+                                      ->label('Review & Publish')
+                                      ->button()
+                                      ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record->id])),
+                                  ])
+                                  ->sendToDatabase($hrUser);
+                              } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error("Failed to notify HRD of SPV rejection: " . $e->getMessage());
+                              }
+                            }
+
                             \Filament\Notifications\Notification::make()
                               ->success()
                               ->title('Hiring Disapproved')
                               ->body('Candidate has been disapproved by Supervisor.')
                               ->send();
+
+                            $livewire->js("window.location.reload();");
                           }),
                       ])
                       ->visible(fn ($record) => $record?->supervisor_decision === 'pending' && auth()->user()->hasRole(['spv', 'super_admin']))
@@ -535,8 +623,8 @@ class ApplicationResource extends Resource
                     ->columns(2),
 
                   \Filament\Schemas\Components\Section::make('Selection Announcement')
-                    ->description('Step 3: Official Announcement & Applicant Email')
-                    ->visible(fn ($record) => in_array($record?->supervisor_decision, ['approved', 'rejected']))
+                    ->description('Official Announcement & Applicant Email')
+                    ->visible(fn ($record) => in_array($record?->supervisor_decision, ['approved', 'rejected']) && auth()->user()->hasRole(['hr', 'super_admin']))
                     ->schema([
                       \Filament\Forms\Components\Placeholder::make('announcement_info')
                         ->hiddenLabel()
@@ -549,88 +637,6 @@ class ApplicationResource extends Resource
                             </p>
                           </div>
                         ')),
-
-                      \Filament\Forms\Components\Placeholder::make('email_preview')
-                        ->label('Live Email Notification Preview')
-                        ->content(function ($record) {
-                          $isApproved = $record->supervisor_decision === 'approved';
-                          $subject = $isApproved 
-                            ? '🎉 Job Offer: ' . ($record->jobVacancy?->title ?? 'Position') . ' at ' . config('app.name', 'AbilityExaminer')
-                            : 'Application Status Update: ' . ($record->jobVacancy?->title ?? 'Position') . ' at ' . config('app.name', 'AbilityExaminer');
-                            
-                          $candidateName = $record->full_name;
-                          $jobTitle = $record->jobVacancy?->title ?? 'Position';
-                          $department = $record->jobVacancy?->department ?? 'Engineering';
-                          $supervisorNotes = $record->supervisor_notes;
-                          $appName = config('app.name', 'AbilityExaminer');
-                          
-                          $body = '';
-                          if ($isApproved) {
-                            $body = '
-                              <p>Dear ' . e($candidateName) . ',</p>
-                              <p>We are absolutely thrilled to extend our official <strong>Job Offer</strong> for the position of <strong>' . e($jobTitle) . '</strong> at ' . e($appName) . '!</p>
-                              <p>Following your outstanding performance in both the CV screening and the Technical Online Exam, our HRD and Technical Management have unanimously approved your selection for this role.</p>
-                              
-                              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin: 16px 0;">
-                                <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; font-weight: 700; color: #1e293b;">Position Details:</h4>
-                                <ul style="margin: 0; padding-left: 18px; font-size: 0.8rem; color: #475569; list-style: disc;">
-                                  <li><strong>Role:</strong> ' . e($jobTitle) . '</li>
-                                  <li><strong>Department:</strong> ' . e($department) . '</li>
-                                  <li><strong>Status:</strong> Full-time / Contract (Based on Position Details)</li>
-                                </ul>
-                              </div>';
-                              
-                            if ($supervisorNotes) {
-                              $body .= '
-                                <div style="border-left: 4px solid #3b82f6; padding-left: 12px; margin: 16px 0; font-style: italic; color: #475569; background-color: #eff6ff; padding-top: 8px; padding-bottom: 8px; border-radius: 0 6px 6px 0;">
-                                  <span style="font-size: 0.7rem; font-weight: 700; display: block; color: #3b82f6; text-transform: uppercase; font-style: normal; margin-bottom: 4px; tracking-wider">Feedback from the Selection Committee:</span>
-                                  "' . e($supervisorNotes) . '"
-                                </div>';
-                            }
-                            
-                            $body .= '
-                              <h4 style="margin: 16px 0 8px 0; font-size: 0.85rem; font-weight: 700; color: #1e293b;">Next Steps:</h4>
-                              <p>Our HR representative will be in touch with you shortly via phone or email to discuss:</p>
-                              <ol style="margin: 0; padding-left: 18px; font-size: 0.8rem; color: #475569; list-style: decimal;">
-                                <li>Compensation, benefits, and standard employment contract details.</li>
-                                <li>Necessary documents for onboarding.</li>
-                                <li>Your official starting date.</li>
-                              </ol>
-                              <p style="margin-top: 16px;">Once again, congratulations on this spectacular achievement! We are extremely excited to have you join our team.</p>';
-                          } else {
-                            $body = '
-                              <p>Dear ' . e($candidateName) . ',</p>
-                              <p>Thank you very much for your interest in the <strong>' . e($jobTitle) . '</strong> position at ' . e($appName) . ' and for taking the time to complete our online assessment stage.</p>
-                              <p>We want to express our appreciation for the effort you put into the Technical Assessment Exam. Our selection committee has carefully reviewed your profile, exam breakdown, and performance metrics.</p>
-                              <p>Unfortunately, we regret to inform you that we will not be proceeding with your candidacy for this specific position at this time.</p>
-                              <p>Although you were not selected for this particular role, our team was impressed by your technical efforts. We will securely retain your resume in our talent database and may contact you should a future position align with your skills.</p>
-                              <p>We wish you the very best of luck with your job search and all your future professional endeavors.</p>';
-                          }
-                          
-                          return new \Illuminate\Support\HtmlString('
-                            <div class="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm font-sans" style="max-width: 600px; margin-top: 12px;">
-                              <!-- Header Info -->
-                              <div class="bg-slate-50 border-b border-slate-200 p-4 space-y-1 text-xs" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 16px;">
-                                <div style="display: flex; margin-bottom: 4px;"><span style="font-weight: 600; color: #64748b; width: 64px;">To:</span> <span style="color: #0f172a; font-weight: 600;">' . e($candidateName) . ' &lt;' . e($record->email) . '&gt;</span></div>
-                                <div style="display: flex; margin-bottom: 4px;"><span style="font-weight: 600; color: #64748b; width: 64px;">Subject:</span> <span style="color: #0f172a; font-weight: 700;">' . e($subject) . '</span></div>
-                                <div style="display: flex;"><span style="font-weight: 600; color: #64748b; width: 64px;">From:</span> <span style="color: #475569; font-weight: 500;">Recruitment Team &lt;' . config('mail.from.address', 'noreply@company.com') . '&gt;</span></div>
-                              </div>
-                              <!-- Body Content -->
-                              <div style="padding: 24px; font-size: 0.85rem; color: #334155; line-height: 1.6; background-color: white;">
-                                ' . $body . '
-                                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0 16px 0;" />
-                                <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Best regards,</p>
-                                <p style="font-size: 0.85rem; font-weight: 700; color: #1e293b; margin: 2px 0 0 0;">The Recruitment Team</p>
-                                <p style="font-size: 0.8rem; color: #64748b; margin: 0;">' . e($appName) . '</p>
-                                
-                                <div style="margin-top: 24px; padding-top: 12px; border-top: 1px dashed #e2e8f0; font-size: 0.75rem; color: #94a3b8; font-style: italic;">
-                                  This email was officially processed and released by the Human Resource Department on ' . now()->format('d F Y, H:i') . ' (WIB).
-                                </div>
-                              </div>
-                            </div>
-                          ');
-                        })
-                        ->columnSpanFull(),
 
                       \Filament\Schemas\Components\Actions::make([
                         \Filament\Actions\Action::make('publish_announcement')

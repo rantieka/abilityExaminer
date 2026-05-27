@@ -115,3 +115,17 @@ Route::get('/test-reset/{id}', function ($id) {
   }
   return "Application not found or session expired.";
 });
+
+Route::get('/test-send-email', function () {
+  $to = request('to', 'rantieka67@gmail.com');
+  
+  try {
+    \Illuminate\Support\Facades\Mail::raw('Halo, ini adalah email uji coba dari aplikasi Laravel Ability Examiner untuk memverifikasi pengaturan SMTP.', function ($message) use ($to) {
+      $message->to($to)
+              ->subject('Uji Coba Pengiriman Email SMTP');
+    });
+    return "Email berhasil dikirim ke: " . e($to) . ". Silakan cek folder inbox atau spam Anda.";
+  } catch (\Exception $e) {
+    return "Gagal mengirim email. Error: " . e($e->getMessage());
+  }
+});

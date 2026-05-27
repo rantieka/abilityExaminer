@@ -5,7 +5,7 @@ use App\Models\Setting;
 
 // Ensure we close Mockery after each test
 afterEach(function () {
-    Mockery::close();
+  Mockery::close();
 });
 
 test('predicts REJECTED if AI score is less than or equal to threshold', function () {

@@ -62,7 +62,13 @@ class ApplicationResource extends Resource
                                 $state === 'pending' && $record->ai_score === null => 'Scanning CV...',
                                 $state === 'pending' && $record->ai_score !== null => 'Pending Review',
                                 $state === 'reviewed' => 'Reviewed',
-                                $state === 'accepted' => 'Accepted',
+                                $state === 'accepted' && $record->announcement_status === 'published' => 'Hired',
+                                $state === 'accepted' && $record->test_completed_at !== null && $record->hrd_decision === 'recommended' && $record->supervisor_decision === 'pending' => 'SPV Review',
+                                $state === 'accepted' && $record->test_completed_at !== null && in_array($record->supervisor_decision, ['approved', 'rejected']) && $record->announcement_status !== 'published' => 'Ready to Announce',
+                                $state === 'accepted' && $record->test_completed_at !== null => 'Test Completed',
+                                $state === 'accepted' && $record->test_completed_at === null => 'Active Test',
+                                $state === 'rejected' && $record->announcement_status === 'published' => 'Rejected (Final)',
+                                $state === 'rejected' && $record->hrd_decision === 'rejected' => 'Rejected by HRD',
                                 $state === 'rejected' => 'Rejected',
                                 default => ucfirst($state),
                             })
@@ -488,7 +494,7 @@ class ApplicationResource extends Resource
                               ->persistent()
                               ->send();
 
-                            $livewire->js("window.open('{$url}', '_blank'); window.location.reload();");
+                            $livewire->js("window.location.reload();");
                           }),
                       ])
                       ->visible(fn ($record) => $record?->hrd_decision === 'pending' && auth()->user()->hasRole(['hr', 'super_admin']))

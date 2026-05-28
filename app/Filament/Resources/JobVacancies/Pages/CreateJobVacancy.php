@@ -28,6 +28,7 @@ class CreateJobVacancy extends CreateRecord
       ]);
       
       \Filament\Notifications\Notification::make()
+          ->info()
           ->title('New Job Vacancy Request')
           ->body("A new job vacancy \"{$this->record->title}\" has been requested by " . auth()->user()->name)
           ->actions([

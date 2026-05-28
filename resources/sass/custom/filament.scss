@@ -78,9 +78,17 @@
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.icon-blue { color: #2563eb; }
-.icon-green { color: #059669; }
-.icon-red { color: #e11d48; }
+.icon-blue {
+    color: #2563eb;
+}
+
+.icon-green {
+    color: #059669;
+}
+
+.icon-red {
+    color: #e11d48;
+}
 
 .card-title {
     font-weight: 600;
@@ -89,9 +97,17 @@
     line-height: 1.2;
 }
 
-.text-blue-900 { color: #1e40af; }
-.text-green-900 { color: #064e3b; }
-.text-red-900 { color: #881337; }
+.text-blue-900 {
+    color: #1e40af;
+}
+
+.text-green-900 {
+    color: #064e3b;
+}
+
+.text-red-900 {
+    color: #881337;
+}
 
 .card-content {
     color: #334155;
@@ -143,8 +159,13 @@
     flex-shrink: 0;
 }
 
-.bg-green-400 { background-color: #34d399; }
-.bg-red-400 { background-color: #f43f5e; }
+.bg-green-400 {
+    background-color: #34d399;
+}
+
+.bg-red-400 {
+    background-color: #f43f5e;
+}
 
 .list-text {
     font-size: 0.875rem;
@@ -156,4 +177,14 @@
     font-size: 0.875rem;
     color: #6b7280;
     font-style: italic;
+}
+
+/* Fix horizontal scrollbar on database notifications panel safely */
+.fi-modal-window {
+    overflow-x: hidden !important;
+}
+
+/* Prevent clipping of notification icons on the left edge */
+.fi-no-notification {
+    margin-left: 0.5rem !important;
 }

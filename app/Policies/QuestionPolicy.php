@@ -1,37 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Question;
-use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class QuestionPolicy
 {
-  use HandlesAuthorization;
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ViewAny:Question');
+    }
 
-  public function viewAny(User $user): bool
-  {
-    return $user->hasRole(['super_admin', 'hr', 'spv']);
-  }
+    public function view(AuthUser $authUser, Question $question): bool
+    {
+        return $authUser->can('View:Question');
+    }
 
-  public function view(User $user, Question $question): bool
-  {
-    return $user->hasRole(['super_admin', 'hr', 'spv']);
-  }
+    public function create(AuthUser $authUser): bool
+    {
+        return $authUser->can('Create:Question');
+    }
 
-  public function create(User $user): bool
-  {
-    return $user->hasRole(['super_admin', 'hr', 'spv']);
-  }
+    public function update(AuthUser $authUser, Question $question): bool
+    {
+        return $authUser->can('Update:Question');
+    }
 
-  public function update(User $user, Question $question): bool
-  {
-    return $user->hasRole(['super_admin', 'hr', 'spv']);
-  }
+    public function delete(AuthUser $authUser, Question $question): bool
+    {
+        return $authUser->can('Delete:Question');
+    }
 
-  public function delete(User $user, Question $question): bool
-  {
-    return $user->hasRole(['super_admin', 'hr', 'spv']);
-  }
+    public function restore(AuthUser $authUser, Question $question): bool
+    {
+        return $authUser->can('Restore:Question');
+    }
+
+    public function forceDelete(AuthUser $authUser, Question $question): bool
+    {
+        return $authUser->can('ForceDelete:Question');
+    }
+
+    public function forceDeleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ForceDeleteAny:Question');
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:Question');
+    }
+
+    public function replicate(AuthUser $authUser, Question $question): bool
+    {
+        return $authUser->can('Replicate:Question');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:Question');
+    }
+
 }

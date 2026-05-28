@@ -1,30 +1,19 @@
 <x-mail::message>
-# Dear {{ $application->full_name }},
 
-Thank you for your interest in applying for the **{{ $application->jobVacancy->title }}** position at {{ config('app.name') }}.
+# Halo {{ $application->full_name }},
 
-After carefully reviewing your application, we regret to inform you that we will not be proceeding with your candidacy at this time.
+Terima kasih atas minat Anda untuk melamar posisi **{{ $application->jobVacancy->title }}** di {{ config('app.name') }}.
 
-@if($application->rejection_reason)
-## Notes from HR Team
+Setelah meninjau lamaran Anda dengan saksama, saat ini kami belum dapat melanjutkan lamaran Anda ke tahap berikutnya.
 
-{{ $application->rejection_reason }}
-@endif
+Kami sangat menghargai minat dan waktu yang telah Anda luangkan untuk melamar di {{ config('app.name') }}. Kami akan menyimpan data lamaran Anda sebagai referensi untuk peluang karir yang sesuai di kemudian hari.
 
-## Message for You
+Semoga Anda sukses dalam perjalanan karir berikutnya.
 
-This decision does not reflect on your qualifications or experience. We encourage you to continue developing your skills and apply for other suitable positions in the future.
-
-We will keep your application on file for future opportunities.
-
----
-
-We wish you all the best in your career endeavors.
-
-Best regards,<br>
-**HR Team**
+Salam hangat,<br>
+**Tim HR**
 
 <x-mail::subcopy>
-If you have any questions regarding this application, please contact us via this email.
+Jika Anda memiliki pertanyaan terkait lamaran ini, silakan hubungi kami melalui email ini.
 </x-mail::subcopy>
 </x-mail::message>

@@ -1,83 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Application;
-use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ApplicationPolicy
 {
-  use HandlesAuthorization;
-
-  /**
-  * Determine whether the user can view any models.
-  */
-  public function viewAny(User $user): bool
-  {
-    return true; // Everyone can see the list
-  }
-
-  /**
-  * Determine whether the user can view the model.
-  */
-  public function view(User $user, Application $application): bool
-  {
-    return true; // Everyone can view details
-  }
-
-  /**
-  * Determine whether the user can create models.
-  */
-  public function create(User $user): bool
-  {
-    if ($user->hasRole('spv')) {
-      return false;
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ViewAny:Application');
     }
-    return true;
-  }
 
-  /**
-  * Determine whether the user can update the model.
-  */
-  public function update(User $user, Application $application): bool
-  {
-    if ($user->hasRole('spv')) {
-      return false;
+    public function view(AuthUser $authUser, Application $application): bool
+    {
+        return $authUser->can('View:Application');
     }
-    return true;
-  }
 
-  /**
-  * Determine whether the user can delete the model.
-  */
-  public function delete(User $user, Application $application): bool
-  {
-    if ($user->hasRole('spv')) {
-      return false;
+    public function create(AuthUser $authUser): bool
+    {
+        return $authUser->can('Create:Application');
     }
-    return true;
-  }
 
-  /**
-  * Determine whether the user can restore the model.
-  */
-  public function restore(User $user, Application $application): bool
-  {
-    if ($user->hasRole('spv')) {
-      return false;
+    public function update(AuthUser $authUser, Application $application): bool
+    {
+        return $authUser->can('Update:Application');
     }
-    return true;
-  }
 
-  /**
-  * Determine whether the user can permanently delete the model.
-  */
-  public function forceDelete(User $user, Application $application): bool
-  {
-    if ($user->hasRole('spv')) {
-      return false;
+    public function delete(AuthUser $authUser, Application $application): bool
+    {
+        return $authUser->can('Delete:Application');
     }
-    return true;
-  }
+
+    public function restore(AuthUser $authUser, Application $application): bool
+    {
+        return $authUser->can('Restore:Application');
+    }
+
+    public function forceDelete(AuthUser $authUser, Application $application): bool
+    {
+        return $authUser->can('ForceDelete:Application');
+    }
+
+    public function forceDeleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ForceDeleteAny:Application');
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:Application');
+    }
+
+    public function replicate(AuthUser $authUser, Application $application): bool
+    {
+        return $authUser->can('Replicate:Application');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:Application');
+    }
+
 }

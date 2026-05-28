@@ -43,6 +43,12 @@ class Application extends Model
     'supervisor_decided_at',
     'announcement_status',
     'announcement_published_at',
+    'ktp_number',
+    'npwp_number',
+    'bank_name',
+    'bank_account_number',
+    'contract_file_path',
+    'hired_administrative_status',
   ];
 
   protected $casts = [

@@ -129,3 +129,37 @@ Route::get('/test-send-email', function () {
     return "Gagal mengirim email. Error: " . e($e->getMessage());
   }
 });
+
+Route::get('/test-send-rejected', function () {
+  $to = request('to', 'rantieka67@gmail.com');
+  $application = \App\Models\Application::where('email', $to)->first() 
+      ?? \App\Models\Application::first();
+      
+  if (!$application) {
+    return "No applications in database to test with.";
+  }
+  
+  try {
+    \Illuminate\Support\Facades\Mail::to($to)->send(new \App\Mail\ApplicationRejected($application));
+    return "Rejection email successfully sent to: " . e($to) . " (using candidate name: " . e($application->full_name) . ")";
+  } catch (\Exception $e) {
+    return "Failed to send rejection email. Error: " . e($e->getMessage());
+  }
+});
+
+Route::get('/test-send-selection-rejected', function () {
+  $to = request('to', 'rantieka67@gmail.com');
+  $application = \App\Models\Application::where('email', $to)->first() 
+      ?? \App\Models\Application::first();
+      
+  if (!$application) {
+    return "No applications in database to test with.";
+  }
+  
+  try {
+    \Illuminate\Support\Facades\Mail::to($to)->send(new \App\Mail\SelectionResultRejected($application));
+    return "Selection Rejection email successfully sent to: " . e($to) . " (using candidate name: " . e($application->full_name) . ")";
+  } catch (\Exception $e) {
+    return "Failed to send selection rejection email. Error: " . e($e->getMessage());
+  }
+});

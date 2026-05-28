@@ -683,8 +683,6 @@ class ApplicationResource extends Resource
                               ->body(new \Illuminate\Support\HtmlString("Selection result published and email sent to {$record->email}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
                               ->persistent()
                               ->send();
-
-                            $livewire->js("window.open('{$url}', '_blank')");
                           }),
                       ])->columnSpanFull()
                     ])

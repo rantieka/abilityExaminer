@@ -54,12 +54,9 @@ class EditApplication extends EditRecord
             Notification::make()
                   ->success()
                   ->title('Email Sent')
-                  ->body("Acceptance email successfully sent to {$this->record->full_name}.")
+                  ->body(new \Illuminate\Support\HtmlString("Acceptance email successfully sent to {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
                   ->persistent()
                   ->send();
-
-            // Try Auto-Open via JS
-            $this->js("window.open('$url', '_blank')");
             
           } catch (\Exception $e) {
             Notification::make()
@@ -108,15 +105,9 @@ class EditApplication extends EditRecord
             Notification::make()
               ->success()
               ->title('Application Rejected')
-              ->body("Rejection email sent to {$this->record->full_name}.")
+              ->body(new \Illuminate\Support\HtmlString("Rejection email sent to {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
               ->persistent()
               ->send();
-
-            // Force external redirect to preview (Unconditional fallback if JS fails)
-            // return redirect()->away(route('email.preview.rejected', $this->record->id));
-
-             // Try Auto-Open via JS
-            $this->js("window.open('$url', '_blank')");
 
           } catch (\Exception $e) {
             Notification::make()

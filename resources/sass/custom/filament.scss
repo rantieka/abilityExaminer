@@ -180,7 +180,7 @@
 }
 
 /* Fix horizontal scrollbar on database notifications panel safely */
-.fi-modal-window {
+.fi-modal-window:has(.fi-no-notification) {
     overflow-x: hidden !important;
 }
 

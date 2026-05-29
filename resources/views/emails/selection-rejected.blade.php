@@ -1,23 +1,15 @@
 <x-mail::message>
-# Dear {{ $application->full_name }},
 
-Thank you very much for your interest in the **{{ $application->jobVacancy->title }}** position at {{ config('app.name') }} and for taking the time to complete our online assessment stage.
+# Halo {{ $application->full_name }},
 
-We want to express our appreciation for the effort you put into the Technical Assessment Exam. Our selection committee has carefully reviewed your profile, exam breakdown, and performance metrics. 
+Terima kasih atas minat Anda terhadap posisi **{{ $application->jobVacancy->title }}** di {{ config('app.name') }} serta waktu dan usaha yang telah Anda berikan dalam mengikuti tahap tes online kami.
 
-Unfortunately, we regret to inform you that we will not be proceeding with your candidacy for this specific position at this time.
+Kami sangat menghargai partisipasi Anda dalam Technical Assessment Exam. Setelah melakukan peninjauan terhadap hasil tes dan keseluruhan proses seleksi, saat ini kami memutuskan untuk belum melanjutkan proses rekrutmen Anda untuk posisi tersebut.
 
-Although you were not selected for this particular role, our team was impressed by your technical efforts. We will securely retain your resume in our talent database and may contact you should a future position align with your skills and qualifications.
+Meskipun demikian, kami mengapresiasi usaha dan kemampuan yang telah Anda tunjukkan selama proses seleksi berlangsung. Data lamaran Anda akan kami simpan sebagai referensi untuk peluang karir lain yang sesuai di kemudian hari.
 
-We encourage you to continue building your portfolio and apply for future vacancies that interest you.
+Terima kasih atas ketertarikan Anda untuk bergabung bersama {{ config('app.name') }}.
 
-We wish you the very best of luck with your job search and all your future professional endeavors.
-
-Warmest regards,  
-**The Recruitment Team**  
-{{ config('app.name') }}
-
-<x-mail::subcopy>
-This email was officially processed and released by the Human Resource Department on {{ now()->format('d F Y, H:i') }} (WIB).
-</x-mail::subcopy>
+Salam hangat,<br>
+**Tim HR**
 </x-mail::message>

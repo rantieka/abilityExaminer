@@ -1,35 +1,30 @@
 <x-mail::message>
 # Dear {{ $application->full_name }},
 
-We are absolutely thrilled to extend our official **Job Offer** for the position of **{{ $application->jobVacancy->title }}** at {{ config('app.name') }}!
+Dengan senang hati kami menyampaikan bahwa Anda telah berhasil lolos seluruh tahapan seleksi dan resmi menerima Penawaran Kerja (Job Offer) untuk posisi {{ $application->jobVacancy->title }} di {{ config('app.name') }}.
 
-Following your outstanding performance in both the CV screening and the Technical Online Exam, our HRD and Technical Management have unanimously approved your selection for this role.
+Berdasarkan hasil seleksi CV dan Technical Online Exam yang telah Anda ikuti, tim HR dan manajemen terkait memutuskan untuk melanjutkan Anda sebagai bagian dari tim kami.
 
-### Position Details:
-- **Role**: {{ $application->jobVacancy->title }}
-- **Department**: {{ $application->jobVacancy->department ?? 'Engineering' }}
-- **Status**: Full-time / Contract (Based on Position Details)
+### Detail Posisi:
+* **Posisi**: {{ $application->jobVacancy->title }}
+* **Departemen**: {{ $application->jobVacancy->department ?? 'Engineering' }}
+* **Status**: Penuh Waktu / Kontrak (sesuai ketentuan posisi)
 
 @if($application->supervisor_notes)
 ### Feedback from the Selection Committee:
 > "{{ $application->supervisor_notes }}"
 @endif
 
-## Next Steps:
-Our HR representative will be in touch with you shortly via phone or email to discuss:
-1. Compensation, benefits, and standard employment contract details.
-2. Necessary documents for onboarding.
-3. Your official starting date.
+## Tahap Selanjutnya:
+Tim HR kami akan segera menghubungi Anda melalui telepon atau email untuk membahas:
+1. Detail kompensasi, benefit, dan kontrak kerja.
+2. Dokumen yang diperlukan untuk proses onboarding.
+3. Tanggal mulai bekerja.
 
-If you have any urgent questions, please feel free to reply directly to this email.
+Jika Anda memiliki pertanyaan, silakan hubungi kami melalui email ini.
 
-Once again, congratulations on this spectacular achievement! We are extremely excited to have you join our team and start a rewarding journey with us.
+Selamat atas pencapaian ini, dan terima kasih atas minat Anda untuk bergabung bersama {{ config('app.name') }}. Kami berharap dapat segera bekerja sama dengan Anda.
 
-Best regards,  
-**The Recruitment Team**  
-{{ config('app.name') }}
-
-<x-mail::subcopy>
-This email was officially processed and released by the Human Resource Department on {{ now()->format('d F Y, H:i') }} (WIB).
-</x-mail::subcopy>
+Salam hangat,<br>
+**Tim HR**
 </x-mail::message>

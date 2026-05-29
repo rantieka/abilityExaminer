@@ -30,7 +30,7 @@ class SelectionResultRejected extends Mailable
   public function envelope(): Envelope
   {
     return new Envelope(
-      subject: 'Recruitment Process Update: ' . $this->application->jobVacancy->title,
+      subject: 'Pemberitahuan Hasil Seleksi - ' . $this->application->jobVacancy->title,
     );
   }
 

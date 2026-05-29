@@ -163,3 +163,37 @@ Route::get('/test-send-selection-rejected', function () {
     return "Failed to send selection rejection email. Error: " . e($e->getMessage());
   }
 });
+
+Route::get('/test-send-accepted', function () {
+  $to = request('to', 'rantieka67@gmail.com');
+  $application = \App\Models\Application::where('email', $to)->first() 
+      ?? \App\Models\Application::first();
+      
+  if (!$application) {
+    return "No applications in database to test with.";
+  }
+  
+  try {
+    \Illuminate\Support\Facades\Mail::to($to)->send(new \App\Mail\ApplicationAccepted($application));
+    return "Acceptance/Test invitation email successfully sent to: " . e($to) . " (using candidate name: " . e($application->full_name) . ")";
+  } catch (\Exception $e) {
+    return "Failed to send acceptance/test email. Error: " . e($e->getMessage());
+  }
+});
+
+Route::get('/test-send-hired', function () {
+  $to = request('to', 'rantieka67@gmail.com');
+  $application = \App\Models\Application::where('email', $to)->first() 
+      ?? \App\Models\Application::first();
+      
+  if (!$application) {
+    return "No applications in database to test with.";
+  }
+  
+  try {
+    \Illuminate\Support\Facades\Mail::to($to)->send(new \App\Mail\SelectionResultHired($application));
+    return "Hired email successfully sent to: " . e($to) . " (using candidate name: " . e($application->full_name) . ")";
+  } catch (\Exception $e) {
+    return "Failed to send hired email. Error: " . e($e->getMessage());
+  }
+});

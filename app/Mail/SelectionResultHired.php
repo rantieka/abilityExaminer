@@ -30,7 +30,7 @@ class SelectionResultHired extends Mailable
   public function envelope(): Envelope
   {
     return new Envelope(
-      subject: 'Congratulations! You are Hired for ' . $this->application->jobVacancy->title,
+      subject: 'Pemberitahuan Hasil Seleksi - ' . $this->application->jobVacancy->title,
     );
   }
 

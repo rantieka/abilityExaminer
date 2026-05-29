@@ -30,7 +30,7 @@ class ApplicationAccepted extends Mailable
   public function envelope(): Envelope
   {
     return new Envelope(
-      subject: 'Congratulations! You Have Passed the CV Screening - ' . $this->application->jobVacancy->title,
+      subject: 'Pembaruan Lamaran Anda - ' . $this->application->jobVacancy->title,
     );
   }
 

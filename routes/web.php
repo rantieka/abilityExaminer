@@ -197,3 +197,41 @@ Route::get('/test-send-hired', function () {
     return "Failed to send hired email. Error: " . e($e->getMessage());
   }
 });
+
+Route::get('/admin/export-applications-csv', function () {
+  if (!auth()->check()) {
+    abort(403);
+  }
+
+  return response()->streamDownload(function () {
+    $handle = fopen('php://output', 'w');
+    
+    // CSV Header matching Weka dataset format
+    fputcsv($handle, [
+      'Full Name',
+      'AI Score (CV)',
+      'Test Score (Exam)',
+      'Experience Level',
+      'Screening Label',
+      'Decision (Label C4.5)'
+    ]);
+    
+    // Chunk queries to keep memory low
+    \App\Models\Application::chunk(100, function ($applications) use ($handle) {
+      foreach ($applications as $app) {
+        fputcsv($handle, [
+          $app->full_name,
+          $app->ai_score,
+          $app->test_score,
+          $app->experience_level,
+          $app->screening_label,
+          $app->c45_decision,
+        ]);
+      }
+    });
+    
+    fclose($handle);
+  }, 'export_dataset_' . now()->format('Y-m-d_H-i-s') . '.csv', [
+    'Content-Type' => 'text/csv',
+  ]);
+})->middleware(['auth']);

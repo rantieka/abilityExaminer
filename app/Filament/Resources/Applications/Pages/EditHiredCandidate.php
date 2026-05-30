@@ -13,4 +13,17 @@ class EditHiredCandidate extends EditRecord
     {
         return [];
     }
+
+    public function getTitle(): string
+    {
+        return 'Ubah Data Administrasi Kandidat';
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            HiredCandidateResource::getUrl() => 'Kandidat Diterima',
+            'Ubah Data Administrasi',
+        ];
+    }
 }

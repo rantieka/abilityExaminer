@@ -20,13 +20,13 @@ class ManageSettings extends Page implements HasForms
 
   protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-  protected static string | \UnitEnum | null $navigationGroup = 'Settings';
+  protected static string | \UnitEnum | null $navigationGroup = 'Pengaturan';
 
   protected string $view = 'filament.pages.manage-settings';
 
-  protected static ?string $navigationLabel = 'Decision Rules';
+  protected static ?string $navigationLabel = 'Aturan Keputusan';
 
-  protected static ?string $title = 'Decision Rules Settings';
+  protected static ?string $title = 'Pengaturan Aturan Keputusan';
 
   public static function canAccess(): bool
   {

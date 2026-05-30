@@ -12,8 +12,8 @@
                 </svg>
             </div>
             <div>
-                <h3 class="text-sm font-bold text-gray-800">Selection & Approval Workflow</h3>
-                <p class="text-xs text-gray-400">Step-by-step selection decisions, technical approvals, and announcement release</p>
+                <h3 class="text-sm font-bold text-gray-800">Alur Kerja Seleksi & Persetujuan</h3>
+                <p class="text-xs text-gray-400">Langkah demi langkah keputusan seleksi, persetujuan teknis, dan perilisan pengumuman</p>
             </div>
         </div>
         
@@ -21,12 +21,12 @@
         <div>
             @if($app->announcement_status === 'published')
                 @if($app->status === 'accepted')
-                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">Status: Hired</span>
+                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">Status: Diterima Kerja</span>
                 @else
-                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200 uppercase tracking-wider">Status: Rejected</span>
+                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200 uppercase tracking-wider">Status: Ditolak</span>
                 @endif
             @else
-                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">Status: In Progress</span>
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">Status: Sedang Diproses</span>
             @endif
         </div>
     </div>
@@ -45,26 +45,26 @@
                     'recommended' => 'text-emerald-800',
                     'rejected' => 'text-red-800',
                     default => 'text-blue-800',
-                } }}">Step 1: HRD Selection</span>
+                } }}">Langkah 1: Seleksi HRD</span>
                 
                 @if($app->hrd_decision === 'recommended')
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-emerald-100 text-emerald-800 border border-emerald-200">Recommended</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-emerald-100 text-emerald-800 border border-emerald-200">Direkomendasikan</span>
                 @elseif($app->hrd_decision === 'rejected')
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-red-100 text-red-800 border border-red-200">Rejected</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-red-100 text-red-800 border border-red-200">Ditolak</span>
                 @else
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">Awaiting Review</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">Menunggu Peninjauan</span>
                 @endif
             </div>
             
-            <p class="text-xs text-gray-500 mb-3">Recruiter evaluates decision recommendation and AI summary to submit hiring recommendation.</p>
+            <p class="text-xs text-gray-500 mb-3">Perekrut mengevaluasi rekomendasi keputusan dan ringkasan AI untuk mengirimkan rekomendasi perekrutan.</p>
             
             @if($app->hrd_decision !== 'pending')
                 <div class="bg-white border border-gray-100 rounded-lg p-2.5 mt-2 shadow-xs">
-                    <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">HRD Selection Notes:</span>
-                    <p class="text-xs text-gray-700 italic">"{{ $app->hrd_notes ?? 'No notes provided.' }}"</p>
+                    <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Catatan Seleksi HRD:</span>
+                    <p class="text-xs text-gray-700 italic">"{{ $app->hrd_notes ?? 'Tidak ada catatan.' }}"</p>
                     <div class="text-[9px] text-gray-400 mt-2 flex justify-between items-center">
-                        <span>Reviewed by HR Recruiter</span>
-                        <span>{{ \Carbon\Carbon::parse($app->hrd_decided_at)->format('d M Y, H:i') }}</span>
+                        <span>Ditinjau oleh Perekrut HR</span>
+                        <span>{{ \Carbon\Carbon::parse($app->hrd_decided_at)->locale('id')->translatedFormat('d M Y, H:i') }}</span>
                     </div>
                 </div>
             @endif
@@ -84,28 +84,28 @@
                     'approved' => 'text-purple-800',
                     'rejected' => 'text-red-800',
                     default => 'text-purple-800',
-                } }}">Step 2: Supervisor Approval</span>
+                } }}">Langkah 2: Persetujuan Supervisor</span>
                 
                 @if($isSvLocked)
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-gray-100 text-gray-400 border border-gray-200">Locked</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-gray-100 text-gray-400 border border-gray-200">Terkunci</span>
                 @elseif($app->supervisor_decision === 'approved')
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-purple-100 text-purple-800 border border-purple-200">Approved</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-purple-100 text-purple-800 border border-purple-200">Disetujui</span>
                 @elseif($app->supervisor_decision === 'rejected')
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-red-100 text-red-800 border border-red-200">Disapproved</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-red-100 text-red-800 border border-red-200">Tidak Disetujui</span>
                 @else
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">Awaiting Approval</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">Menunggu Persetujuan</span>
                 @endif
             </div>
             
-            <p class="text-xs text-gray-500 mb-3">Supervisor reviews HRD's assessment and grants the final technical approval or disapproval.</p>
+            <p class="text-xs text-gray-500 mb-3">Supervisor meninjau penilaian HRD dan memberikan persetujuan atau penolakan teknis akhir.</p>
             
             @if($app->supervisor_decision !== 'pending' && !$isSvLocked)
                 <div class="bg-white border border-gray-100 rounded-lg p-2.5 mt-2 shadow-xs">
-                    <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Supervisor Notes:</span>
-                    <p class="text-xs text-gray-700 italic">"{{ $app->supervisor_notes ?? 'No notes provided.' }}"</p>
+                    <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Catatan Supervisor:</span>
+                    <p class="text-xs text-gray-700 italic">"{{ $app->supervisor_notes ?? 'Tidak ada catatan.' }}"</p>
                     <div class="text-[9px] text-gray-400 mt-2 flex justify-between items-center">
-                        <span>Reviewed by Tech Lead</span>
-                        <span>{{ \Carbon\Carbon::parse($app->supervisor_decided_at)->format('d M Y, H:i') }}</span>
+                        <span>Ditinjau oleh Tech Lead</span>
+                        <span>{{ \Carbon\Carbon::parse($app->supervisor_decided_at)->locale('id')->translatedFormat('d M Y, H:i') }}</span>
                     </div>
                 </div>
             @endif
@@ -120,31 +120,31 @@
             default => 'border-blue-200 bg-white ring-1 ring-blue-100 shadow-sm',
         } }}">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] font-bold tracking-wider uppercase {{ $isAnnounceLocked ? 'text-gray-400' : 'text-blue-800' }}">Step 3: Announcement</span>
+                <span class="text-[10px] font-bold tracking-wider uppercase {{ $isAnnounceLocked ? 'text-gray-400' : 'text-blue-800' }}">Langkah 3: Pengumuman</span>
                 
                 @if($isAnnounceLocked)
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-gray-100 text-gray-400 border border-gray-200">Locked</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-gray-100 text-gray-400 border border-gray-200">Terkunci</span>
                 @elseif($app->announcement_status === 'published')
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-blue-100 text-blue-800 border border-blue-200">Published</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-blue-100 text-blue-800 border border-blue-200">Dipublikasikan</span>
                 @else
-                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">Awaiting Release</span>
+                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">Menunggu Rilis</span>
                 @endif
             </div>
             
-            <p class="text-xs text-gray-500 mb-3">Upon supervisor approval, HRD releases official announcements and dispatches automatic emails.</p>
+            <p class="text-xs text-gray-500 mb-3">Setelah persetujuan supervisor, HRD merilis pengumuman resmi dan mengirimkan email otomatis.</p>
             
             @if($app->announcement_status === 'published')
                 <div class="bg-white border border-blue-100 rounded-lg p-2.5 mt-2 shadow-xs">
-                    <span class="text-[9px] font-bold text-blue-800 uppercase block mb-1">Official Result Released:</span>
+                    <span class="text-[9px] font-bold text-blue-800 uppercase block mb-1">Hasil Resmi Dirilis:</span>
                     <div class="text-xs text-gray-700 mb-2">
                         Kandidat dinyatakan <strong>{{ $app->status === 'accepted' ? 'DITERIMA (HIRED)' : 'TIDAK LOLOS (REJECTED)' }}</strong>.
                     </div>
                     <div class="text-[9px] text-gray-400 flex items-center justify-between mt-1">
                         <span class="text-emerald-600 font-semibold flex items-center gap-0.5">
                             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                            Email Sent
+                            Email Terkirim
                         </span>
-                        <span>{{ \Carbon\Carbon::parse($app->announcement_published_at)->format('d M Y, H:i') }}</span>
+                        <span>{{ \Carbon\Carbon::parse($app->announcement_published_at)->locale('id')->translatedFormat('d M Y, H:i') }}</span>
                     </div>
                 </div>
             @endif

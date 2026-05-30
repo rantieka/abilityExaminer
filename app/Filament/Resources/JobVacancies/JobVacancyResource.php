@@ -21,7 +21,13 @@ class JobVacancyResource extends Resource
 
   protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-briefcase';
 
-  protected static string | \UnitEnum | null $navigationGroup = 'Recruitment';
+  protected static string | \UnitEnum | null $navigationGroup = 'Rekrutmen';
+
+  protected static ?string $navigationLabel = 'Lowongan Pekerjaan';
+
+  protected static ?string $modelLabel = 'Lowongan Pekerjaan';
+
+  protected static ?string $pluralModelLabel = 'Lowongan Pekerjaan';
 
   protected static ?string $recordTitleAttribute = 'title';
 

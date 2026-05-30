@@ -114,7 +114,7 @@
 
 @if($testScore === null)
   <div style="background-color: #f9fafb; border-radius: 0.75rem; padding: 1.5rem; border: 1px solid #e5e7eb; text-align: center;">
-    <p style="color: #6b7280; font-size: 0.875rem; font-style: italic; margin: 0;">Candidate has not completed the online exam yet.</p>
+    <p style="color: #6b7280; font-size: 0.875rem; font-style: italic; margin: 0;">Kandidat belum menyelesaikan ujian online.</p>
   </div>
 @else
   <div style="background-color: white; border-radius: 0.75rem; padding: 1.5rem; color: #374151; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb; position: relative; overflow: hidden;">
@@ -131,28 +131,28 @@
                   <svg style="width: 0.875rem; height: 0.875rem; color: #16a34a;" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Sangat Yakin
+                  Akurasi Sangat Tinggi
                 </span>
               @elseif($c45Confidence >= 80)
                 <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 700; background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
                   <svg style="width: 0.875rem; height: 0.875rem; color: #3b82f6;" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Yakin
+                  Akurasi Tinggi
                 </span>
               @elseif($c45Confidence >= 70)
                 <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 700; background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a;">
                   <svg style="width: 0.875rem; height: 0.875rem; color: #d97706;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                   </svg>
-                  Perlu Review
+                  Akurasi Sedang
                 </span>
               @else
                 <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 700; background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca;">
                   <svg style="width: 0.875rem; height: 0.875rem; color: #ef4444;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                   </svg>
-                  Tidak Yakin
+                  Akurasi Rendah
                 </span>
               @endif
             @endif
@@ -165,12 +165,12 @@
         @if($c45Decision !== null)
           <span style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; background-color: {{ $c45Decision === 'ACCEPTED' ? '#d1fae5' : '#fee2e2' }}; color: {{ $c45Decision === 'ACCEPTED' ? '#065f46' : '#991b1b' }}; border: 1px solid {{ $c45Decision === 'ACCEPTED' ? '#a7f3d0' : '#fecaca' }};">
             <span style="width: 0.4rem; height: 0.4rem; border-radius: 9999px; background-color: {{ $c45Decision === 'ACCEPTED' ? '#10b981' : '#ef4444' }};"></span>
-            Rekomendasi: {{ $c45Decision }}
+            Rekomendasi: {{ $c45Decision === 'ACCEPTED' ? 'DITERIMA' : 'DITOLAK' }}
           </span>
         @else
           <span style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1.15rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; background-color: #fee2e2; color: #991b1b; border: 1px dashed #fecaca;">
             <span style="width: 0.45rem; height: 0.45rem; border-radius: 9999px; background-color: #ef4444;"></span>
-            No Decision
+            Tidak Ada Keputusan
           </span>
         @endif
       </div>
@@ -180,17 +180,17 @@
     <div style="margin-top: 1.25rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.875rem; border-top: 1px solid #f3f4f6; padding-top: 1.25rem; position: relative; z-index: 10;">
       <!-- Feature 1: AI Score -->
       <div style="background-color: #f9fafb; padding: 0.625rem 0.875rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-        <span style="font-size: 0.65rem; text-transform: uppercase; color: #6b7280; font-weight: 600; display: block; letter-spacing: 0.05em;">AI CV Match Score</span>
+        <span style="font-size: 0.65rem; text-transform: uppercase; color: #6b7280; font-weight: 600; display: block; letter-spacing: 0.05em;">Skor AI (Kesesuaian CV)</span>
         <span style="font-size: 1.1rem; font-weight: 700; color: #111827; margin-top: 0.15rem; display: block;">{{ $record->ai_score }}%</span>
       </div>
       <!-- Feature 2: Test Score -->
       <div style="background-color: #f9fafb; padding: 0.625rem 0.875rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-        <span style="font-size: 0.65rem; text-transform: uppercase; color: #6b7280; font-weight: 600; display: block; letter-spacing: 0.05em;">Online Exam Score</span>
+        <span style="font-size: 0.65rem; text-transform: uppercase; color: #6b7280; font-weight: 600; display: block; letter-spacing: 0.05em;">Skor Ujian Online</span>
         <span style="font-size: 1.1rem; font-weight: 700; color: #111827; margin-top: 0.15rem; display: block;">{{ $testScore }} <span style="font-size: 0.75rem; color: #6b7280; font-weight: 400;">/100</span></span>
       </div>
       <!-- Feature 3: Conf. Score -->
       <div style="background-color: #f9fafb; padding: 0.625rem 0.875rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-        <span style="font-size: 0.65rem; text-transform: uppercase; color: #6b7280; font-weight: 600; display: block; letter-spacing: 0.05em;">Confidence Score</span>
+        <span style="font-size: 0.65rem; text-transform: uppercase; color: #6b7280; font-weight: 600; display: block; letter-spacing: 0.05em;">Tingkat Akurasi</span>
         <span style="font-size: 1.1rem; font-weight: 700; color: {{ $textPercentColor }}; margin-top: 0.15rem; display: block;">{{ round($c45Confidence) }}%</span>
       </div>
     </div>
@@ -198,7 +198,7 @@
     <!-- Dynamic AI-Powered Candidate Assessment Summary -->
     <div style="margin-top: 1rem; border-top: 1px dashed #e5e7eb; padding-top: 1rem;">
       <div style="display: flex; align-items: center; gap: 0.45rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; font-size: 0.85rem;">
-        Candidate Analysis & Decision Recommendation
+        Analisis Kandidat & Rekomendasi Keputusan
       </div>
       
       <p style="font-size: 0.825rem; line-height: 1.5; color: #475569; margin: 0 0 0.875rem 0;">
@@ -210,7 +210,7 @@
         <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.5rem; padding: 0.75rem 1rem;">
           <span style="font-size: 0.7rem; font-weight: 700; color: #166534; text-transform: uppercase; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.35rem; letter-spacing: 0.025em;">
             <span style="width: 0.4rem; height: 0.4rem; border-radius: 9999px; background-color: #22c55e;"></span>
-            Key Strengths
+            Kelebihan Utama
           </span>
           <ul style="margin: 0; padding-left: 1rem; font-size: 0.775rem; color: #374151; list-style-type: disc;">
             @foreach($strengths ?? [] as $strength)
@@ -223,7 +223,7 @@
         <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 0.5rem; padding: 0.75rem 1rem;">
           <span style="font-size: 0.7rem; font-weight: 700; color: #92400e; text-transform: uppercase; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.35rem; letter-spacing: 0.025em;">
             <span style="width: 0.4rem; height: 0.4rem; border-radius: 9999px; background-color: #f59e0b;"></span>
-            Potential Concerns
+            Kekhawatiran Potensial
           </span>
           <ul style="margin: 0; padding-left: 1rem; font-size: 0.775rem; color: #374151; list-style-type: disc;">
             @foreach($keyRisks ?? [] as $risk)

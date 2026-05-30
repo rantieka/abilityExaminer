@@ -27,7 +27,13 @@ class ApplicationResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-inbox';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Recruitment';
+    protected static string | \UnitEnum | null $navigationGroup = 'Rekrutmen';
+
+    protected static ?string $navigationLabel = 'Pelamar';
+
+    protected static ?string $modelLabel = 'Pelamar';
+
+    protected static ?string $pluralModelLabel = 'Pelamar';
 
     protected static ?string $recordTitleAttribute = 'full_name';
 
@@ -38,57 +44,57 @@ class ApplicationResource extends Resource
           // Basic Information (Full Width)
           // Using Filament\Schemas\Components\Tabs because Filament\Forms\Components\Tabs is not found
           // (Assuming this is a custom or specific version of Filament where Schemas namespace is used for Tabs)
-          \Filament\Schemas\Components\Tabs::make('Application Details')
+          \Filament\Schemas\Components\Tabs::make('Detail Pelamar')
             ->columnSpanFull()
             ->tabs([
                 // Tab 1: Applicant Profile
-                \Filament\Schemas\Components\Tabs\Tab::make('Applicant Profile')
+                \Filament\Schemas\Components\Tabs\Tab::make('Profil Pelamar')
                     ->icon('heroicon-o-user')
                     ->schema([
                         TextInput::make('job_position')
-                            ->label('Job Position')
+                            ->label('Posisi Pekerjaan')
                             ->formatStateUsing(fn ($record) => $record->jobVacancy?->title)
                             ->disabled()
                             ->dehydrated(false),
                         TextInput::make('created_at')
-                            ->label('Applied Date')
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d M Y') : '-')
+                            ->label('Tanggal Melamar')
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->locale('id')->translatedFormat('d M Y') : '-')
                             ->disabled()
                             ->dehydrated(false),
                         
                         TextInput::make('status')
                             ->label('Status')
                             ->formatStateUsing(fn ($state, $record) => match (true) {
-                                $state === 'pending' && $record->ai_score === null => 'Scanning CV...',
-                                $state === 'pending' && $record->ai_score !== null => 'Pending Review',
-                                $state === 'reviewed' => 'Reviewed',
-                                $state === 'accepted' && $record->announcement_status === 'published' => 'Hired',
-                                $state === 'accepted' && $record->test_completed_at !== null && $record->hrd_decision === 'recommended' && $record->supervisor_decision === 'pending' => 'SPV Review',
-                                $state === 'accepted' && $record->test_completed_at !== null && in_array($record->supervisor_decision, ['approved', 'rejected']) && $record->announcement_status !== 'published' => 'Ready to Announce',
-                                $state === 'accepted' && $record->test_completed_at !== null => 'Test Completed',
-                                $state === 'accepted' && $record->test_completed_at === null => 'Active Test',
-                                $state === 'rejected' && $record->announcement_status === 'published' => 'Rejected (Final)',
-                                $state === 'rejected' && $record->hrd_decision === 'rejected' => 'Rejected by HRD',
-                                $state === 'rejected' => 'Rejected',
+                                $state === 'pending' && $record->ai_score === null => 'Memindai CV...',
+                                $state === 'pending' && $record->ai_score !== null => 'Menunggu Peninjauan',
+                                $state === 'reviewed' => 'Sudah Ditinjau',
+                                $state === 'accepted' && $record->announcement_status === 'published' => 'Diterima Kerja',
+                                $state === 'accepted' && $record->test_completed_at !== null && $record->hrd_decision === 'recommended' && $record->supervisor_decision === 'pending' => 'Peninjauan SPV',
+                                $state === 'accepted' && $record->test_completed_at !== null && in_array($record->supervisor_decision, ['approved', 'rejected']) && $record->announcement_status !== 'published' => 'Siap Diumumkan',
+                                $state === 'accepted' && $record->test_completed_at !== null => 'Ujian Selesai',
+                                $state === 'accepted' && $record->test_completed_at === null => 'Ujian Aktif',
+                                $state === 'rejected' && $record->announcement_status === 'published' => 'Ditolak (Final)',
+                                $state === 'rejected' && $record->hrd_decision === 'rejected' => 'Ditolak oleh HRD',
+                                $state === 'rejected' => 'Ditolak',
                                 default => ucfirst($state),
                             })
                             ->disabled()
                             ->dehydrated(false),
                         TextInput::make('full_name')
-                            ->label('Full Name')
+                            ->label('Nama Lengkap')
                             ->disabled()
                             ->dehydrated(),
                         TextInput::make('email')
-                            ->label('Email')
+                            ->label('Alamat Email')
                             ->disabled()
                             ->dehydrated(),
                         TextInput::make('phone')
-                            ->label('Phone')
+                            ->label('No. Telepon')
                             ->disabled()
                             ->dehydrated(),
                         
                         Textarea::make('rejection_reason')
-                            ->label('Reason for Rejection')
+                            ->label('Alasan Penolakan')
                             ->visible(fn ($record) => $record?->status === 'rejected')
                             ->disabled()
                             ->dehydrated(false)
@@ -97,14 +103,14 @@ class ApplicationResource extends Resource
                     ]),
 
                 // Tab 2: CV Screening
-                \Filament\Schemas\Components\Tabs\Tab::make('CV Screening')
+                \Filament\Schemas\Components\Tabs\Tab::make('Skrining CV')
                     ->icon('heroicon-o-document-text')
                     ->schema([
                         \Filament\Schemas\Components\Grid::make(2)
                             ->columnSpanFull()
                             ->schema([
                                 // Left Column: CV Document
-                                \Filament\Schemas\Components\Section::make('CV Document')
+                                \Filament\Schemas\Components\Section::make('Dokumen CV')
                                     ->schema([
                                     \Filament\Forms\Components\Placeholder::make('cv_preview')
                                         ->hiddenLabel()
@@ -115,7 +121,7 @@ class ApplicationResource extends Resource
                                                 <a href="' . asset('storage/' . $record->cv_path) . '" 
                                                     target="_blank" 
                                                     class="text-xs text-blue-600 hover:text-blue-700 force-no-underline">
-                                                    Open in New Tab
+                                                    Buka di Tab Baru
                                                 </a>
                                                 </div>
                                                 <iframe 
@@ -123,32 +129,32 @@ class ApplicationResource extends Resource
                                                 class="w-full border border-gray-300 rounded-lg"
                                                 style="height: 800px; width: 100%"
                                                 frameborder="0">
-                                                <p>Your browser does not support PDFs. 
-                                                    <a href="' . asset('storage/' . $record->cv_path) . '">Download the PDF</a>
+                                                <p>Browser Anda tidak mendukung pratinjau PDF. 
+                                                    <a href="' . asset('storage/' . $record->cv_path) . '">Unduh file PDF</a>
                                                 </p>
                                                 </iframe>
                                             </div>
                                         ')
-                                        : new \Illuminate\Support\HtmlString('<p class="text-gray-500 italic">No CV uploaded</p>')
+                                        : new \Illuminate\Support\HtmlString('<p class="text-gray-500 italic">Tidak ada CV yang diunggah</p>')
                                         ),
                                     ])
                                     ->collapsible()
                                     ->collapsed(false),
                                 
                                 // Right Column: AI Analysis
-                                \Filament\Schemas\Components\Section::make('AI Analysis')
+                                \Filament\Schemas\Components\Section::make('Analisis AI')
                                     ->heading(fn ($record) => $record ? new \Illuminate\Support\HtmlString('
                                         <div class="ai-analysis-header">
-                                            <span>AI Analysis</span>
+                                            <span>Analisis AI</span>
                                             <div class="ai-score-wrapper ' . match(true) {
                                                 $record->ai_score >= 80 => 'ai-score-badge-green',
                                                 $record->ai_score >= 50 => 'ai-score-badge-yellow',
                                                 default => 'ai-score-badge-red',
                                             } . '">
-                                                <span class="ai-score-text">Match Score: ' . ($record->ai_score ?? 0) . '%</span>
+                                                <span class="ai-score-text">Skor Kesesuaian: ' . ($record->ai_score ?? 0) . '%</span>
                                             </div>
                                         </div>
-                                    ') : 'AI Analysis')
+                                    ') : 'Analisis AI')
                                     ->schema([
                                     \Filament\Forms\Components\Placeholder::make('ai_analysis')
                                         ->hiddenLabel()
@@ -160,12 +166,12 @@ class ApplicationResource extends Resource
                                                 <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm mb-4">
                                                     <div class="flex items-center">
                                                         <div class="ml-3">
-                                                            <h3 class="text-sm font-bold text-red-800">AI Screening Failed</h3>
+                                                            <h3 class="text-sm font-bold text-red-800">Skrining AI Gagal</h3>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center justify-center h-24 bg-gray-50 rounded-lg border border-gray-200">
-                                                    <p class="text-xs text-gray-500 italic">No analysis data available due to system error. Please review CV manually.</p>
+                                                    <p class="text-xs text-gray-500 italic">Data analisis tidak tersedia karena kesalahan sistem. Silakan tinjau CV secara manual.</p>
                                                 </div>
                                                 ' : '
                                                 <!-- Executive Summary Card -->
@@ -175,7 +181,7 @@ class ApplicationResource extends Resource
                                                         <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                                     </div>
                                                     <div>
-                                                        <h4 class="card-title text-blue-900">Executive Summary</h4>
+                                                        <h4 class="card-title text-blue-900">Ringkasan Eksekutif</h4>
                                                     </div>
                                                 </div>
                                                 <p class="card-content">' . ($record->ai_analysis['summary'] ?? '-') . '</p>
@@ -188,7 +194,7 @@ class ApplicationResource extends Resource
                                                         <div class="icon-wrapper icon-green">
                                                             <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                                         </div>
-                                                        <h4 class="card-title text-green-900">Key Strengths</h4>
+                                                        <h4 class="card-title text-green-900">Kelebihan Utama</h4>
                                                     </div>
                                                     <ul class="list-container">
                                                         ' . (isset($record->ai_analysis['pros']) && is_array($record->ai_analysis['pros']) 
@@ -197,7 +203,7 @@ class ApplicationResource extends Resource
                                                                  <span class="bullet-point bg-green-400"></span>
                                                                  <span class="list-text">' . htmlspecialchars($item) . '</span>
                                                             </li>', $record->ai_analysis['pros']))
-                                                        : '<li class="no-data">No data</li>') . '
+                                                        : '<li class="no-data">Tidak ada data</li>') . '
                                                     </ul>
                                                     </div>
                                                     
@@ -207,7 +213,7 @@ class ApplicationResource extends Resource
                                                         <div class="icon-wrapper icon-red">
                                                             <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                                         </div>
-                                                        <h4 class="card-title text-red-900">Profile Weaknesses</h4>
+                                                        <h4 class="card-title text-red-900">Kelemahan Profil</h4>
                                                     </div>
                                                     <ul class="list-container">
                                                         ' . (isset($record->ai_analysis['cons']) && count($record->ai_analysis['cons']) > 0 
@@ -219,7 +225,7 @@ class ApplicationResource extends Resource
                                                         : '
                                                             <li class="list-item">
                                                                 <span class="bullet-point bg-gray-400"></span>
-                                                                <span class="list-text italic text-gray-500">No prominent weaknesses identified.</span>
+                                                                <span class="list-text italic text-gray-500">Tidak ada kelemahan menonjol yang teridentifikasi.</span>
                                                             </li>') . '
                                                     </ul>
                                                     </div>
@@ -227,7 +233,7 @@ class ApplicationResource extends Resource
                                             </div>')
                                         : new \Illuminate\Support\HtmlString('
                                             <div class="flex items-center justify-center h-32 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                                <p class="text-gray-500 italic">No AI analysis available yet</p>
+                                                <p class="text-gray-500 italic">Analisis AI belum tersedia</p>
                                             </div>
                                         ')
                                         ),
@@ -238,12 +244,12 @@ class ApplicationResource extends Resource
                     ]),
 
                 // Tab 3: Generate Token
-                \Filament\Schemas\Components\Tabs\Tab::make('Generate Token')
+                \Filament\Schemas\Components\Tabs\Tab::make('Buat Token')
                   ->icon('heroicon-o-key')
                   ->visible(fn () => auth()->user()->hasRole(['hr', 'super_admin']))
                   ->schema([
-                    \Filament\Schemas\Components\Section::make('Access Configuration')
-                      ->description('Manage test access token and expiration for this applicant.')
+                    \Filament\Schemas\Components\Section::make('Konfigurasi Akses')
+                      ->description('Kelola token akses ujian dan masa berlaku untuk pelamar.')
                       ->schema([
                         \Filament\Schemas\Components\Grid::make(1)
                           ->schema([
@@ -290,7 +296,7 @@ class ApplicationResource extends Resource
                                       }),
                                   ]),
                                 \Filament\Forms\Components\DateTimePicker::make('token_expires_at')
-                                  ->label('Token Expiration')
+                                  ->label('Masa Berlaku Token')
                                   ->native(false)
                                   ->default(fn() => now()->addDays(7))
                                   ->requiredWith('test_token')
@@ -298,12 +304,12 @@ class ApplicationResource extends Resource
                               ]),
                         
                         \Filament\Forms\Components\TextInput::make('test_link_preview')
-                          ->label('Test Link Preview')
+                          ->label('Pratinjau Link Ujian')
                           ->readOnly()
                           ->dehydrated(false)
                           ->formatStateUsing(function ($get) {
                             $token = $get('test_token');
-                            if (!$token) return 'No token generated yet.';
+                            if (!$token) return 'Belum ada token yang dibuat.';
                             return route('test.access', ['token' => $token]);
                           })
                           ->suffixActions([
@@ -362,58 +368,58 @@ class ApplicationResource extends Resource
                 ]),
               ]),
                 // Tab 4: Assessment Results
-              \Filament\Schemas\Components\Tabs\Tab::make('Assessment Results')
+              \Filament\Schemas\Components\Tabs\Tab::make('Hasil Penilaian')
                 ->icon('heroicon-o-academic-cap')
                 ->schema([
-                  \Filament\Schemas\Components\Section::make('Test Results')
+                  \Filament\Schemas\Components\Section::make('Hasil Ujian')
                     ->schema([
                       \Filament\Forms\Components\ViewField::make('test_details')
                         ->view('filament.forms.components.test-score-details'),
                     ]),
                 ]),
 
-              \Filament\Schemas\Components\Tabs\Tab::make('Selection & Approvals')
+              \Filament\Schemas\Components\Tabs\Tab::make('Seleksi & Persetujuan')
                 ->icon('heroicon-o-check-badge')
                 ->schema([
-                  \Filament\Schemas\Components\Section::make('Decision Recommendation')
-                    ->description('Predictive recommendation based on candidate scores')
+                  \Filament\Schemas\Components\Section::make('Rekomendasi Keputusan')
+                    ->description('Rekomendasi prediktif berdasarkan skor kandidat')
                     ->schema([
                       \Filament\Forms\Components\ViewField::make('c45_selection_summary')
                         ->view('filament.forms.components.c45-selection-summary'),
                     ])
                     ->columnSpanFull(),
 
-                  \Filament\Schemas\Components\Section::make('HRD Selection Decision')
-                    ->description('HRD Recruiter Recommendation')
+                  \Filament\Schemas\Components\Section::make('Keputusan Seleksi HRD')
+                    ->description('Rekomendasi Rekruter HRD')
                     ->visible(fn ($record) => $record?->test_completed_at !== null)
                     ->schema([
                       \Filament\Forms\Components\Placeholder::make('hrd_decision_summary')
-                        ->label('HRD Recommendation')
+                        ->label('Rekomendasi HRD')
                         ->content(fn ($record) => new \Illuminate\Support\HtmlString(
                           $record->hrd_decision === 'recommended' 
-                            ? '<span style="color: #16a34a; font-weight: bold; font-size: 0.875rem;">Recommended for Hire</span>'
-                            : '<span style="color: #dc2626; font-weight: bold; font-size: 0.875rem;">Rejected</span>'
+                            ? '<span style="color: #16a34a; font-weight: bold; font-size: 0.875rem;">Direkomendasikan untuk Diterima</span>'
+                            : '<span style="color: #dc2626; font-weight: bold; font-size: 0.875rem;">Ditolak</span>'
                         ))
                         ->visible(fn ($record) => $record?->hrd_decision !== 'pending'),
 
                       \Filament\Forms\Components\Placeholder::make('hrd_notes_summary')
-                        ->label('HRD Selection Notes')
+                        ->label('Catatan Seleksi HRD')
                         ->content(fn ($record) => $record->hrd_notes ?: '-')
                         ->visible(fn ($record) => $record?->hrd_decision !== 'pending'),
 
                       \Filament\Schemas\Components\Actions::make([
                         \Filament\Actions\Action::make('recommend_hrd')
-                          ->label('Recommend for Hire')
+                          ->label('Rekomendasikan untuk Diterima')
                           ->color('success')
                           ->requiresConfirmation()
                           ->modalIcon('heroicon-o-check-circle')
                           ->modalIconColor('success')
-                          ->modalHeading('Recommend Candidate')
-                          ->modalDescription('Are you sure you want to recommend this candidate to the Supervisor?')
+                          ->modalHeading('Rekomendasikan Kandidat')
+                          ->modalDescription('Apakah Anda yakin ingin merekomendasikan kandidat ini kepada Supervisor?')
                           ->form([
                             \Filament\Forms\Components\Textarea::make('notes')
-                              ->label('HRD Selection Notes')
-                              ->placeholder('Provide key reasoning for this recommendation...')
+                              ->label('Catatan Seleksi HRD')
+                              ->placeholder('Berikan alasan utama untuk rekomendasi ini...')
                               ->rows(3)
                               ->required(),
                           ])
@@ -446,25 +452,25 @@ class ApplicationResource extends Resource
 
                             \Filament\Notifications\Notification::make()
                               ->success()
-                              ->title('Candidate Recommended')
-                              ->body('Candidate has been successfully recommended to the Supervisor.')
+                              ->title('Kandidat Direkomendasikan')
+                              ->body('Kandidat telah berhasil direkomendasikan kepada Supervisor.')
                               ->send();
 
                             $livewire->js("window.location.reload();");
                           }),
 
                         \Filament\Actions\Action::make('reject_hrd')
-                          ->label('Reject Candidate')
+                          ->label('Tolak Kandidat')
                           ->color('danger')
                           ->requiresConfirmation()
                           ->modalIcon('heroicon-o-x-circle')
                           ->modalIconColor('danger')
-                          ->modalHeading('Reject Candidate')
-                          ->modalDescription('Are you sure you want to reject this candidate? This will end their recruitment process.')
+                          ->modalHeading('Tolak Kandidat')
+                          ->modalDescription('Apakah Anda yakin ingin menolak kandidat ini? Ini akan mengakhiri proses rekrutmen mereka.')
                           ->form([
                             \Filament\Forms\Components\Textarea::make('notes')
-                              ->label('Rejection Reason / Notes')
-                              ->placeholder('Provide key reasoning for this rejection...')
+                              ->label('Alasan Penolakan / Catatan')
+                              ->placeholder('Berikan alasan utama untuk penolakan ini...')
                               ->rows(3)
                               ->required(),
                           ])
@@ -489,8 +495,8 @@ class ApplicationResource extends Resource
 
                             \Filament\Notifications\Notification::make()
                               ->success()
-                              ->title('Candidate Rejected')
-                              ->body(new \Illuminate\Support\HtmlString("Candidate has been rejected by HRD and notified via email.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
+                              ->title('Kandidat Ditolak')
+                              ->body(new \Illuminate\Support\HtmlString("Kandidat telah ditolak oleh HRD dan diberi tahu melalui email.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Buka Pratinjau Email</a>"))
                               ->persistent()
                               ->send();
 
@@ -502,37 +508,37 @@ class ApplicationResource extends Resource
                     ])
                     ->columns(2),
 
-                  \Filament\Schemas\Components\Section::make('Supervisor Final Approval')
-                    ->description('Technical / Management Approval')
+                  \Filament\Schemas\Components\Section::make('Persetujuan Akhir Supervisor')
+                    ->description('Persetujuan Teknis / Manajemen')
                     ->visible(fn ($record) => $record?->hrd_decision === 'recommended')
                     ->schema([
                       \Filament\Forms\Components\Placeholder::make('supervisor_decision_summary')
-                        ->label('Supervisor Decision')
+                        ->label('Keputusan Supervisor')
                         ->content(fn ($record) => new \Illuminate\Support\HtmlString(
                           $record->supervisor_decision === 'approved' 
-                            ? '<span style="color: #2563eb; font-weight: bold; font-size: 0.875rem;">Approved for Hire</span>'
-                            : '<span style="color: #dc2626; font-weight: bold; font-size: 0.875rem;">Disapproved / Rejected</span>'
+                            ? '<span style="color: #2563eb; font-weight: bold; font-size: 0.875rem;">Disetujui untuk Diterima</span>'
+                            : '<span style="color: #dc2626; font-weight: bold; font-size: 0.875rem;">Ditolak / Tidak Disetujui</span>'
                         ))
                         ->visible(fn ($record) => $record?->supervisor_decision !== 'pending'),
 
                       \Filament\Forms\Components\Placeholder::make('supervisor_notes_summary')
-                        ->label('Supervisor Selection Notes')
+                        ->label('Catatan Seleksi Supervisor')
                         ->content(fn ($record) => $record->supervisor_notes ?: '-')
                         ->visible(fn ($record) => $record?->supervisor_decision !== 'pending'),
 
                       \Filament\Schemas\Components\Actions::make([
                         \Filament\Actions\Action::make('approve_spv')
-                          ->label('Approve for Hire')
+                          ->label('Setujui untuk Diterima')
                           ->color('success')
                           ->requiresConfirmation()
                           ->modalIcon('heroicon-o-check-circle')
                           ->modalIconColor('success')
-                          ->modalHeading('Approve Candidate for Hire')
-                          ->modalDescription('Are you sure you want to approve this candidate? This will authorize HRD to issue an official offering letter.')
+                          ->modalHeading('Setujui Kandidat untuk Diterima')
+                          ->modalDescription('Apakah Anda yakin ingin menyetujui kandidat ini? Ini akan memberikan wewenang kepada HRD untuk menerbitkan surat penawaran kerja (offering letter) resmi.')
                           ->form([
                             \Filament\Forms\Components\Textarea::make('notes')
-                              ->label('Supervisor Selection Notes')
-                              ->placeholder('Provide technical feedback or reasoning for hiring approval...')
+                              ->label('Catatan Seleksi Supervisor')
+                              ->placeholder('Berikan umpan balik teknis atau alasan untuk persetujuan penerimaan...')
                               ->rows(3)
                               ->required(),
                           ])
@@ -565,25 +571,25 @@ class ApplicationResource extends Resource
 
                             \Filament\Notifications\Notification::make()
                               ->success()
-                              ->title('Hiring Approved')
-                              ->body('Final selection approval has been processed successfully.')
+                              ->title('Penerimaan Disetujui')
+                              ->body('Persetujuan seleksi akhir telah berhasil diproses.')
                               ->send();
 
                             $livewire->js("window.location.reload();");
                           }),
 
                         \Filament\Actions\Action::make('reject_spv')
-                          ->label('Disapprove / Reject')
+                          ->label('Tolak / Jangan Setujui')
                           ->color('danger')
                           ->requiresConfirmation()
                           ->modalIcon('heroicon-o-x-circle')
                           ->modalIconColor('danger')
-                          ->modalHeading('Disapprove Candidate')
-                          ->modalDescription('Are you sure you want to disapprove and reject this candidate?')
+                          ->modalHeading('Tolak Kandidat')
+                          ->modalDescription('Apakah Anda yakin ingin menolak dan tidak menyetujui kandidat ini?')
                           ->form([
                             \Filament\Forms\Components\Textarea::make('notes')
-                              ->label('Disapproval Reason / Notes')
-                              ->placeholder('Provide technical reasoning for disapproval...')
+                              ->label('Alasan Penolakan / Catatan')
+                              ->placeholder('Berikan alasan teknis untuk penolakan...')
                               ->rows(3)
                               ->required(),
                           ])
@@ -616,8 +622,8 @@ class ApplicationResource extends Resource
 
                             \Filament\Notifications\Notification::make()
                               ->success()
-                              ->title('Hiring Disapproved')
-                              ->body('Candidate has been disapproved by Supervisor.')
+                              ->title('Penerimaan Ditolak')
+                              ->body('Kandidat telah ditolak oleh Supervisor.')
                               ->send();
 
                             $livewire->js("window.location.reload();");
@@ -628,25 +634,25 @@ class ApplicationResource extends Resource
                     ])
                     ->columns(2),
 
-                  \Filament\Schemas\Components\Section::make('Selection Announcement')
-                    ->description('Official Announcement & Applicant Email')
+                  \Filament\Schemas\Components\Section::make('Pengumuman Seleksi')
+                    ->description('Pengumuman Resmi & Email Pelamar')
                     ->visible(fn ($record) => in_array($record?->supervisor_decision, ['approved', 'rejected']) && auth()->user()->hasRole(['hr', 'super_admin']))
                     ->schema([
                       \Filament\Forms\Components\Placeholder::make('announcement_info')
                         ->hiddenLabel()
                         ->content(fn ($record) => new \Illuminate\Support\HtmlString('
                           <div class="p-4 rounded-lg bg-blue-50 border border-blue-200">
-                            <h4 class="text-xs font-bold text-blue-900 mb-1">Ready for Announcement</h4>
+                            <h4 class="text-xs font-bold text-blue-900 mb-1">Siap untuk Diumumkan</h4>
                             <p class="text-xs text-blue-700">
-                              Supervisor has decided to <strong>' . strtoupper($record->supervisor_decision) . '</strong> this candidate.
-                              HRD can now preview the email notification below and trigger the official announcement to send it.
+                              Supervisor telah memutuskan untuk <strong>' . ($record->supervisor_decision === 'approved' ? 'MENYETUJUI' : 'MENOLAK') . '</strong> kandidat ini.
+                              HRD sekarang dapat melihat pratinjau pemberitahuan email di bawah ini dan memicu pengumuman resmi untuk mengirimkannya.
                             </p>
                           </div>
                         ')),
 
                       \Filament\Schemas\Components\Actions::make([
                         \Filament\Actions\Action::make('publish_announcement')
-                          ->label('Publish Announcement & Send Email')
+                          ->label('Publikasikan Pengumuman & Kirim Email')
                           ->color('success')
                           ->icon('heroicon-m-paper-airplane')
                           ->visible(fn ($record) => $record?->announcement_status !== 'published' && auth()->user()->hasRole(['hr', 'super_admin']))
@@ -679,8 +685,8 @@ class ApplicationResource extends Resource
 
                             \Filament\Notifications\Notification::make()
                               ->success()
-                              ->title('Announcement Published')
-                              ->body(new \Illuminate\Support\HtmlString("Selection result published and email sent to {$record->email}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
+                              ->title('Pengumuman Dipublikasikan')
+                              ->body(new \Illuminate\Support\HtmlString("Hasil seleksi telah dipublikasikan dan email dikirim ke {$record->email}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Buka Pratinjau Email</a>"))
                               ->persistent()
                               ->send();
                           }),

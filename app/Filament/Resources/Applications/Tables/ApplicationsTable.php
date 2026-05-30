@@ -28,34 +28,37 @@ class ApplicationsTable
           ->label('No.')
           ->rowIndex(),
         TextColumn::make('jobVacancy.title')
-          ->label('Job Position')
+          ->label('Posisi Pekerjaan')
           ->searchable(),
         // TextColumn::make('user.name')
         //   ->searchable(),
         TextColumn::make('full_name')
+          ->label('Nama Lengkap')
           ->searchable(),
         TextColumn::make('email')
-          ->label('Email address')
+          ->label('Alamat Email')
           ->searchable(),
         TextColumn::make('phone')
+          ->label('No. Telepon')
           ->searchable(),
         // TextColumn::make('cv_path')
         //   ->searchable(),
         TextColumn::make('status')
+          ->label('Status')
           ->searchable()
           ->badge()
           ->formatStateUsing(fn (string $state, $record): string => match (true) {
-            $state === 'pending' && $record->ai_score === null => 'Scanning CV...',
-            $state === 'pending' && $record->ai_score !== null => 'Pending Review',
-            $state === 'reviewed' => 'Reviewed',
-            $state === 'accepted' && $record->announcement_status === 'published' => 'Hired',
-            $state === 'accepted' && $record->test_completed_at !== null && $record->hrd_decision === 'recommended' && $record->supervisor_decision === 'pending' => 'SPV Review',
-            $state === 'accepted' && $record->test_completed_at !== null && in_array($record->supervisor_decision, ['approved', 'rejected']) && $record->announcement_status !== 'published' => 'Ready to Announce',
-            $state === 'accepted' && $record->test_completed_at !== null => 'Test Completed',
-            $state === 'accepted' && $record->test_completed_at === null => 'Active Test',
-            $state === 'rejected' && $record->announcement_status === 'published' => 'Rejected (Final)',
-            $state === 'rejected' && $record->hrd_decision === 'rejected' => 'Rejected by HRD',
-            $state === 'rejected' => 'Rejected',
+            $state === 'pending' && $record->ai_score === null => 'Memindai CV...',
+            $state === 'pending' && $record->ai_score !== null => 'Menunggu Peninjauan',
+            $state === 'reviewed' => 'Sudah Ditinjau',
+            $state === 'accepted' && $record->announcement_status === 'published' => 'Diterima Bekerja',
+            $state === 'accepted' && $record->test_completed_at !== null && $record->hrd_decision === 'recommended' && $record->supervisor_decision === 'pending' => 'Peninjauan Supervisor',
+            $state === 'accepted' && $record->test_completed_at !== null && in_array($record->supervisor_decision, ['approved', 'rejected']) && $record->announcement_status !== 'published' => 'Siap Diumumkan',
+            $state === 'accepted' && $record->test_completed_at !== null => 'Ujian Selesai',
+            $state === 'accepted' && $record->test_completed_at === null => 'Ujian Aktif',
+            $state === 'rejected' && $record->announcement_status === 'published' => 'Ditolak (Final)',
+            $state === 'rejected' && $record->hrd_decision === 'rejected' => 'Ditolak oleh HRD',
+            $state === 'rejected' => 'Ditolak',
             default => ucfirst($state),
           })
           ->color(fn (string $state, $record): string => match (true) {
@@ -68,26 +71,15 @@ class ApplicationsTable
             $state === 'reviewed' => 'info',
             $state === 'pending' => 'gray',
             default => 'gray',
-          })
-          ->icon(fn (string $state, $record): ?string => match (true) {
-            $state === 'pending' && $record->ai_score === null => 'heroicon-m-arrow-path',
-            $state === 'reviewed' => 'heroicon-m-check',
-            $state === 'accepted' && $record->announcement_status === 'published' => 'heroicon-m-check-badge',
-            $state === 'accepted' && $record->test_completed_at !== null && $record->hrd_decision === 'recommended' && $record->supervisor_decision === 'pending' => 'heroicon-m-user',
-            $state === 'accepted' && $record->test_completed_at !== null && in_array($record->supervisor_decision, ['approved', 'rejected']) && $record->announcement_status !== 'published' => 'heroicon-m-bell',
-            $state === 'accepted' && $record->test_completed_at !== null => 'heroicon-m-academic-cap',
-            $state === 'accepted' && $record->test_completed_at === null => 'heroicon-m-clock',
-            $state === 'rejected' => 'heroicon-m-x-circle',
-            default => null,
           }),
         TextColumn::make('ai_score')
-          ->label('CV Score')
+          ->label('Skor CV')
           ->numeric()
           ->sortable()
           ->badge()
           ->formatStateUsing(fn ($state, $record) => match (true) {
              is_numeric($state) => $state . '%',
-             $record->status === 'pending' && $record->ai_score === null => 'Calculating...',
+             $record->status === 'pending' && $record->ai_score === null => 'Menghitung...',
              default => '-'
           })
           ->color(fn ($state, $record) => match (true) {
@@ -98,7 +90,7 @@ class ApplicationsTable
           })
           ->icon(fn ($state, $record) => ($record->status === 'pending' && $record->ai_score === null) ? 'heroicon-m-arrow-path' : null),
         TextColumn::make('test_score')
-          ->label('Test Score')
+          ->label('Skor Ujian')
           ->badge()
           ->sortable()
           ->default('-')
@@ -138,9 +130,8 @@ class ApplicationsTable
           ->sortable()
           ->toggleable(isToggledHiddenByDefault: true),
         TextColumn::make('created_at')
-          ->label('Apply Date')
-          // ->dateTime('d M Y, H:i')
-          ->dateTime('d M Y')
+          ->label('Tanggal Melamar')
+          ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->locale('id')->translatedFormat('d M Y') : '-')
           ->sortable(),
         TextColumn::make('updated_at')
           ->dateTime()

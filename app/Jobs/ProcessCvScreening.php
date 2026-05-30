@@ -130,37 +130,37 @@ class ProcessCvScreening implements ShouldQueue
       }
 
       if (count($missingRequired) === 0 && count($allRequired) > 0) {
-        $pros[] = "Matches core skill requirements.";
+        $pros[] = "Memenuhi persyaratan keahlian inti.";
       } elseif (count($missingRequired) > 0) {
-        $cons[] = "Mandatory skills not explicitly found: " . implode(', ', $missingRequired) . ".";
+        $cons[] = "Keahlian wajib tidak ditemukan secara eksplisit: " . implode(', ', $missingRequired) . ".";
       }
 
       // Preferred/Bonus
       $filteredPreferred = array_filter($skillsFound['preferred'], fn($s) => true);
       if (count($filteredPreferred) > 0) {
-        $pros[] = "Demonstrates proficiency in: " . implode(', ', $filteredPreferred) . ".";
+        $pros[] = "Menunjukkan kemahiran dalam: " . implode(', ', $filteredPreferred) . ".";
       }
 
       if (count($skillsFound['bonus']) > 0) {
-        $pros[] = "Brings additional value with expertise in: " . implode(', ', $skillsFound['bonus']) . ".";
+        $pros[] = "Memberikan nilai tambah dengan keahlian di bidang: " . implode(', ', $skillsFound['bonus']) . ".";
       }
 
       // Experience & Education - use text-based description without decimal-to-months conversion
       Log::info("DEBUG displayExpPros [App ID: {$this->application->id}]: expYearsRaw={$expYearsRaw}, expYears={$expYears}");
       $displayExpPros = ($expYears == 0)
-          ? "no relevant experience"
-          : ($expYears < 1 ? "less than 1 year" : (($expYears == 1) ? "1 year" : round($expYears, 1) . " years"));
+          ? "tidak memiliki pengalaman relevan"
+          : ($expYears < 1 ? "kurang dari 1 tahun" : (($expYears == 1) ? "1 tahun" : round($expYears, 1) . " tahun"));
 
       if ($expYears >= 5) {
-        $pros[] = "Extensive professional background with {$displayExpPros} of experience.";
+        $pros[] = "Latar belakang profesional yang luas dengan pengalaman selama {$displayExpPros}.";
       } elseif ($expYears >= 2) {
-        $pros[] = "Solid career foundation with {$displayExpPros} in the industry.";
+        $pros[] = "Fondasi karir yang kokoh dengan {$displayExpPros} di industri.";
       } elseif ($expYears > 0) {
-        $pros[] = "Possesses practical work experience ({$displayExpPros}).";
+        $pros[] = "Memiliki pengalaman kerja praktis ({$displayExpPros}).";
       }
       
       if (!empty($result['education_level'])) {
-        $pros[] = "Academic background: {$result['education_level']} ". ($result['education_major'] ?? '') . ".";
+        $pros[] = "Latar belakang akademis: {$result['education_level']} ". ($result['education_major'] ?? '') . ".";
       }
 
       // General Requirements
@@ -171,7 +171,7 @@ class ProcessCvScreening implements ShouldQueue
         // If fresh graduate but candidate has experience, handle based on years
         if (str_contains($reqTextLower, 'fresh')) {
           if ($expYears > 2) {
-            $cons[] = "Candidate may be overqualified (More than 2 years of experience for a Fresh Graduate role).";
+            $cons[] = "Kandidat mungkin berkualifikasi lebih (Memiliki lebih dari 2 tahun pengalaman untuk peran Fresh Graduate).";
           }
           if ($expYears >= 1) {
             continue; // Do not show as "No explicit evidence" if they have experience
@@ -179,16 +179,16 @@ class ProcessCvScreening implements ShouldQueue
         }
 
         if (!$isMet) {
-          $cons[] = "No explicit evidence found for: " . ($item['requirement'] ?? 'Unknown');
+          $cons[] = "Tidak ditemukan bukti eksplisit untuk: " . ($item['requirement'] ?? 'Tidak Diketahui');
         }
       }
 
       $expFormatted = (float) $expYearsRaw;
       $displayExp = ($expFormatted == 0)
-        ? "no relevant experience"
-        : ($expFormatted < 1 ? "less than 1 year" : (($expFormatted == 1) ? "1 year" : round($expFormatted, 1) . " years"));
+        ? "tanpa pengalaman relevan"
+        : ($expFormatted < 1 ? "kurang dari 1 tahun" : (($expFormatted == 1) ? "1 tahun" : round($expFormatted, 1) . " tahun"));
 
-      $summary = "Identified " . count($skillsFound['required']) . " required skills and " . count($skillsFound['preferred']) . " preferred skills with " . $displayExp . ".";
+      $summary = "Mengidentifikasi " . count($skillsFound['required']) . " keahlian wajib dan " . count($skillsFound['preferred']) . " keahlian opsional dengan " . $displayExp . ".";
 
       // Determine screening label based on score (2-class for C4.5)
       $screeningLabel = $calculatedScore >= 60 ? 'suitable' : 'not_suitable';
@@ -211,7 +211,7 @@ class ProcessCvScreening implements ShouldQueue
     } catch (\RuntimeException $e) {
       // Infrastructure errors
       Log::error("CV Screening Infrastructure Error [Application ID: {$this->application->id}]: " . $e->getMessage());
-      $this->failWithMessage("Service temporarily unavailable: " . $e->getMessage());
+      $this->failWithMessage("Layanan sementara tidak tersedia: " . $e->getMessage());
       throw $e;
 
     } catch (\LogicException $e) {
@@ -222,7 +222,7 @@ class ProcessCvScreening implements ShouldQueue
     } catch (\Throwable $e) {
       // Unexpected errors
       Log::error("CV Screening Unexpected Error [Application ID: {$this->application->id}]: " . $e->getMessage());
-      $this->failWithMessage("An unexpected error occurred: " . $e->getMessage());
+      $this->failWithMessage("Terjadi kesalahan yang tidak terduga: " . $e->getMessage());
     }
   }
 
@@ -232,9 +232,9 @@ class ProcessCvScreening implements ShouldQueue
       $this->application->update([
         'ai_score'    => 0,
         'ai_analysis' => [
-          'summary' => 'Automated analysis failed: ' . $message,
+          'summary' => 'Analisis otomatis gagal: ' . $message,
           'pros'    => [],
-          'cons'    => ['A system or file error occurred. Please review this CV manually.'],
+          'cons' => ['Terjadi kesalahan sistem atau file. Silakan tinjau CV ini secara manual.'],
         ],
         'status' => 'pending',
       ]);
@@ -257,7 +257,7 @@ class ProcessCvScreening implements ShouldQueue
   }
 
   protected function buildPrompt(\App\Models\JobVacancy $job, string $cvText): array {
-    $systemMessage = 'You are an HR Evaluation AI. You extract structured data. Output valid JSON ONLY without markdown formatting blocks. Output all text in English.';
+    $systemMessage = 'You are an HR Evaluation AI. You extract structured data. Output valid JSON ONLY without markdown formatting blocks. Output all summary, pros, and cons in professional Indonesian. Keep technical keywords and IT terms (like Laravel, React, CI/CD, API) in their original format without translation.';
 
     $reqSkills = is_array($job->required_skills) ? implode(', ', $job->required_skills) : '';
     $qualifications = strip_tags($job->qualifications ?? '');

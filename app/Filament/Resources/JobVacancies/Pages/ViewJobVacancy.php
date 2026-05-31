@@ -13,6 +13,16 @@ class ViewJobVacancy extends ViewRecord
 {
   protected static string $resource = JobVacancyResource::class;
 
+  public function getTitle(): string
+  {
+      return $this->record->title;
+  }
+
+  public function getBreadcrumb(): string
+  {
+      return 'Detail';
+  }
+
   protected function getHeaderActions(): array
   {
     return [

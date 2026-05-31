@@ -21,17 +21,27 @@ use Filament\Actions\ActionGroup;
 class ViewApplication extends ViewRecord {
   protected static string $resource = ApplicationResource::class;
 
+  public function getTitle(): string
+  {
+      return $this->record->full_name;
+  }
+
+  public function getBreadcrumb(): string
+  {
+      return 'Detail';
+  }
+
     protected function getHeaderActions(): array {
     return [
       // Action: Send Initial Test Invitation
       Action::make('send_accepted_email')
-        ->label('Send Test Invitation')
+        ->label('Kirim Undangan Ujian')
         ->icon('heroicon-o-paper-airplane')
         ->color('success')
         ->button()
         ->form([
           TextInput::make('test_token')
-            ->label('Test Token')
+            ->label('Token Ujian')
             ->default(fn () => $this->record->test_token ?? Str::random(64))
             ->required()
             ->suffixAction(
@@ -42,23 +52,23 @@ class ViewApplication extends ViewRecord {
                 })
             ),
           DateTimePicker::make('token_expires_at')
-              ->label('Token Expiration')
+              ->label('Masa Berlaku Token')
               ->default(fn () => now()->addDays(7))
               ->required()
               ->native(false)
               ->minDate(now()),
         ])
-        ->modalHeading('Send Online Test Invitation')
-        ->modalDescription(fn () => "Send an online test invitation email to {$this->record->full_name}. Status will change to 'Accepted'.")
-        ->modalSubmitActionLabel('Send Invitation')
+        ->modalHeading('Kirim Undangan Ujian Online')
+        ->modalDescription(fn () => "Kirim email undangan ujian online ke {$this->record->full_name}. Status pelamar akan berubah menjadi 'Diterima' (untuk ujian).")
+        ->modalSubmitActionLabel('Kirim Undangan')
         ->before(function (Action $action) {
             $jobVacancy = $this->record->jobVacancy;
 
             if (! $jobVacancy) {
                 Notification::make()
                     ->danger()
-                    ->title('Error')
-                    ->body('Job Vacancy data is missing.')
+                    ->title('Kesalahan')
+                    ->body('Data Lowongan Pekerjaan tidak ditemukan.')
                     ->send();
                 $action->halt();
             }
@@ -70,8 +80,8 @@ class ViewApplication extends ViewRecord {
             if (! $hasQuestions) {
                 Notification::make()
                     ->danger()
-                    ->title('Failed to Send Test')
-                    ->body('No active test questions available for this vacancy. Please create them first.')
+                    ->title('Gagal Mengirim Ujian')
+                    ->body('Tidak ada pertanyaan ujian aktif untuk lowongan ini. Silakan buat pertanyaan terlebih dahulu.')
                     ->persistent()
                     ->send();
 
@@ -94,8 +104,8 @@ class ViewApplication extends ViewRecord {
             
               Notification::make()
                 ->success()
-                ->title('Email Sent')
-                ->body(new HtmlString("Test invitation has been sent to {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
+                ->title('Email Terkirim')
+                ->body(new HtmlString("Undangan ujian telah dikirim ke {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Buka Pratinjau Email</a>"))
                 ->persistent()
                 ->send();
 
@@ -104,7 +114,7 @@ class ViewApplication extends ViewRecord {
           } catch (\Exception $e) {
             Notification::make()
               ->danger()
-              ->title('Failed to Send Email')
+              ->title('Gagal Mengirim Email')
               ->body($e->getMessage())
               ->send();
           }
@@ -113,13 +123,13 @@ class ViewApplication extends ViewRecord {
 
       // Action: Resend Test Invitation
       Action::make('resend_accepted_email')
-        ->label('Resend Test Link')
+        ->label('Kirim Ulang Link Ujian')
         ->icon('heroicon-o-arrow-path')
         ->color('info')
         ->button()
         ->form([
           TextInput::make('test_token')
-            ->label('Test Token')
+            ->label('Token Ujian')
             ->default(fn () => $this->record->test_token ?? Str::random(64))
             ->required()
             ->suffixAction(
@@ -130,15 +140,15 @@ class ViewApplication extends ViewRecord {
                 })
             ),
           DateTimePicker::make('token_expires_at')
-              ->label('Expiration Date')
+              ->label('Tanggal Kedaluwarsa')
               ->default(fn () => $this->record->token_expires_at ?? now()->addDays(7))
               ->required()
               ->native(false)
               ->minDate(now()),
         ])
-        ->modalHeading('Resend Test Link')
-        ->modalDescription(fn () => "Resend the test access link to {$this->record->full_name}. You can update the token if the previous one has expired.")
-        ->modalSubmitActionLabel('Resend Email')
+        ->modalHeading('Kirim Ulang Link Ujian')
+        ->modalDescription(fn () => "Kirim ulang tautan akses ujian ke {$this->record->full_name}. Anda dapat memperbarui token jika token sebelumnya telah kedaluwarsa.")
+        ->modalSubmitActionLabel('Kirim Ulang Email')
         ->action(function (array $data, ViewApplication $livewire) {
           try {
             $this->record->update([
@@ -153,8 +163,8 @@ class ViewApplication extends ViewRecord {
             
               Notification::make()
                 ->success()
-                ->title('Email Resent Successfully')
-                ->body(new HtmlString("Test link has been resent to {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
+                ->title('Email Berhasil Dikirim Ulang')
+                ->body(new HtmlString("Tautan ujian telah dikirim ulang ke {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Buka Pratinjau Email</a>"))
                 ->persistent()
                 ->send();
 
@@ -163,7 +173,7 @@ class ViewApplication extends ViewRecord {
           } catch (\Exception $e) {
             Notification::make()
               ->danger()
-              ->title('Failed to Resend Email')
+              ->title('Gagal Mengirim Ulang Email')
               ->body($e->getMessage())
               ->send();
           }
@@ -172,21 +182,21 @@ class ViewApplication extends ViewRecord {
 
       // Action: Send Rejection Email
       Action::make('send_rejected_email')
-        ->label('Reject Application')
+        ->label('Tolak Lamaran')
         ->icon('heroicon-o-x-circle')
         ->color('danger')
         ->button()
         ->form([
           Textarea::make('rejection_reason')
-            ->label('Rejection Reason (Optional)')
-            ->placeholder('Example: Qualifications do not meet current needs')
+            ->label('Alasan Penolakan (Opsional)')
+            ->placeholder('Contoh: Kualifikasi belum memenuhi kebutuhan saat ini')
             ->rows(3)
             ->maxLength(500),
         ])
         ->requiresConfirmation()
-        ->modalHeading('Reject Application')
-        ->modalDescription(fn () => "Reject application for {$this->record->full_name} ({$this->record->email})?")
-        ->modalSubmitActionLabel('Reject & Send Email')
+        ->modalHeading('Tolak Lamaran')
+        ->modalDescription(fn () => "Tolak lamaran untuk {$this->record->full_name} ({$this->record->email})?")
+        ->modalSubmitActionLabel('Tolak & Kirim Email')
         ->action(function (array $data, ViewApplication $livewire) {
           try {
             if (!empty($data['rejection_reason'])) {
@@ -206,8 +216,8 @@ class ViewApplication extends ViewRecord {
             
             Notification::make()
                 ->success()
-                ->title('Application Rejected')
-                ->body(new HtmlString("Rejection email sent to {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Open Email Preview</a>"))
+                ->title('Lamaran Ditolak')
+                ->body(new HtmlString("Email penolakan telah dikirim ke {$this->record->full_name}.<br><a href='{$url}' target='_blank' style='font-weight: bold; text-decoration: underline;'>Buka Pratinjau Email</a>"))
                 ->persistent()
                 ->send();
 
@@ -216,7 +226,7 @@ class ViewApplication extends ViewRecord {
           } catch (\Exception $e) {
             Notification::make()
               ->danger()
-              ->title('Error')
+              ->title('Kesalahan')
               ->body($e->getMessage())
               ->send();
           }

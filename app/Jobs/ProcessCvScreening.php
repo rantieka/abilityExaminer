@@ -130,19 +130,19 @@ class ProcessCvScreening implements ShouldQueue
       }
 
       if (count($missingRequired) === 0 && count($allRequired) > 0) {
-        $pros[] = "Memenuhi persyaratan keahlian inti.";
+        $pros[] = "Menguasai keahlian inti yang disyaratkan.";
       } elseif (count($missingRequired) > 0) {
-        $cons[] = "Keahlian wajib tidak ditemukan secara eksplisit: " . implode(', ', $missingRequired) . ".";
+        $cons[] = "Keahlian wajib berikut tidak tercantum dalam CV: " . implode(', ', $missingRequired) . ".";
       }
 
       // Preferred/Bonus
       $filteredPreferred = array_filter($skillsFound['preferred'], fn($s) => true);
       if (count($filteredPreferred) > 0) {
-        $pros[] = "Menunjukkan kemahiran dalam: " . implode(', ', $filteredPreferred) . ".";
+        $pros[] = "Memiliki keahlian yang diutamakan: " . implode(', ', $filteredPreferred) . ".";
       }
 
       if (count($skillsFound['bonus']) > 0) {
-        $pros[] = "Memberikan nilai tambah dengan keahlian di bidang: " . implode(', ', $skillsFound['bonus']) . ".";
+        $pros[] = "Memiliki nilai tambah pada bidang: " . implode(', ', $skillsFound['bonus']) . ".";
       }
 
       // Experience & Education - use text-based description without decimal-to-months conversion
@@ -160,7 +160,7 @@ class ProcessCvScreening implements ShouldQueue
       }
       
       if (!empty($result['education_level'])) {
-        $pros[] = "Latar belakang akademis: {$result['education_level']} ". ($result['education_major'] ?? '') . ".";
+        $pros[] = "Latar belakang pendidikan terakhir: {$result['education_level']} ". ($result['education_major'] ?? '') . ".";
       }
 
       // General Requirements
@@ -171,7 +171,7 @@ class ProcessCvScreening implements ShouldQueue
         // If fresh graduate but candidate has experience, handle based on years
         if (str_contains($reqTextLower, 'fresh')) {
           if ($expYears > 2) {
-            $cons[] = "Kandidat mungkin berkualifikasi lebih (Memiliki lebih dari 2 tahun pengalaman untuk peran Fresh Graduate).";
+            $cons[] = "Kandidat terindikasi memiliki kualifikasi berlebih (memiliki pengalaman kerja di atas 2 tahun untuk posisi Fresh Graduate).";
           }
           if ($expYears >= 1) {
             continue; // Do not show as "No explicit evidence" if they have experience
@@ -179,16 +179,16 @@ class ProcessCvScreening implements ShouldQueue
         }
 
         if (!$isMet) {
-          $cons[] = "Tidak ditemukan bukti eksplisit untuk: " . ($item['requirement'] ?? 'Tidak Diketahui');
+          $cons[] = "Tidak terdapat informasi tertulis mengenai: " . ($item['requirement'] ?? 'Tidak Diketahui');
         }
       }
 
       $expFormatted = (float) $expYearsRaw;
       $displayExp = ($expFormatted == 0)
-        ? "tanpa pengalaman relevan"
-        : ($expFormatted < 1 ? "kurang dari 1 tahun" : (($expFormatted == 1) ? "1 tahun" : round($expFormatted, 1) . " tahun"));
+        ? "tidak memiliki pengalaman relevan"
+        : ($expFormatted < 1 ? "pengalaman kerja kurang dari 1 tahun" : "pengalaman kerja selama " . (($expFormatted == 1) ? "1 tahun" : round($expFormatted, 1) . " tahun"));
 
-      $summary = "Mengidentifikasi " . count($skillsFound['required']) . " keahlian wajib dan " . count($skillsFound['preferred']) . " keahlian opsional dengan " . $displayExp . ".";
+      $summary = "Mengidentifikasi " . count($skillsFound['required']) . " keahlian wajib dan " . count($skillsFound['preferred']) . " keahlian yang diutamakan, serta " . $displayExp . ".";
 
       // Determine screening label based on score (2-class for C4.5)
       $screeningLabel = $calculatedScore >= 60 ? 'suitable' : 'not_suitable';

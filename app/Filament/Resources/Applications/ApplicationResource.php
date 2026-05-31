@@ -117,13 +117,13 @@ class ApplicationResource extends Resource
                                         ->content(fn ($record) => $record?->cv_path 
                                         ? new \Illuminate\Support\HtmlString('
                                             <div class="space-y-2">
-                                                <div class="flex items-center justify-end mb-2">
+                                                <!-- <div class="flex items-center justify-end mb-2">
                                                 <a href="' . asset('storage/' . $record->cv_path) . '" 
                                                     target="_blank" 
                                                     class="text-xs text-blue-600 hover:text-blue-700 force-no-underline">
                                                     Buka di Tab Baru
                                                 </a>
-                                                </div>
+                                                </div> -->
                                                 <iframe 
                                                 src="' . asset('storage/' . $record->cv_path) . '" 
                                                 class="w-full border border-gray-300 rounded-lg"
@@ -181,7 +181,7 @@ class ApplicationResource extends Resource
                                                         <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                                     </div>
                                                     <div>
-                                                        <h4 class="card-title text-blue-900">Ringkasan Eksekutif</h4>
+                                                        <h4 class="card-title text-blue-900">Ringkasan Analisis</h4>
                                                     </div>
                                                 </div>
                                                 <p class="card-content">' . ($record->ai_analysis['summary'] ?? '-') . '</p>
@@ -554,16 +554,16 @@ class ApplicationResource extends Resource
                             foreach ($hrUsers as $hrUser) {
                               try {
                                 \Filament\Notifications\Notification::make()
-                                  ->success()
-                                  ->title('Candidate Approved by Supervisor')
-                                  ->body("Supervisor has approved candidate '{$record->full_name}' for '{$record->jobVacancy->title}'. Ready for announcement.")
-                                  ->actions([
-                                    \Filament\Actions\Action::make('view_candidate')
-                                      ->label('Review & Publish')
-                                      ->button()
-                                      ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record->id])),
-                                  ])
-                                  ->sendToDatabase($hrUser);
+                                   ->success()
+                                   ->title('Kandidat Disetujui oleh Supervisor')
+                                   ->body("Supervisor telah menyetujui kandidat '{$record->full_name}' untuk posisi '{$record->jobVacancy->title}'. Siap untuk diumumkan.")
+                                   ->actions([
+                                     \Filament\Actions\Action::make('view_candidate')
+                                       ->label('Tinjau & Publikasikan')
+                                       ->button()
+                                       ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record->id])),
+                                   ])
+                                   ->sendToDatabase($hrUser);
                               } catch (\Throwable $e) {
                                 \Illuminate\Support\Facades\Log::error("Failed to notify HRD of SPV approval: " . $e->getMessage());
                               }
@@ -605,16 +605,16 @@ class ApplicationResource extends Resource
                             foreach ($hrUsers as $hrUser) {
                               try {
                                 \Filament\Notifications\Notification::make()
-                                  ->danger()
-                                  ->title('Candidate Rejected by Supervisor')
-                                  ->body("Supervisor has rejected candidate '{$record->full_name}' for '{$record->jobVacancy->title}'. Ready for announcement.")
-                                  ->actions([
-                                    \Filament\Actions\Action::make('view_candidate')
-                                      ->label('Review & Publish')
-                                      ->button()
-                                      ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record->id])),
-                                  ])
-                                  ->sendToDatabase($hrUser);
+                                   ->danger()
+                                   ->title('Kandidat Ditolak oleh Supervisor')
+                                   ->body("Supervisor telah menolak kandidat '{$record->full_name}' untuk posisi '{$record->jobVacancy->title}'. Siap untuk diumumkan.")
+                                   ->actions([
+                                     \Filament\Actions\Action::make('view_candidate')
+                                       ->label('Tinjau & Publikasikan')
+                                       ->button()
+                                       ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record->id])),
+                                   ])
+                                   ->sendToDatabase($hrUser);
                               } catch (\Throwable $e) {
                                 \Illuminate\Support\Facades\Log::error("Failed to notify HRD of SPV rejection: " . $e->getMessage());
                               }

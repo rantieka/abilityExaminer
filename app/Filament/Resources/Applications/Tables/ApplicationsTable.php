@@ -150,13 +150,13 @@ class ApplicationsTable
           
           // Bulk Action: Send Acceptance Emails
           Action::make('bulk_send_accepted')
-            ->label('Send Acceptance Emails (Bulk)')
+            ->label('Kirim Undangan Ujian')
             ->icon('heroicon-o-check-circle')
             ->color('success')
             ->requiresConfirmation()
-            ->modalHeading('Send Acceptance Emails to Selected Candidates')
-            ->modalDescription(fn (Collection $records) => "Send acceptance emails to {$records->count()} candidates?")
-            ->modalSubmitActionLabel('Send All Emails')
+            ->modalHeading('Kirim Undangan Ujian ke Kandidat Terpilih')
+            ->modalDescription(fn (Collection $records) => "Kirim email undangan ujian ke {$records->count()} kandidat terpilih?")
+            ->modalSubmitActionLabel('Kirim Semua Email')
             ->action(function (Collection $records) {
               $successCount = 0;
               $failCount = 0;
@@ -218,20 +218,20 @@ class ApplicationsTable
 
           // Bulk Action: Send Rejection Emails
           Action::make('bulk_send_rejected')
-            ->label('Send Rejection Emails (Bulk)')
+            ->label('Tolak Lamaran')
             ->icon('heroicon-o-x-circle')
             ->color('danger')
             ->form([
               Textarea::make('rejection_reason')
-                ->label('Rejection Reason (Optional)')
-                ->placeholder('This reason will be sent to all selected candidates')
+                ->label('Alasan Penolakan (Opsional)')
+                ->placeholder('Alasan ini akan dikirim ke semua kandidat terpilih')
                 ->rows(3)
                 ->maxLength(500),
             ])
             ->requiresConfirmation()
-            ->modalHeading('Send Rejection Emails to Selected Candidates')
-            ->modalDescription(fn (Collection $records) => "Send rejection emails to {$records->count()} candidates?")
-            ->modalSubmitActionLabel('Send All Emails')
+            ->modalHeading('Tolak Lamaran Kandidat Terpilih')
+            ->modalDescription(fn (Collection $records) => "Kirim email penolakan ke {$records->count()} kandidat terpilih?")
+            ->modalSubmitActionLabel('Tolak & Kirim Semua Email')
             ->action(function (Collection $records, array $data) {
               $successCount = 0;
               $failCount = 0;

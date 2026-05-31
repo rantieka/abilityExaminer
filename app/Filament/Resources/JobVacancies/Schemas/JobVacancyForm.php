@@ -24,16 +24,16 @@ class JobVacancyForm
     return $schema
       ->components([
         // SECTION 1: POSISI
-        Section::make('Position')
+        Section::make('Posisi Jabatan')
           ->columnSpanFull()
           ->columns(2)
           ->disabled(fn ($record) => $record?->status === 'approved')
           ->schema([
 
             \Filament\Forms\Components\TextInput::make('title')
-              ->label('Position Title')
+              ->label('Nama Posisi/Jabatan')
               ->required()
-              ->placeholder('Backend Developer')
+              ->placeholder('Contoh: Backend Developer')
               ->datalist([
                   'Frontend Developer',
                   'Backend Developer',
@@ -41,7 +41,7 @@ class JobVacancyForm
                   'Mobile Developer'
               ])
               ->lazy()
-              ->helperText(new \Illuminate\Support\HtmlString('<small style="color: #dc3545;">* <i>Please use standard titles for better screening accuracy</i></small>'))
+              ->helperText(new \Illuminate\Support\HtmlString('<small style="color: #dc3545;">* <i>Gunakan nama posisi standar agar akurasi pemindaian AI maksimal</i></small>'))
               ->afterStateUpdated(function ($set, $state) {
                 if ($state) {
                   $set('slug', \Illuminate\Support\Str::slug($state) . '-' . uniqid());
@@ -52,11 +52,12 @@ class JobVacancyForm
               ->maxLength(255)
               ->unique(ignoreRecord: true),
             \Filament\Forms\Components\Select::make('experience_level')
-              ->label('Experience Level')
+              ->label('Tingkat Pengalaman')
+              ->placeholder('Pilih tingkat pengalaman')
               ->required()
               ->options([
-                  'junior' => 'Junior / Fresh Graduate',
-                  'middle' => 'Mid Level ',
+                  'junior' => 'Junior / Lulusan Baru',
+                  'middle' => 'Tingkat Menengah',
                   'senior' => 'Senior',
               ])
               ->default('junior')
@@ -64,80 +65,85 @@ class JobVacancyForm
           ]),
 
         // SECTION 2: DETAIL PEKERJAAN
-        Section::make('Job Details')
+        Section::make('Rincian Pekerjaan')
           ->columnSpanFull()
           ->columns(2)
           ->disabled(fn ($record) => $record?->status === 'approved')
           ->schema([
             TextInput::make('department')
-              ->label('Department')
+              ->label('Departemen')
               ->default('IT')
               ->disabled()
               ->dehydrated()
               ->required(),
 
             Select::make('employment_type')
-              ->label('Employment Type')
+              ->label('Jenis Pekerjaan')
+              ->placeholder('Pilih jenis pekerjaan')
               ->options([
-                  'Full Time' => 'Full Time',
-                  'Contract' => 'Contract',
+                  'Full Time' => 'Penuh Waktu (Full Time)',
+                  'Contract' => 'Kontrak (Contract)',
               ])
               ->required(),
             TextInput::make('work_arrangement')
-              ->label('Work Arrangement')
+              ->label('Sistem Kerja')
               ->default('WFO')
               ->disabled()
               ->dehydrated()
               ->required(),
             TextInput::make('required_count')
-              ->label('Vacancies Needed')
+              ->label('Kuota Lowongan')
               ->numeric()
               ->default(1)
               ->minValue(1)
               ->required(),
             DatePicker::make('published_until')
-                  ->label('Publish Until')
+                  ->label('Publikasi Hingga')
                   ->native(false)
                   ->visible(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord && Auth::user()->hasRole(['hr', 'super_admin']))
                   ->required(fn ($get) => $get('status') === 'approved'),
           ]),
 
         // SECTION 3: DESKRIPSI & KUALIFIKASI
-        Section::make('Description & General Qualifications')
+        Section::make('Deskripsi & Kualifikasi Umum')
             ->columnSpanFull()
             ->columns(2)
             ->disabled(fn ($record) => $record?->status === 'approved')
             ->schema([
                 Textarea::make('description')
-                  ->label('Description')
+                  ->label('Deskripsi Pekerjaan')
                   ->required()
                   ->rows(10)
                   ->columnSpanFull(),
                 RichEditor::make('qualifications')
-                  ->label('General Qualifications')
+                  ->label('Kualifikasi Umum')
                   ->columnSpanFull(),
             ]),
 
         // SECTION: SKILLS
-        Section::make('Technical Skills')
+        Section::make('Keahlian Teknis')
           ->columnSpanFull()
           ->columns(3)
           ->disabled(fn ($record) => $record?->status === 'approved')
           ->schema([
             Select::make('required_skills')
-              ->label('Required Skills')
+              ->label('Keahlian Wajib')
+              ->placeholder('Pilih keahlian wajib')
               ->multiple()
               ->searchable()
+              ->searchPrompt('Mulai ketik untuk mencari...')
+              ->searchingMessage('Sedang mencari...')
+              ->noSearchResultsMessage('Tidak ada hasil ditemukan')
               ->required()
               ->createOptionForm([
                   TextInput::make('name')
-                      ->label('Skill Name')
+                      ->label('Nama Keahlian')
                       ->required(),
               ])
               ->createOptionUsing(function (array $data): string {
                   return $data['name'];
               })
-              ->helperText(new \Illuminate\Support\HtmlString('<small style="color: #dc3545;">* <i>Please use standard tech names for better screening accuracy</i></small>'))
+              ->helperText(new \Illuminate\Support\HtmlString('<small style="color: #dc3545;">* <i>Gunakan nama teknologi standar agar akurasi pemindaian AI maksimal</i></small>'))
               ->options(function ($get) {
                   $title = strtolower($get('title') ?? '');
                   if (str_contains($title, 'backend')) {
@@ -149,12 +155,16 @@ class JobVacancyForm
                   return ['PHP' => 'PHP', 'JavaScript' => 'JavaScript'];
               }),
             Select::make('preferred_skills')
-              ->label('Preferred Skills')
+              ->label('Keahlian yang Diutamakan')
+              ->placeholder('Pilih keahlian yang diutamakan')
               ->multiple()
               ->searchable()
+              ->searchPrompt('Mulai ketik untuk mencari...')
+              ->searchingMessage('Sedang mencari...')
+              ->noSearchResultsMessage('Tidak ada hasil ditemukan')
               ->createOptionForm([
                   TextInput::make('name')
-                      ->label('Skill Name')
+                      ->label('Nama Keahlian')
                       ->required(),
               ])
               ->createOptionUsing(function (array $data): string {
@@ -172,12 +182,16 @@ class JobVacancyForm
                   return ['Docker' => 'Docker', 'AWS' => 'AWS'];
               }),
             Select::make('bonus_skills')
-              ->label('Bonus Skills')
+              ->label('Keahlian Tambahan')
+              ->placeholder('Pilih keahlian tambahan')
               ->multiple()
               ->searchable()
+              ->searchPrompt('Mulai ketik untuk mencari...')
+              ->searchingMessage('Sedang mencari...')
+              ->noSearchResultsMessage('Tidak ada hasil ditemukan')
               ->createOptionForm([
                   TextInput::make('name')
-                      ->label('Skill Name')
+                      ->label('Nama Keahlian')
                       ->required(),
               ])
               ->createOptionUsing(function (array $data): string {
@@ -196,32 +210,32 @@ class JobVacancyForm
               }),
           ]),
         Select::make('status')
+          ->placeholder('Pilih status')
           ->options([
               'draft' => 'Draft',
-              'pending' => 'Pending Approval',
-              'approved' => 'Approved (Publish)',
-              'rejected' => 'Rejected',
+              'pending' => 'Menunggu Persetujuan',
+              'approved' => 'Disetujui',
+              'rejected' => 'Ditolak',
           ])
           ->default(fn () => Auth::user()->hasRole(['hr', 'super_admin']) ? 'approved' : 'pending')
           ->dehydrated()
           ->required()
           ->visible(fn() => Auth::user()->hasRole(['hr', 'super_admin', 'spv'])),
-        // is_published is auto-set by Approve action, no need for manual toggle
         
-        // Rejection Information
-        Section::make('Rejection Information')
+        // Informasi Penolakan
+        Section::make('Informasi Penolakan')
           ->schema([
             Placeholder::make('rejection_reason')
-            ->label('Rejection Reason')
+            ->label('Alasan Penolakan')
             ->content(fn ($record) => $record?->rejection_reason ?? '-'),
           
             Placeholder::make('rejected_by')
-            ->label('Rejected By')
+            ->label('Ditolak Oleh')
             ->content(fn ($record) => $record?->rejectedBy?->name ?? '-'),
           
             Placeholder::make('rejected_at')
-            ->label('Rejected At')
-            ->content(fn ($record) => $record?->rejected_at?->format('d M Y, H:i') ?? '-'),
+            ->label('Ditolak Pada')
+            ->content(fn ($record) => $record?->rejected_at?->locale('id')->translatedFormat('d M Y, H:i') ?? '-'),
           ])
           ->visible(fn ($record) => $record?->status === 'rejected' && Auth::user()->hasRole(['hr', 'super_admin', 'spv']))
           ->collapsible()

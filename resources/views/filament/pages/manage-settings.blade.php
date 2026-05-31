@@ -4,7 +4,7 @@
 
         <div class="flex flex-wrap items-center gap-4 justify-start mt-6" style="margin-top: 1.5rem;">
             <x-filament::button type="submit" size="md" color="warning">
-                Save Settings
+                Simpan
             </x-filament::button>
         </div>
     </form>

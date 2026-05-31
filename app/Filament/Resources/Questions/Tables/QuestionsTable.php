@@ -28,23 +28,38 @@ class QuestionsTable
         TextColumn::make('#')
           ->rowIndex(),  
         TextColumn::make('jobVacancy.title')
-          ->label('Job Vacancy')
+          ->label('Lowongan Pekerjaan')
           ->searchable()
           ->sortable()
           ->limit(30),
         TextColumn::make('question_text')
+          ->label('Pertanyaan')
           ->limit(50)
           ->searchable(),
         TextColumn::make('section')
+          ->label('Bagian')
           ->badge()
+          ->formatStateUsing(fn (string $state): string => match ($state) {
+              'knowledge' => 'Pengetahuan',
+              'technical' => 'Teknis',
+              default => $state,
+          })
           ->colors([
             'secondary' => 'knowledge', 
             'warning' => 'technical'
           ])
           ->sortable(),
-        TextColumn::make('correct_answer'),
+        TextColumn::make('correct_answer')
+          ->label('Kunci Jawaban'),
         TextColumn::make('difficulty')
+          ->label('Kesulitan')
           ->badge()
+          ->formatStateUsing(fn (string $state): string => match ($state) {
+              'easy' => 'Mudah',
+              'medium' => 'Sedang',
+              'hard' => 'Sulit',
+              default => $state,
+          })
           ->colors([
             'success' => 'easy',
             'warning' => 'medium',
@@ -52,7 +67,14 @@ class QuestionsTable
           ])
           ->sortable(),
         TextColumn::make('skill_category')
+          ->label('Kategori Skill')
           ->badge()
+          ->formatStateUsing(fn (string $state): string => match ($state) {
+              'required' => 'Wajib',
+              'preferred' => 'Disukai',
+              'bonus' => 'Bonus',
+              default => $state,
+          })
           ->colors([
             'danger'  => 'required',
             'warning' => 'preferred',
@@ -60,10 +82,10 @@ class QuestionsTable
           ])
           ->sortable(),
         ToggleColumn::make('is_active')
-          ->label('Active')
+          ->label('Status')
           ->afterStateUpdated(function ($state) {
             Notification::make()
-              ->title($state ? 'Question Activated' : 'Question Deactivated')
+              ->title($state ? 'Pertanyaan Diaktifkan' : 'Pertanyaan Dinonaktifkan')
               ->success()
               ->send();
           }),
@@ -71,30 +93,32 @@ class QuestionsTable
       ->filters([
         SelectFilter::make('job_vacancy_id')
           ->relationship('jobVacancy', 'title')
-          ->label('Filter by Job')
+          ->label('Filter Lowongan')
           ->searchable()
           ->default(fn () => request('job_id')), // Auto-select filter from URL
         SelectFilter::make('section')
+          ->label('Bagian')
           ->options([
-            'knowledge' => 'Knowledge & Foundation',
-            'technical' => 'Technical & Case Study',
+            'knowledge' => 'Pengetahuan & Dasar',
+            'technical' => 'Teknis & Studi Kasus',
           ]),
         SelectFilter::make('skill_category')
+          ->label('Kategori Skill')
           ->options([
-            'required'  => 'Required',
-            'preferred' => 'Preferred',
+            'required'  => 'Wajib',
+            'preferred' => 'Disukai',
             'bonus'     => 'Bonus',
           ]),
       ])
       ->headerActions([
         Action::make('generate')
-          ->label('Generate Exam Questions')
+          ->label('Buat Pertanyaan Ujian')
           ->icon('heroicon-o-sparkles')
           ->color('warning')
           ->visible(true)
           ->requiresConfirmation()
-          ->modalHeading('Generate Exam Questions?')
-          ->modalDescription('This will  questions (Knowledge & Technical) using AI. The result will be added to this Job Vacancy.')
+          ->modalHeading('Buat Pertanyaan Ujian?')
+          ->modalDescription('Sistem akan membuat pertanyaan ujian (Pengetahuan & Teknis) secara otomatis menggunakan AI. Hasilnya akan ditambahkan ke Lowongan Pekerjaan ini.')
           ->action(function ($livewire) {
             // Read from the sticky property on the Livewire component
             $jobId = $livewire->job_id ?? null;
@@ -105,14 +129,14 @@ class QuestionsTable
               GenerateExamQuestions::dispatch($job);
               
               Notification::make()
-                ->title('Generation Started')
-                ->body("Generating questions for '{$job->title}' in background...")
+                ->title('Proses Dimulai')
+                ->body("Sedang membuat pertanyaan untuk '{$job->title}' di latar belakang...")
                 ->success()
                 ->send();
             } else {
               Notification::make()
-                ->title('Action Required')
-                ->body("Please open this page via the 'Questions' button in the Job Vacancy menu so the system knows the target vacancy.")
+                ->title('Tindakan Diperlukan')
+                ->body("Silakan buka halaman ini melalui menu 'Pertanyaan' pada Lowongan Pekerjaan agar sistem mengetahui lowongan target.")
                 ->warning()
                 ->send();
             }
@@ -125,7 +149,7 @@ class QuestionsTable
       ->toolbarActions([
         BulkActionGroup::make([
           BulkAction::make('approve_all')
-            ->label('Approve Selected')
+            ->label('Setujui yang Dipilih')
             ->icon('heroicon-o-check-circle')
             ->action(fn (Collection $records) => $records->each->update(['is_active' => true])),
           DeleteBulkAction::make(),

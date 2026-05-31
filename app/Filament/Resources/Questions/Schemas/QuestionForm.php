@@ -24,24 +24,29 @@ class QuestionForm
       ->components([
         Grid::make(2)->schema([
             Select::make('job_vacancy_id')
+              ->label('Lowongan Pekerjaan')
               ->relationship('jobVacancy', 'title')
+              ->placeholder('Pilih opsi')
               ->required()
               ->searchable()
               ->preload(),
             Select::make('section')
+              ->label('Bagian')
+              ->placeholder('Pilih opsi')
               ->options([
-                'knowledge' => 'Part 1: Knowledge & Foundation',
-                'technical' => 'Part 2: Technical & Analysis'
+                'knowledge' => 'Bagian 1: Pengetahuan & Dasar',
+                'technical' => 'Bagian 2: Teknis & Analisis'
               ])
               ->required(),
         ]),
 
         Textarea::make('question_text')
+          ->label('Pertanyaan')
           ->required()
           ->rows(3)
           ->columnSpanFull(),
 
-        Section::make('Answer Options')
+        Section::make('Pilihan Jawaban')
           ->schema([
             Repeater::make('options')
               ->hiddenLabel()
@@ -56,19 +61,19 @@ class QuestionForm
                       ->hiddenLabel()
                       ->required()
                       ->rows(1)
-                      ->placeholder('Enter answer text...')
+                      ->placeholder('Masukkan teks jawaban...')
                       ->columnSpan(9),
                     Actions::make([
                       Action::make('delete')
                         ->icon('heroicon-m-trash')
                         ->color('danger')
                         ->label('') 
-                        ->tooltip('Delete Option')
+                        ->tooltip('Hapus Pilihan')
                         ->requiresConfirmation()
-                        ->modalHeading('Delete Answer Option')
-                        ->modalDescription('Are you sure you want to delete this answer option? This action cannot be undone.')
-                        ->modalSubmitActionLabel('Delete')
-                        ->modalCancelActionLabel('Cancel')
+                        ->modalHeading('Hapus Pilihan Jawaban')
+                        ->modalDescription('Apakah Anda yakin ingin menghapus pilihan jawaban ini? Tindakan ini tidak dapat dibatalkan.')
+                        ->modalSubmitActionLabel('Hapus')
+                        ->modalCancelActionLabel('Batal')
                         ->action(function ($component) {
                             $repeater = $component->getParentRepeater();
                             $index = $component->getParentRepeaterItemIndex();
@@ -85,7 +90,7 @@ class QuestionForm
               ])
               ->columnSpanFull()
               ->reorderable(false)
-              ->addActionLabel('Add Option')
+              ->addActionLabel('Tambah Pilihan')
               ->addActionAlignment('end')
               ->deletable(false)
               ->afterStateHydrated(function ($component, $state) {
@@ -116,33 +121,35 @@ class QuestionForm
               }),
 
             TextInput::make('correct_answer')
-                ->label('Correct Answer Label (e.g., A)')
+                ->label('Kunci Jawaban (Contoh: A)')
                 ->placeholder('A')
                 ->required(),
 
             Select::make('difficulty')
-                ->label('Difficulty Level')
+                ->label('Tingkat Kesulitan')
+                ->placeholder('Pilih opsi')
                 ->options([
-                    'easy'   => 'Easy',
-                    'medium' => 'Medium',
-                    'hard'   => 'Hard',
+                    'easy'   => 'Mudah',
+                    'medium' => 'Sedang',
+                    'hard'   => 'Sulit',
                 ])
                 ->required()
                 ->default('medium'),
 
             Select::make('skill_category')
-                ->label('Skill Category')
+                ->label('Kategori Skill')
+                ->placeholder('Pilih opsi')
                 ->options([
-                    'required'  => 'Required Skills',
-                    'preferred' => 'Preferred Skills',
-                    'bonus'     => 'Bonus Skills',
+                    'required'  => 'Wajib',
+                    'preferred' => 'Disukai',
+                    'bonus'     => 'Bonus',
                 ])
                 ->required()
                 ->default('required'),
           ]),
 
         Toggle::make('is_active')
-            ->label('Is Active')
+            ->label('Status Aktif')
             ->default(true)
             ->columnSpanFull(),
       ]);

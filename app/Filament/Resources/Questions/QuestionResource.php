@@ -18,6 +18,10 @@ class QuestionResource extends Resource
 {
   protected static ?string $model = Question::class;
 
+  protected static ?string $modelLabel = 'Pertanyaan';
+
+  protected static ?string $pluralModelLabel = 'Pertanyaan';
+
   protected static bool $shouldRegisterNavigation = false;
 
   protected static ?string $recordTitleAttribute = 'question_text';

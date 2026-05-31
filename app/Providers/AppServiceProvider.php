@@ -21,6 +21,16 @@ class AppServiceProvider extends ServiceProvider
   {
     \Illuminate\Support\Facades\Gate::policy(\App\Models\Question::class, \App\Policies\QuestionPolicy::class);
 
+    \Filament\Tables\Table::configureUsing(function (\Filament\Tables\Table $table): void {
+      $table
+        ->emptyStateHeading('Tidak ada data')
+        ->searchPlaceholder('Cari');
+    });
+
+    \Filament\Actions\ViewAction::configureUsing(function (\Filament\Actions\ViewAction $action): void {
+      $action->label('Detail');
+    });
+
     \Filament\Support\Facades\FilamentView::registerRenderHook(
       \Filament\Tables\View\TablesRenderHook::TOOLBAR_COLUMN_MANAGER_TRIGGER_AFTER,
       fn (array $scopes): string => in_array(\App\Filament\Resources\Applications\Pages\ListApplications::class, $scopes) 

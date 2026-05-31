@@ -14,13 +14,16 @@ class UserForm
     return $schema
       ->components([
         TextInput::make('name')
+          ->label('Nama')
           ->required(),
         TextInput::make('email')
-          ->label('Email address')
+          ->label('Alamat Email')
           ->email()
           ->required(),
-        DateTimePicker::make('email_verified_at'),
+        DateTimePicker::make('email_verified_at')
+          ->label('Email Terverifikasi Pada'),
         TextInput::make('password')
+          ->label('Password')
           ->password()
           // Only save (dehydrate) if this field is filled. If empty, old password remains safe.
           ->dehydrated(fn (?string $state) => filled($state))
@@ -29,9 +32,10 @@ class UserForm
         
         // Input to select Role
         CheckboxList::make('roles')
+          ->label('Role')
           ->relationship('roles', 'name')
           ->columns(2)
-          ->helperText('Select only one role!'),
+          ->helperText('Pilih hanya satu role!'),
       ]);
   }
 }

@@ -105,7 +105,7 @@
                  <svg style="width: 0.875rem; height: 0.875rem;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                  <span>{{ $duration }}</span>
                </div>
-               <div style="color: #9ca3af; font-size: 0.7rem;">{{ $completedAt->format('d M Y, H:i') }}</div>
+               <div style="color: #9ca3af; font-size: 0.7rem;">{{ $completedAt->locale('id')->translatedFormat('d M Y, H:i') }}</div>
              </div>
            @else
              <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af; text-align: right;">
@@ -196,7 +196,7 @@
                 <div>
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
                         <div style="width: 0.5rem; height: 0.5rem; border-radius: 9999px; background-color: #f59e0b;"></div>
-                        <span style="font-size: 0.875rem; font-weight: 600; color: #374151;">Keahlian Opsional</span>
+                        <span style="font-size: 0.875rem; font-weight: 600; color: #374151;">Keahlian yang Diutamakan</span>
                     </div>
                     <div style="display: flex; align-items: baseline; gap: 0.25rem;">
                         <span style="font-size: 1.25rem; font-weight: 700; color: #111827;">{{ $details['preferred']['percentage'] }}%</span>
@@ -274,7 +274,7 @@
                     <div style="flex-grow: 1;">
                       <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                         <span style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; padding: 0.1rem 0.5rem; border-radius: 0.25rem; background-color: {{ $question->skill_category === 'required' ? '#fee2e2' : ($question->skill_category === 'preferred' ? '#fef3c7' : '#d1fae5') }}; color: {{ $question->skill_category === 'required' ? '#b91c1c' : ($question->skill_category === 'preferred' ? '#b45309' : '#047857') }};">
-                            {{ $question->skill_category === 'required' ? 'wajib' : ($question->skill_category === 'preferred' ? 'opsional' : 'tambahan') }}
+                            {{ $question->skill_category === 'required' ? 'wajib' : ($question->skill_category === 'preferred' ? 'diutamakan' : 'tambahan') }}
                         </span>
                         <span style="font-size: 0.7rem; font-weight: 600; color: #9ca3af;">Kesulitan: {{ match($question->difficulty) { 'easy' => 'Mudah', 'medium' => 'Sedang', 'hard' => 'Sulit', default => ucfirst($question->difficulty) } }}</span>
                       </div>

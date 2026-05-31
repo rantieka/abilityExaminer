@@ -26,7 +26,7 @@ class ManageSettings extends Page implements HasForms
 
   protected static ?string $navigationLabel = 'Aturan Keputusan';
 
-  protected static ?string $title = 'Pengaturan Aturan Keputusan';
+  protected static ?string $title = 'Aturan Keputusan';
 
   public static function canAccess(): bool
   {
@@ -52,20 +52,20 @@ class ManageSettings extends Page implements HasForms
   {
     return $schema
       ->schema([
-        Section::make('Unggah Hasil Weka (J48 Model Buffer)')
-          ->description('Unggah file teks (.txt) hasil ekspor Weka Result Buffer untuk mengonfigurasi batas keputusan secara otomatis.')
+        Section::make('Unggah Model Keputusan')
+          
           ->schema([
             Grid::make(1)
               ->schema([
                 \Filament\Forms\Components\FileUpload::make('weka_file')
-                  ->label('File Output Weka (.txt)')
+                  ->label('File Output')
                   ->acceptedFileTypes(['text/plain'])
                   ->disk('public')
                   ->directory('weka-models')
                   ->preserveFilenames()
                   ->maxSize(1024),
                 \Filament\Forms\Components\Placeholder::make('active_model_info')
-                  ->label('Active Model Performance Summary')
+                  ->hiddenLabel()
                   ->content(function () {
                     $accuracy = Setting::get('c45_weka_accuracy');
                     $kappa = Setting::get('c45_weka_kappa');
@@ -73,24 +73,24 @@ class ManageSettings extends Page implements HasForms
                     $fileName = Setting::get('c45_weka_file_name');
 
                     if (!$accuracy && !$kappa) {
-                      return new \Illuminate\Support\HtmlString('<div style="color: #6b7280; font-style: italic;">No active Weka model file uploaded yet. Using default parameters.</div>');
+                      return new \Illuminate\Support\HtmlString('<div style="color: #6b7280; font-style: italic;">Belum ada file model Weka aktif yang diunggah. Menggunakan parameter default.</div>');
                     }
 
                     return new \Illuminate\Support\HtmlString("
                       <div style='background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem;'>
                         <div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;'>
                           <div>
-                            <strong style='font-size: 0.75rem; color: #6b7280; text-transform: uppercase;'>Accuracy</strong>
+                            <strong style='font-size: 0.75rem; color: #6b7280; text-transform: uppercase;'>Akurasi</strong>
                             <div style='font-size: 1.5rem; font-weight: 700; color: #10b981;'>{$accuracy}%</div>
                           </div>
                           <div>
-                            <strong style='font-size: 0.75rem; color: #6b7280; text-transform: uppercase;'>Kappa Statistic</strong>
+                            <strong style='font-size: 0.75rem; color: #6b7280; text-transform: uppercase;'>Statistik Kappa</strong>
                             <div style='font-size: 1.5rem; font-weight: 700; color: #3b82f6;'>{$kappa}</div>
                           </div>
                         </div>
                         <div style='margin-top: 1rem; border-top: 1px solid #f3f4f6; padding-top: 0.5rem; font-size: 0.75rem; color: #6b7280;'>
-                          <div><strong>Active File:</strong> {$fileName}</div>
-                          <div><strong>Uploaded At:</strong> {$updatedAt}</div>
+                          <div><strong>File Aktif:</strong> {$fileName}</div>
+                          <div><strong>Diunggah Pada:</strong> {$updatedAt}</div>
                         </div>
                       </div>
                     ");
@@ -98,19 +98,19 @@ class ManageSettings extends Page implements HasForms
               ])
           ]),
 
-        Section::make('C4.5 (J48) Decision Tree Thresholds (Auto-parsed)')
-          ->description('Set numeric score thresholds generated from Weka training J48 model.')
+        Section::make('Threshold Keputusan')
+          
           ->schema([
             Grid::make(2)
               ->schema([
                 TextInput::make('c45_ai_threshold')
-                  ->label('AI Score Threshold (CV Screening)')
+                  ->label('Threshold Skor AI (CV Screening)')
                   ->numeric()
                   ->required()
                   ->readOnly()
                   ->dehydrated(),
                 TextInput::make('c45_test_threshold')
-                  ->label('Test Score Threshold (Online Exam)')
+                  ->label('Threshold Skor Ujian')
                   ->numeric()
                   ->required()
                   ->readOnly()
@@ -118,34 +118,33 @@ class ManageSettings extends Page implements HasForms
               ]),
           ]),
 
-        Section::make('Model Confidence Levels & Alert Threshold (%)')
-          ->description('Persentase keyakinan tiap aturan klasifikasi dan batas peringatan ditentukan otomatis dari model Weka.')
+        Section::make('Confidence Level Model & Alert Threshold (%)')
           ->schema([
             Grid::make(4)
               ->schema([
                 TextInput::make('c45_leaf1_confidence')
-                  ->label('Rule 1 Confidence (%)')
+                  ->label('Confidence Rule 1 (%)')
                   ->numeric()
                   ->required()
                   ->readOnly()
                   ->dehydrated()
                   ->suffix('%'),
                 TextInput::make('c45_leaf2_confidence')
-                  ->label('Rule 2 Confidence (%)')
+                  ->label('Confidence Rule 2 (%)')
                   ->numeric()
                   ->required()
                   ->readOnly()
                   ->dehydrated()
                   ->suffix('%'),
                 TextInput::make('c45_leaf3_confidence')
-                  ->label('Rule 3 Confidence (%)')
+                  ->label('Confidence Rule 3 (%)')
                   ->numeric()
                   ->required()
                   ->readOnly()
                   ->dehydrated()
                   ->suffix('%'),
                 TextInput::make('c45_confidence_threshold')
-                  ->label('Confidence Alert Threshold (%)')
+                  ->label('Alert Threshold Confidence (%)')
                   ->numeric()
                   ->required()
                   ->readOnly()

@@ -14,57 +14,56 @@ class QuestionPolicy
     
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('ViewAny:Question');
     }
 
     public function view(AuthUser $authUser, Question $question): bool
     {
-        return $authUser->can('View:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('View:Question');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('Create:Question');
     }
 
     public function update(AuthUser $authUser, Question $question): bool
     {
-        return $authUser->can('Update:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('Update:Question');
     }
 
     public function delete(AuthUser $authUser, Question $question): bool
     {
-        return $authUser->can('Delete:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('Delete:Question');
     }
 
     public function restore(AuthUser $authUser, Question $question): bool
     {
-        return $authUser->can('Restore:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('Restore:Question');
     }
 
     public function forceDelete(AuthUser $authUser, Question $question): bool
     {
-        return $authUser->can('ForceDelete:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('ForceDelete:Question');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ForceDeleteAny:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('ForceDeleteAny:Question');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->can('RestoreAny:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('RestoreAny:Question');
     }
 
     public function replicate(AuthUser $authUser, Question $question): bool
     {
-        return $authUser->can('Replicate:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('Replicate:Question');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->can('Reorder:Question');
+        return $authUser->hasRole(['super_admin', 'hr', 'spv']) || $authUser->can('Reorder:Question');
     }
-
 }

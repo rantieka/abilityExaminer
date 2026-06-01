@@ -149,6 +149,8 @@ class JobVacanciesTable
           ->icon('heroicon-o-archive-box')
           ->color('danger')
           ->requiresConfirmation()
+          ->modalSubmitActionLabel('Arsipkan')
+          ->modalCancelActionLabel('Batal')
           ->visible(fn (JobVacancy $record) => $record->archived_at === null && $record->status === 'approved' && auth()->user()->hasRole(['hr', 'super_admin', 'spv']))
           ->extraAttributes(['style' => 'text-decoration: none !important'])
           ->action(fn (JobVacancy $record) => $record->update(['archived_at' => now()])),
@@ -157,6 +159,8 @@ class JobVacanciesTable
           ->icon('heroicon-o-arrow-path')
           ->color('success')
           ->requiresConfirmation()
+          ->modalSubmitActionLabel('Aktifkan')
+          ->modalCancelActionLabel('Batal')
           ->extraAttributes(['style' => 'text-decoration: none !important'])
           ->visible(fn (JobVacancy $record) => $record->archived_at !== null && auth()->user()->hasRole(['hr', 'super_admin', 'spv']))
           ->form([

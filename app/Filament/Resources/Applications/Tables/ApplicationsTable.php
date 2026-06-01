@@ -157,6 +157,7 @@ class ApplicationsTable
             ->modalHeading('Kirim Undangan Ujian ke Kandidat Terpilih')
             ->modalDescription(fn (Collection $records) => "Kirim email undangan ujian ke {$records->count()} kandidat terpilih?")
             ->modalSubmitActionLabel('Kirim Semua Email')
+            ->modalCancelActionLabel('Batal')
             ->action(function (Collection $records) {
               $successCount = 0;
               $failCount = 0;
@@ -232,6 +233,7 @@ class ApplicationsTable
             ->modalHeading('Tolak Lamaran Kandidat Terpilih')
             ->modalDescription(fn (Collection $records) => "Kirim email penolakan ke {$records->count()} kandidat terpilih?")
             ->modalSubmitActionLabel('Tolak & Kirim Semua Email')
+            ->modalCancelActionLabel('Batal')
             ->action(function (Collection $records, array $data) {
               $successCount = 0;
               $failCount = 0;

@@ -78,8 +78,8 @@ class ProcessCvScreening implements ShouldQueue
       // Send to AI for structured data extraction
       $messages = $this->buildPrompt($job, $anonymizedCvText);
 
-      // Add a 60-second delay to prevent Groq TPM (Tokens Per Minute) Rate Limit
-      sleep(60);
+      // Add a 20-second delay to prevent Groq TPM (Tokens Per Minute) Rate Limit
+      sleep(20);
 
       // Low temperature for deterministic, structured extraction
       $rawResult = $groq->chat($messages, 0.1);
@@ -164,6 +164,7 @@ class ProcessCvScreening implements ShouldQueue
       }
 
       // General Requirements
+      $hasMissingSoftSkill = false;
       foreach ($generalReqs as $item) {
         $reqTextLower = strtolower($item['requirement'] ?? '');
         $isMet        = $item['is_met'] ?? true;
@@ -179,8 +180,19 @@ class ProcessCvScreening implements ShouldQueue
         }
 
         if (!$isMet) {
-          $cons[] = "Tidak terdapat informasi tertulis mengenai: " . ($item['requirement'] ?? 'Tidak Diketahui');
+          $reqType = strtolower($item['type'] ?? 'hard_requirement');
+          $isSoftSkill = ($reqType === 'soft_skill');
+
+          if ($isSoftSkill) {
+            $hasMissingSoftSkill = true;
+          } else {
+            $cons[] = "Tidak terdapat informasi tertulis mengenai: " . ($item['requirement'] ?? 'Tidak Diketahui');
+          }
         }
+      }
+
+      if ($hasMissingSoftSkill) {
+        $cons[] = "Beberapa kualifikasi soft skill tidak dapat dinilai dari CV dan perlu digali lebih lanjut saat sesi wawancara.";
       }
 
       $expFormatted = (float) $expYearsRaw;
@@ -278,11 +290,12 @@ class ProcessCvScreening implements ShouldQueue
       4. REQUIREMENTS: Check these specific labels from the CV:
          - {$qualifications}
          Determine if they are met based ONLY on the CV text.
+         Classify each requirement's type as either 'soft_skill' (e.g. teamwork, communication, attitude, eagerness, critical thinking, working under pressure, adaptable) or 'hard_requirement' (e.g. degrees, years of experience, explicit hard skills, certificates, age limits).
 
       ## Format JSON strictly:
       {
         \"all_extracted_skills\": [],
-        \"general_requirements_analysis\": [{\"requirement\": \"label\", \"is_met\": false}],
+        \"general_requirements_analysis\": [{\"requirement\": \"label\", \"is_met\": false, \"type\": \"hard_requirement\"}],
         \"work_experiences\": [
           {
             \"company\": \"\",
@@ -554,6 +567,7 @@ class ProcessCvScreening implements ShouldQueue
           $sanitizedReqs[] = [
             'requirement' => trim((string)($item['requirement'] ?? 'Unknown')),
             'is_met'      => (bool)($item['is_met'] ?? false),
+            'type'        => trim((string)($item['type'] ?? 'hard_requirement')),
           ];
         }
       }
@@ -692,12 +706,15 @@ class ProcessCvScreening implements ShouldQueue
     $rawScore += $optPointsFinal;
 
     // Experience (Max 20 points) - Check if this is specifically a Fresh Graduate targeted job
-    $isFreshGradJob = false;
-    foreach ($genReqs as $item) {
-      $reqLabel = strtolower($item['requirement'] ?? '');
-      if (preg_match('/fresh/i', $reqLabel)) {
-        $isFreshGradJob = true;
-        break;
+    $isFreshGradJob = ($job->experience_level === 'junior');
+    
+    if (!$isFreshGradJob) {
+      foreach ($genReqs as $item) {
+        $reqLabel = strtolower($item['requirement'] ?? '');
+        if (preg_match('/fresh/i', $reqLabel)) {
+          $isFreshGradJob = true;
+          break;
+        }
       }
     }
       
@@ -729,12 +746,10 @@ class ProcessCvScreening implements ShouldQueue
     // General Requirements (Max 10 points)
     $genPoints = 10;
     
-    // Soft skill keywords to avoid punishing lack of "vague" traits in a technical CV
-    $softSkillKeywords = ['teamwork', 'collaboration', 'communication', 'learning', 'growth', 'interpersonal', 'leadership', 'eagerness', 'attitude', 'bersedia', 'jujur'];
-
     foreach ($genReqs as $item) {
       $reqTextLower = strtolower($item['requirement'] ?? '');
       $isMet        = $item['is_met'] ?? true;
+      $reqType      = strtolower($item['type'] ?? 'hard_requirement');
 
       // Special Case: If requirement is "fresh graduate" and candidate has experience, they pass.
       if (str_contains($reqTextLower, 'fresh') && $expYears >= 1) {
@@ -742,16 +757,10 @@ class ProcessCvScreening implements ShouldQueue
       }
 
       if (!$isMet) {
-        $isSoftSkill = false;
-        foreach ($softSkillKeywords as $keyword) {
-          if (str_contains($reqTextLower, $keyword)) {
-            $isSoftSkill = true;
-            break;
-          }
-        }
+        $isSoftSkill = ($reqType === 'soft_skill');
         
         // Only penalize Hard Requirements (Education, Experience levels, Certification, etc.)
-        // Soft skills (Teamwork, etc.) will NOT reduce the score but will still show in 'cons' for interviewers.
+        // Soft skills will NOT reduce the score.
         if (!$isSoftSkill) {
           $genPoints -= 5; 
         }

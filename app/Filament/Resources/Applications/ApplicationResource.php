@@ -340,6 +340,8 @@ class ApplicationResource extends Resource
                                 ->requiresConfirmation() // button() dihapus karena tidak disupport di hint actions
                                 ->modalHeading('Remind Supervisor')
                                 ->modalDescription(fn ($record) => "Send a notification to the supervisor ({$record->jobVacancy->createdBy->name}) to create test questions for this Job Vacancy?")
+                                ->modalSubmitActionLabel('Kirim Pengingat')
+                                ->modalCancelActionLabel('Batal')
                                 ->action(function ($record) {
                                   $recipient = $record->jobVacancy->createdBy;
                                         
@@ -416,6 +418,8 @@ class ApplicationResource extends Resource
                           ->modalIconColor('success')
                           ->modalHeading('Rekomendasikan Kandidat')
                           ->modalDescription('Apakah Anda yakin ingin merekomendasikan kandidat ini kepada Supervisor?')
+                          ->modalSubmitActionLabel('Rekomendasikan')
+                          ->modalCancelActionLabel('Batal')
                           ->form([
                             \Filament\Forms\Components\Textarea::make('notes')
                               ->label('Catatan Seleksi HRD')
@@ -467,6 +471,8 @@ class ApplicationResource extends Resource
                           ->modalIconColor('danger')
                           ->modalHeading('Tolak Kandidat')
                           ->modalDescription('Apakah Anda yakin ingin menolak kandidat ini? Ini akan mengakhiri proses rekrutmen mereka.')
+                          ->modalSubmitActionLabel('Tolak')
+                          ->modalCancelActionLabel('Batal')
                           ->form([
                             \Filament\Forms\Components\Textarea::make('notes')
                               ->label('Alasan Penolakan / Catatan')

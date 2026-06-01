@@ -108,7 +108,8 @@ class SpvReviewQueueWidget extends BaseWidget
           ->requiresConfirmation()
           ->modalHeading('Setujui Kandidat')
           ->modalDescription(fn (Application $record) => "Apakah Anda yakin ingin menyetujui {$record->full_name}?")
-          ->modalSubmitActionLabel('Ya, Setujui')
+          ->modalSubmitActionLabel('Setujui')
+          ->modalCancelActionLabel('Batal')
           ->form([
             Textarea::make('supervisor_notes')
               ->label('Catatan (Opsional)')
@@ -136,7 +137,8 @@ class SpvReviewQueueWidget extends BaseWidget
           ->requiresConfirmation()
           ->modalHeading('Tolak Kandidat')
           ->modalDescription(fn (Application $record) => "Apakah Anda yakin ingin menolak {$record->full_name}?")
-          ->modalSubmitActionLabel('Ya, Tolak')
+          ->modalSubmitActionLabel('Tolak')
+          ->modalCancelActionLabel('Batal')
           ->form([
             Textarea::make('supervisor_notes')
               ->label('Alasan Penolakan (Opsional)')

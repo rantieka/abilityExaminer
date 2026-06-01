@@ -34,7 +34,7 @@ class AiCvScoreChart extends ChartWidget
           'borderColor' => 'transparent',
         ],
       ],
-      'labels' => ['Suitable (≥80%)', 'Neutral (50-79%)', 'Not Suitable (<50%)', 'Scanning / No Score'],
+      'labels' => ["Suitable (≥80%) : {$suitable}", "Neutral (50-79%) : {$neutral}", "Not Suitable (<50%) : {$notSuitable}", "Scanning / No Score : {$scanning}"],
     ];
   }
 

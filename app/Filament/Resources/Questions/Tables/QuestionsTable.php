@@ -119,6 +119,8 @@ class QuestionsTable
           ->requiresConfirmation()
           ->modalHeading('Buat Pertanyaan Ujian?')
           ->modalDescription('Sistem akan membuat pertanyaan ujian (Pengetahuan & Teknis) secara otomatis menggunakan AI. Hasilnya akan ditambahkan ke Lowongan Pekerjaan ini.')
+          ->modalSubmitActionLabel('Ya, Buat')
+          ->modalCancelActionLabel('Batal')
           ->action(function ($livewire) {
             // Read from the sticky property on the Livewire component
             $jobId = $livewire->job_id ?? null;

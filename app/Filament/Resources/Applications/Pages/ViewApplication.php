@@ -61,6 +61,7 @@ class ViewApplication extends ViewRecord {
         ->modalHeading('Kirim Undangan Ujian Online')
         ->modalDescription(fn () => "Kirim email undangan ujian online ke {$this->record->full_name}. Status pelamar akan berubah menjadi 'Diterima' (untuk ujian).")
         ->modalSubmitActionLabel('Kirim Undangan')
+        ->modalCancelActionLabel('Batal')
         ->before(function (Action $action) {
             $jobVacancy = $this->record->jobVacancy;
 
@@ -149,6 +150,7 @@ class ViewApplication extends ViewRecord {
         ->modalHeading('Kirim Ulang Link Ujian')
         ->modalDescription(fn () => "Kirim ulang tautan akses ujian ke {$this->record->full_name}. Anda dapat memperbarui token jika token sebelumnya telah kedaluwarsa.")
         ->modalSubmitActionLabel('Kirim Ulang Email')
+        ->modalCancelActionLabel('Batal')
         ->action(function (array $data, ViewApplication $livewire) {
           try {
             $this->record->update([
@@ -197,6 +199,7 @@ class ViewApplication extends ViewRecord {
         ->modalHeading('Tolak Lamaran')
         ->modalDescription(fn () => "Tolak lamaran untuk {$this->record->full_name} ({$this->record->email})?")
         ->modalSubmitActionLabel('Tolak & Kirim Email')
+        ->modalCancelActionLabel('Batal')
         ->action(function (array $data, ViewApplication $livewire) {
           try {
             if (!empty($data['rejection_reason'])) {

@@ -56,6 +56,8 @@ class BulkEmailQueueWidget extends BaseWidget
           ->requiresConfirmation()
           ->modalHeading('Kirim Undangan Ujian')
           ->modalDescription(fn ($record) => "Kirim email undangan ujian online ke {$record->full_name}?")
+          ->modalSubmitActionLabel('Kirim Undangan')
+          ->modalCancelActionLabel('Batal')
           ->action(function (Application $record) {
             try {
               $test_token = \Illuminate\Support\Str::random(64);

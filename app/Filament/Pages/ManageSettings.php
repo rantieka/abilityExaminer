@@ -194,8 +194,8 @@ class ManageSettings extends Page implements HasForms
           
           if (empty($aiMatch) || empty($testMatch)) {
             Notification::make()
-              ->title('Invalid Weka File')
-              ->body('Failed to parse J48 tree rules from the file. Please ensure it is a valid Weka J48 result buffer.')
+              ->title('Gagal Membaca Aturan')
+              ->body('Gagal mem-parsing aturan dari file. Pastikan file yang diunggah merupakan buffer hasil valid J48.')
               ->danger()
               ->send();
             return;
@@ -252,8 +252,8 @@ class ManageSettings extends Page implements HasForms
     $this->form->fill($state);
 
     Notification::make()
-      ->title('Settings Saved')
-      ->body('C4.5 decision rules parameters have been updated successfully.')
+      ->title('Berhasil!')
+      ->body('Pengaturan berhasil disimpan.')
       ->success()
       ->send();
   }

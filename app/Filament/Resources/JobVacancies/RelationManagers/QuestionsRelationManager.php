@@ -79,8 +79,7 @@ class QuestionsRelationManager extends RelationManager
 
     public function dispatchGeneration($job)
     {
-      // Dispatch Job to Background
-      GenerateExamQuestions::dispatch($job);
+      GenerateExamQuestions::dispatch($job, auth()->id());
 
       Notification::make()
         ->title('Generation Started')

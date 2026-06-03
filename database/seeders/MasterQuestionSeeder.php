@@ -8,9 +8,9 @@ use App\Models\JobVacancy;
 
 class MasterQuestionSeeder extends Seeder
 {
-  public function run(): void
+  public static function getQuestions(): array
   {
-    $masterQuestions = [
+    return [
       // Backend question
       [
         'section' => 'technical',
@@ -354,6 +354,11 @@ class MasterQuestionSeeder extends Seeder
         'difficulty' => 'hard'
       ]
     ];
+  }
+
+  public function run(): void
+  {
+    $masterQuestions = self::getQuestions();
 
     $vacancies = JobVacancy::all();
 

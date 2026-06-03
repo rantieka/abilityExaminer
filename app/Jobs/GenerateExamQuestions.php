@@ -18,11 +18,13 @@ class GenerateExamQuestions
   use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
   public $jobVacancy;
+  public $userId;
   public $timeout = 600;
 
-  public function __construct(JobVacancy $jobVacancy)
+  public function __construct(JobVacancy $jobVacancy, ?int $userId = null)
   {
     $this->jobVacancy = $jobVacancy;
+    $this->userId = $userId;
   }
 
   /**
@@ -140,8 +142,29 @@ class GenerateExamQuestions
         sleep(20);
       }
 
+      if ($this->userId) {
+          $user = \App\Models\User::find($this->userId);
+          if ($user) {
+              \Filament\Notifications\Notification::make()
+                  ->title('Berhasil Membuat Soal')
+                  ->body("AI berhasil memproduksi seluruh soal (Knowledge & Technical) untuk lowongan: {$this->jobVacancy->title}.")
+                  ->success()
+                  ->sendToDatabase($user);
+          }
+      }
+
     } catch (\Exception $e) {
       Log::error("Failed to generate exam questions: " . $e->getMessage());
+      if ($this->userId) {
+          $user = \App\Models\User::find($this->userId);
+          if ($user) {
+              \Filament\Notifications\Notification::make()
+                  ->title('Gagal Membuat Soal')
+                  ->body('AI gagal memproduksi soal. Error: ' . $e->getMessage())
+                  ->danger()
+                  ->sendToDatabase($user);
+          }
+      }
     }
   }
 

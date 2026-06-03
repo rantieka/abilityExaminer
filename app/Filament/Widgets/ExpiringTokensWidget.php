@@ -28,6 +28,7 @@ class ExpiringTokensWidget extends BaseWidget
           ->whereNotNull('test_token')
           ->whereBetween('token_expires_at', [now(), now()->addHours(48)])
           ->orderBy('token_expires_at', 'asc')
+          ->limit(5)
       )
       ->columns([
         TextColumn::make('full_name')
@@ -42,6 +43,7 @@ class ExpiringTokensWidget extends BaseWidget
           ->dateTime('d M Y, H:i')
           ->badge()
           ->color('danger'),
-      ]);
+      ])
+      ->paginated(false);
   }
 }

@@ -144,15 +144,33 @@ class JobVacancyForm
                   return $data['name'];
               })
               ->helperText(new \Illuminate\Support\HtmlString('<small style="color: #dc3545;">* <i>Gunakan nama teknologi standar agar akurasi pemindaian AI maksimal</i></small>'))
-              ->options(function ($get) {
+              ->validationMessages(['in' => 'Keahlian wajib yang dipilih tidak valid.'])
+              ->options(function ($get, $record) {
                   $title = strtolower($get('title') ?? '');
                   if (str_contains($title, 'backend')) {
-                      return ['PHP' => 'PHP', 'CodeIgniter' => 'CodeIgniter', 'Python' => 'Python', 'Django' => 'Django', 'Laravel' => 'Laravel'];
+                      $options = ['PHP' => 'PHP', 'CodeIgniter' => 'CodeIgniter', 'Python' => 'Python', 'Django' => 'Django', 'Laravel' => 'Laravel'];
+                  } elseif (str_contains($title, 'frontend')) {
+                      $options = ['HTML5' => 'HTML5', 'CSS3' => 'CSS3', 'JavaScript' => 'JavaScript', 'React' => 'React', 'Vue' => 'Vue'];
+                  } else {
+                      $options = ['PHP' => 'PHP', 'JavaScript' => 'JavaScript'];
                   }
-                  if (str_contains($title, 'frontend')) {
-                      return ['HTML5' => 'HTML5', 'CSS3' => 'CSS3', 'JavaScript' => 'JavaScript', 'React' => 'React', 'Vue' => 'Vue'];
+                  
+                  $selected = $get('required_skills') ?? [];
+                  $requestInput = collect(request()->all())->dot();
+                  $matchingKeys = $requestInput->keys()->filter(fn ($key) => str_contains($key, 'required_skills'));
+                  if ($matchingKeys->isNotEmpty()) {
+                      $selected = $matchingKeys->map(fn ($key) => $requestInput->get($key))->toArray();
                   }
-                  return ['PHP' => 'PHP', 'JavaScript' => 'JavaScript'];
+
+                  if ($record && is_array($record->required_skills)) {
+                      $selected = array_merge($selected, $record->required_skills);
+                  }
+                  foreach ($selected as $skill) {
+                      if ($skill && !isset($options[$skill])) {
+                          $options[$skill] = $skill;
+                      }
+                  }
+                  return $options;
               }),
             Select::make('preferred_skills')
               ->label('Keahlian yang Diutamakan')
@@ -171,15 +189,33 @@ class JobVacancyForm
                   return $data['name'];
               })
 
-              ->options(function ($get) {
+              ->validationMessages(['in' => 'Keahlian yang diutamakan yang dipilih tidak valid.'])
+              ->options(function ($get, $record) {
                   $title = strtolower($get('title') ?? '');
                   if (str_contains($title, 'backend')) {
-                      return ['Ruby' => 'Ruby', 'Go' => 'Go', 'Redis' => 'Redis'];
+                      $options = ['Ruby' => 'Ruby', 'Go' => 'Go', 'Redis' => 'Redis'];
+                  } elseif (str_contains($title, 'frontend')) {
+                      $options = ['Angular' => 'Angular', 'Svelte' => 'Svelte', 'Tailwind' => 'Tailwind'];
+                  } else {
+                      $options = ['Docker' => 'Docker', 'AWS' => 'AWS'];
                   }
-                  if (str_contains($title, 'frontend')) {
-                      return ['Angular' => 'Angular', 'Svelte' => 'Svelte', 'Tailwind' => 'Tailwind'];
+                  
+                  $selected = $get('preferred_skills') ?? [];
+                  $requestInput = collect(request()->all())->dot();
+                  $matchingKeys = $requestInput->keys()->filter(fn ($key) => str_contains($key, 'preferred_skills'));
+                  if ($matchingKeys->isNotEmpty()) {
+                      $selected = $matchingKeys->map(fn ($key) => $requestInput->get($key))->toArray();
                   }
-                  return ['Docker' => 'Docker', 'AWS' => 'AWS'];
+
+                  if ($record && is_array($record->preferred_skills)) {
+                      $selected = array_merge($selected, $record->preferred_skills);
+                  }
+                  foreach ($selected as $skill) {
+                      if ($skill && !isset($options[$skill])) {
+                          $options[$skill] = $skill;
+                      }
+                  }
+                  return $options;
               }),
             Select::make('bonus_skills')
               ->label('Keahlian Tambahan')
@@ -198,18 +234,36 @@ class JobVacancyForm
                   return $data['name'];
               })
 
-              ->options(function ($get) {
+              ->validationMessages(['in' => 'Keahlian tambahan yang dipilih tidak valid.'])
+              ->options(function ($get, $record) {
                   $title = strtolower($get('title') ?? '');
                   if (str_contains($title, 'backend')) {
-                      return ['Git' => 'Git', 'MySQL' => 'MySQL', 'REST API' => 'REST API'];
+                      $options = ['Git' => 'Git', 'MySQL' => 'MySQL', 'REST API' => 'REST API'];
+                  } elseif (str_contains($title, 'frontend')) {
+                      $options = ['Git' => 'Git', 'Bootstrap' => 'Bootstrap', 'Jquery' => 'Jquery'];
+                  } else {
+                      $options = ['English' => 'English', 'Communication' => 'Communication'];
                   }
-                  if (str_contains($title, 'frontend')) {
-                      return ['Git' => 'Git', 'Bootstrap' => 'Bootstrap', 'Jquery' => 'Jquery'];
+                  
+                  $selected = $get('bonus_skills') ?? [];
+                  $requestInput = collect(request()->all())->dot();
+                  $matchingKeys = $requestInput->keys()->filter(fn ($key) => str_contains($key, 'bonus_skills'));
+                  if ($matchingKeys->isNotEmpty()) {
+                      $selected = $matchingKeys->map(fn ($key) => $requestInput->get($key))->toArray();
                   }
-                  return ['English' => 'English', 'Communication' => 'Communication'];
+
+                  if ($record && is_array($record->bonus_skills)) {
+                      $selected = array_merge($selected, $record->bonus_skills);
+                  }
+                  foreach ($selected as $skill) {
+                      if ($skill && !isset($options[$skill])) {
+                          $options[$skill] = $skill;
+                      }
+                  }
+                  return $options;
               }),
           ]),
-        Select::make('status')
+         Select::make('status')
           ->placeholder('Pilih status')
           ->options([
               'draft' => 'Draft',
@@ -218,6 +272,7 @@ class JobVacancyForm
               'rejected' => 'Ditolak',
           ])
           ->default(fn () => Auth::user()->hasRole(['hr', 'super_admin']) ? 'approved' : 'pending')
+          ->disabled(fn () => Auth::user()->hasRole('spv'))
           ->dehydrated()
           ->required()
           ->visible(fn() => Auth::user()->hasRole(['hr', 'super_admin', 'spv'])),

@@ -66,6 +66,24 @@ class CareerController extends Controller
 
       // Dispatch job
       ProcessCvScreening::dispatch($application);
+
+      // Send Real-time Notification to Admins
+      $admins = \App\Models\User::whereHas('roles', function($q) {
+          $q->whereIn('name', ['super_admin', 'admin', 'hr']); // Adjust roles if needed
+      })->get();
+
+      // Fallback: If no users have those specific roles, notify the first registered user
+      if ($admins->isEmpty()) {
+          $admins = \App\Models\User::first() ? collect([\App\Models\User::first()]) : collect();
+      }
+
+      \Filament\Notifications\Notification::make()
+          ->title('Lamaran Baru Masuk!')
+          ->body("{$application->full_name} melamar posisi {$job->title}.")
+          ->icon('heroicon-o-document-text')
+          ->success()
+          ->sendToDatabase($admins);
+
       return redirect()->route('career.index')->with('success', 'Application submitted successfully!');
     }
 }

@@ -132,7 +132,7 @@ class ProcessCvScreening implements ShouldQueue
       if (count($missingRequired) === 0 && count($allRequired) > 0) {
         $pros[] = "Menguasai keahlian inti yang disyaratkan.";
       } elseif (count($missingRequired) > 0) {
-        $cons[] = "Keahlian wajib berikut tidak tercantum dalam CV: " . implode(', ', $missingRequired) . ".";
+        $cons[] = "Keahlian wajib tidak tercantum dalam CV: " . implode(', ', $missingRequired) . ".";
       }
 
       // Preferred/Bonus
@@ -186,7 +186,7 @@ class ProcessCvScreening implements ShouldQueue
           if ($isSoftSkill) {
             $hasMissingSoftSkill = true;
           } else {
-            $cons[] = "Tidak terdapat informasi tertulis mengenai: " . ($item['requirement'] ?? 'Tidak Diketahui');
+            $cons[] = "Tidak terdapat informasi mengenai: " . ($item['requirement'] ?? 'Tidak Diketahui');
           }
         }
       }
@@ -289,7 +289,7 @@ class ProcessCvScreening implements ShouldQueue
       3. EDUCATION: Extract highest education level (SMK/D3/D4/S1/etc) and major.
       4. REQUIREMENTS: Check these specific labels from the CV:
          - {$qualifications}
-         Determine if they are met based ONLY on the CV text.
+         Determine if they are met based ONLY on the CV text. Translate the 'requirement' name to professional Indonesian in the JSON output.
          Classify each requirement's type as either 'soft_skill' (e.g. teamwork, communication, attitude, eagerness, critical thinking, working under pressure, adaptable) or 'hard_requirement' (e.g. degrees, years of experience, explicit hard skills, certificates, age limits).
 
       ## Format JSON strictly:
@@ -686,11 +686,11 @@ class ProcessCvScreening implements ShouldQueue
     }
     $extractedData['other_technical_skills'] = array_values(array_unique($otherSkills));
 
-    // Core Required Skills (Max 60 points)
+    // Core Required Skills (Max 70 points)
     $corePoints = 0;
     if ($reqCount > 0) {
         $matchRatio = $matchedReqCount / $reqCount;
-        $corePoints = (int) round($matchRatio * 60);
+        $corePoints = (int) round($matchRatio * 70);
     }
     $rawScore += $corePoints;
 
@@ -743,31 +743,8 @@ class ProcessCvScreening implements ShouldQueue
 
     $rawScore += $expScore;
 
-    // General Requirements (Max 10 points)
-    $genPoints = 10;
-    
-    foreach ($genReqs as $item) {
-      $reqTextLower = strtolower($item['requirement'] ?? '');
-      $isMet        = $item['is_met'] ?? true;
-      $reqType      = strtolower($item['type'] ?? 'hard_requirement');
-
-      // Special Case: If requirement is "fresh graduate" and candidate has experience, they pass.
-      if (str_contains($reqTextLower, 'fresh') && $expYears >= 1) {
-        $isMet = true;
-      }
-
-      if (!$isMet) {
-        $isSoftSkill = ($reqType === 'soft_skill');
-        
-        // Only penalize Hard Requirements (Education, Experience levels, Certification, etc.)
-        // Soft skills will NOT reduce the score.
-        if (!$isSoftSkill) {
-          $genPoints -= 5; 
-        }
-      }
-    }
-    $genPointsFinal = max(0, $genPoints);
-    $rawScore += $genPointsFinal;
+    // General Requirements are no longer scored to prevent penalizing the candidate.
+    // They are only used to populate the Pros & Cons summary for HR review.
 
     // FIRST-CLASS CONFIDENCE (The Multiplier)
     // If AI is very confident (>= 0.8), don't penalize the score.
@@ -782,10 +759,9 @@ class ProcessCvScreening implements ShouldQueue
     }
 
     Log::info("Scoring Detail [{$this->application->id}]:");
-    Log::info("Core Skills (Max 60): {$corePoints}");
+    Log::info("Core Skills (Max 70): {$corePoints}");
     Log::info("Optional Skills (Max 10): {$optPointsFinal}");
     Log::info("Experience (Max 20): {$expScore}");
-    Log::info("General Reqs (Max 10): {$genPointsFinal}");
     Log::info("Raw Total (Max 100): {$rawScore}");
     Log::info("Confidence: {$confidence} (Applied: {$appliedConfidence})");
     Log::info("Final ScoreE: {$finalScore}");

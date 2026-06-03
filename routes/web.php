@@ -235,3 +235,58 @@ Route::get('/admin/export-applications-csv', function () {
     'Content-Type' => 'text/csv',
   ]);
 })->middleware(['auth']);
+
+Route::get('/admin/export-hired-candidates-csv', function () {
+  if (!auth()->check()) {
+    abort(403);
+  }
+
+  return response()->streamDownload(function () {
+    $handle = fopen('php://output', 'w');
+    
+    fputcsv($handle, [
+      'Nama Lengkap',
+      'Email',
+      'No. Telepon',
+      'Posisi Pekerjaan',
+      'Status Administrasi',
+      'Tanggal Diterima',
+      'Nomor KTP',
+      'Nomor NPWP',
+      'Nama Bank',
+      'Nomor Rekening Bank',
+      'Berkas Kontrak Kerja'
+    ]);
+    
+    \App\Models\Application::where('status', 'accepted')
+      ->where('announcement_status', 'published')
+      ->with('jobVacancy')
+      ->chunk(100, function ($applications) use ($handle) {
+        foreach ($applications as $app) {
+          $adminStatus = match ($app->hired_administrative_status) {
+            'pending' => 'Menunggu Verifikasi',
+            'in_progress' => 'Sedang Diproses',
+            'completed' => 'Selesai / Terverifikasi',
+            default => $app->hired_administrative_status ?? 'Menunggu Verifikasi',
+          };
+          fputcsv($handle, [
+            $app->full_name,
+            $app->email,
+            $app->phone,
+            $app->jobVacancy?->title ?? '-',
+            $adminStatus,
+            $app->announcement_published_at ? \Carbon\Carbon::parse($app->announcement_published_at)->format('Y-m-d H:i:s') : '-',
+            $app->ktp_number,
+            $app->npwp_number,
+            $app->bank_name,
+            $app->bank_account_number,
+            $app->contract_file_path ? asset('storage/' . $app->contract_file_path) : '-'
+          ]);
+        }
+      });
+    
+    fclose($handle);
+  }, 'export_kandidat_diterima_' . now()->format('Y-m-d_H-i-s') . '.csv', [
+    'Content-Type' => 'text/csv',
+  ]);
+})->middleware(['auth']);

@@ -34,8 +34,7 @@ class UserForm
         CheckboxList::make('roles')
           ->label('Role')
           ->relationship('roles', 'name')
-          ->columns(2)
-          ->helperText('Pilih hanya satu role!'),
+          ->columns(2),
       ]);
   }
 }

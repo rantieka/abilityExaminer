@@ -128,7 +128,7 @@ class QuestionsTable
             $job = $jobId ? JobVacancy::find($jobId) : null;
 
             if ($job) {
-              GenerateExamQuestions::dispatch($job);
+              GenerateExamQuestions::dispatch($job, auth()->id());
               
               Notification::make()
                 ->title('Proses Dimulai')
@@ -143,6 +143,68 @@ class QuestionsTable
                 ->send();
             }
         }),
+        Action::make('import_bank')
+          ->label('Impor dari Bank Soal')
+          ->icon('heroicon-o-circle-stack')
+          ->color('success')
+          ->visible(true)
+          ->requiresConfirmation()
+          ->modalHeading('Impor dari Bank Soal?')
+          ->modalDescription('Sistem akan menyalin pertanyaan yang relevan dari bank soal lokal ke Lowongan Pekerjaan ini.')
+          ->modalSubmitActionLabel('Impor')
+          ->modalCancelActionLabel('Batal')
+          ->action(function ($livewire) {
+            $jobId = $livewire->job_id ?? null;
+            $job = $jobId ? JobVacancy::find($jobId) : null;
+
+            if ($job) {
+              $masterQuestions = \Database\Seeders\MasterQuestionSeeder::getQuestions();
+              $title = strtolower($job->title);
+              $requiredSkills = array_map('strtolower', $job->required_skills ?? []);
+              
+              $role = '';
+              if (str_contains($title, 'backend')) $role = 'backend';
+              elseif (str_contains($title, 'frontend')) $role = 'frontend';
+
+              $countSaved = 0;
+              foreach ($masterQuestions as $q) {
+                $qTags = array_map('strtolower', $q['tags']);
+                
+                $isRoleMatch = in_array($role, $qTags);
+                $isSkillMatch = !empty(array_intersect($qTags, $requiredSkills));
+
+                if ($isRoleMatch || $isSkillMatch) {
+                  $question = \App\Models\Question::updateOrCreate(
+                    ['job_vacancy_id' => $job->id, 'question_text' => $q['text']],
+                    [
+                      'options' => $q['options'],
+                      'correct_answer' => $q['correct'],
+                      'section' => $q['section'],
+                      'difficulty' => $q['difficulty'] ?? 'medium',
+                      'skill_category' => 'required',
+                      'is_active' => true
+                    ]
+                  );
+
+                  if ($question->wasRecentlyCreated) {
+                    $countSaved++;
+                  }
+                }
+              }
+
+              Notification::make()
+                ->title('Impor Berhasil')
+                ->body("Berhasil menyalin {$countSaved} pertanyaan baru dari bank soal ke lowongan '{$job->title}'.")
+                ->success()
+                ->send();
+            } else {
+              Notification::make()
+                ->title('Tindakan Diperlukan')
+                ->body("Silakan buka halaman ini melalui menu 'Pertanyaan' pada Lowongan Pekerjaan.")
+                ->warning()
+                ->send();
+            }
+          }),
       ])
       ->recordActions([
         EditAction::make(),

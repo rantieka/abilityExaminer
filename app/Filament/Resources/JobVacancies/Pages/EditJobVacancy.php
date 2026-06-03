@@ -34,20 +34,20 @@ class EditJobVacancy extends EditRecord
   protected function getHeaderActions(): array {
     return [
       Action::make('approve')
-        ->label('Approve & Publish')
+        ->label('Setujui & Publikasikan')
         ->icon('heroicon-o-check-circle')
         ->color('success')
         ->visible(fn ($record) => $record->status === 'pending' && auth()->user()->hasRole(['hr', 'super_admin']))
         ->form([
             \Filament\Forms\Components\DatePicker::make('published_until')
-                ->label('Publish Until')
+                ->label('Publikasikan Hingga')
                 ->required()
                 ->native(false)
                 ->minDate(now()),
         ])
-        ->modalHeading('Approve & Publish')
-        ->modalDescription('Please set the publication expiry date.')
-        ->modalSubmitActionLabel('Publish')
+        ->modalHeading('Setujui & Publikasikan Lowongan')
+        ->modalDescription('Silakan tentukan batas tanggal kadaluarsa publikasi lowongan.')
+        ->modalSubmitActionLabel('Publikasikan')
         ->action(function ($record, array $data) {
           $record->update([
             'status' => 'approved',
@@ -58,18 +58,18 @@ class EditJobVacancy extends EditRecord
           // Notification to Admin (Current User)
           \Filament\Notifications\Notification::make()
             ->success()
-            ->title('Job vacancy published successfully!')
+            ->title('Lowongan kerja berhasil dipublikasikan!')
             ->send();
 
           // Notification to Requestor (SPV)
           if ($record->createdBy && $record->created_by !== auth()->id()) {
               \Filament\Notifications\Notification::make()
                 ->success()
-                ->title('Job Vacancy Approved!')
-                ->body("Job vacancy \"{$record->title}\" is now active. Please proceed to create the test questions.")
+                ->title('Lowongan Kerja Disetujui!')
+                ->body("Lowongan kerja \"{$record->title}\" kini telah aktif. Silakan lanjutkan untuk membuat pertanyaan ujian.")
                 ->actions([
                     \Filament\Actions\Action::make('create_questions')
-                        ->label('Create Questions')
+                        ->label('Buat Pertanyaan')
                         ->button()
                         ->markAsRead()
                         ->url(\App\Filament\Resources\Questions\QuestionResource::getUrl('index', ['job_id' => $record->id])),
@@ -78,21 +78,21 @@ class EditJobVacancy extends EditRecord
           }
         }),
       Action::make('reject')
-        ->label('Reject')
+        ->label('Tolak')
         ->icon('heroicon-o-x-circle')
         ->color('danger')
         ->visible(fn ($record) => $record->status === 'pending' && auth()->user()->hasRole(['hr', 'super_admin']))
         ->form([
           Textarea::make('rejection_reason')
-            ->label('Rejection Reason')
-            ->placeholder('Please provide a reason for rejecting this job vacancy...')
+            ->label('Alasan Penolakan')
+            ->placeholder('Berikan alasan penolakan lowongan kerja ini...')
             ->required()
             ->rows(4)
             ->maxLength(1000),
         ])
-        ->modalHeading('Reject Job Vacancy')
-        ->modalDescription('Please provide a reason for rejecting this job vacancy.')
-        ->modalSubmitActionLabel('Reject')
+        ->modalHeading('Tolak Lowongan Kerja')
+        ->modalDescription('Silakan berikan alasan penolakan lowongan kerja ini.')
+        ->modalSubmitActionLabel('Tolak')
         ->action(function ($record, array $data) {
           $record->update([
             'status' => 'rejected',
@@ -105,18 +105,19 @@ class EditJobVacancy extends EditRecord
           // Notification to Admin
           \Filament\Notifications\Notification::make()
             ->success()
-            ->title('Job vacancy rejected successfully!')
-            ->body("Job vacancy \"{$record->title}\" has been rejected.")
+            ->title('Lowongan kerja berhasil ditolak!')
+            ->body("Lowongan kerja \"{$record->title}\" telah ditolak.")
             ->send();
 
           // Notification to Requestor (SPV)
           if ($record->createdBy && $record->created_by !== auth()->id()) {
               \Filament\Notifications\Notification::make()
                 ->danger()
-                ->title('Your Job Vacancy Request was Rejected')
-                ->body("Job vacancy \"{$record->title}\" has been rejected.")
+                ->title('Permintaan Lowongan Kerja Anda Ditolak')
+                ->body("Lowongan kerja \"{$record->title}\" telah ditolak.")
                 ->actions([
                     \Filament\Actions\Action::make('view')
+                        ->label('Lihat')
                         ->button()
                         ->markAsRead()
                         ->url(JobVacancyResource::getUrl('index')),
@@ -130,18 +131,18 @@ class EditJobVacancy extends EditRecord
   }
 
   protected function getUpdatedNotificationTitle(): ?string {
-    return 'Job vacancy successfully updated!';
+    return 'Lowongan kerja berhasil diperbarui!';
   }
 
   protected function getDeletedNotificationTitle(): ?string {
-    return 'Job vacancy successfully deleted!';
+    return 'Lowongan kerja berhasil dihapus!';
   }
 
   protected function getRejectedNotificationTitle(): ?string {
-    return 'Job vacancy successfully rejected!';
+    return 'Lowongan kerja berhasil ditolak!';
   }
 
   protected function getApprovedNotificationTitle(): ?string {
-    return 'Job vacancy successfully approved!';
+    return 'Lowongan kerja berhasil disetujui!';
   }
 }

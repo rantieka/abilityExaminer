@@ -33,8 +33,9 @@ class AppServiceProvider extends ServiceProvider
 
     \Filament\Support\Facades\FilamentView::registerRenderHook(
       \Filament\Tables\View\TablesRenderHook::TOOLBAR_COLUMN_MANAGER_TRIGGER_AFTER,
-      fn (array $scopes): string => in_array(\App\Filament\Resources\Applications\Pages\ListApplications::class, $scopes) 
-          ? \Illuminate\Support\Facades\Blade::render('
+      function (array $scopes): string {
+        if (in_array(\App\Filament\Resources\Applications\Pages\ListApplications::class, $scopes)) {
+          return \Illuminate\Support\Facades\Blade::render('
               <div class="flex items-center ml-2">
                   <x-filament::icon-button
                       tag="a"
@@ -46,8 +47,27 @@ class AppServiceProvider extends ServiceProvider
                       tooltip="Export CSV"
                   />
               </div>
-            ')
-          : ''
+          ');
+        }
+
+        if (in_array(\App\Filament\Resources\Applications\Pages\ListHiredCandidates::class, $scopes)) {
+          return \Illuminate\Support\Facades\Blade::render('
+              <div class="flex items-center ml-2">
+                  <x-filament::icon-button
+                      tag="a"
+                      href="/admin/export-hired-candidates-csv"
+                      download
+                      rel="external"
+                      icon="heroicon-m-arrow-down-tray"
+                      color="gray"
+                      tooltip="Export CSV"
+                  />
+              </div>
+          ');
+        }
+
+        return '';
+      }
     );
   }
 }

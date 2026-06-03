@@ -15,7 +15,7 @@ class CreateJobVacancy extends CreateRecord
   }
 
   protected function getCreatedNotificationTitle(): ?string {
-    return 'Job vacancy successfully created!';
+    return 'Lowongan kerja berhasil dibuat!';
   }
 
   protected function afterCreate(): void
@@ -29,10 +29,11 @@ class CreateJobVacancy extends CreateRecord
       
       \Filament\Notifications\Notification::make()
           ->info()
-          ->title('New Job Vacancy Request')
-          ->body("A new job vacancy \"{$this->record->title}\" has been requested by " . auth()->user()->name)
+          ->title('Permintaan Lowongan Kerja Baru')
+          ->body("Lowongan kerja baru \"{$this->record->title}\" telah diajukan oleh " . auth()->user()->name)
           ->actions([
               \Filament\Actions\Action::make('view')
+                  ->label('Lihat')
                   ->button()
                   ->markAsRead()
                   ->url(JobVacancyResource::getUrl('edit', ['record' => $this->record]), shouldOpenInNewTab: true),

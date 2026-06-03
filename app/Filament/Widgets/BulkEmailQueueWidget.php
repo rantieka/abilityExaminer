@@ -13,7 +13,7 @@ use Filament\Notifications\Notification;
 
 class BulkEmailQueueWidget extends BaseWidget
 {
-  protected static ?string $heading = 'Daftar Pelamar Lolos Seleksi CV';
+  protected static ?string $heading = 'Daftar Pelamar Baru';
   protected static ?int $sort = 4;
   protected int | string | array $columnSpan = 'full';
 
@@ -29,7 +29,8 @@ class BulkEmailQueueWidget extends BaseWidget
         Application::query()
           ->whereIn('status', ['pending', 'reviewed'])
           ->where('ai_score', '>=', 50)
-          ->orderBy('ai_score', 'desc')
+          ->latest()
+          ->limit(5)
       )
       ->columns([
         TextColumn::make('full_name')
@@ -37,15 +38,20 @@ class BulkEmailQueueWidget extends BaseWidget
           ->searchable(),
         TextColumn::make('jobVacancy.title')
           ->label('Posisi'),
-        TextColumn::make('ai_score')
-          ->label('CV Score')
-          ->formatStateUsing(fn ($state) => $state . '%')
-          ->badge()
-          ->color(fn ($state) => $state >= 80 ? 'success' : 'warning'),
         TextColumn::make('status')
           ->label('Status')
           ->badge()
-          ->color(fn ($state) => $state === 'reviewed' ? 'info' : 'gray'),
+          ->color(fn ($state) => $state === 'reviewed' ? 'info' : 'gray')
+          ->formatStateUsing(fn (string $state): string => match ($state) {
+            'pending' => 'Menunggu Peninjauan',
+            'reviewed' => 'Sudah Ditinjau',
+            default => ucfirst($state),
+          }),
+        TextColumn::make('ai_score')
+          ->label('Skor CV')
+          ->formatStateUsing(fn ($state) => $state . '%')
+          ->badge()
+          ->color(fn ($state) => $state >= 80 ? 'success' : 'warning'),
       ])
       ->actions([
         Action::make('invite')
@@ -86,6 +92,7 @@ class BulkEmailQueueWidget extends BaseWidget
                 ->send();
             }
           }),
-      ]);
+      ])
+      ->paginated(false);
   }
 }

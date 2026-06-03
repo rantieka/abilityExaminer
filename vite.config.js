@@ -13,7 +13,8 @@ export default defineConfig({
         'resources/css/app.css',
         'resources/js/app.js',
         'resources/js/test-background.js',
-        'resources/js/test-timer.js'
+        'resources/js/test-timer.js',
+        'resources/js/cv-upload.js'
       ],
       refresh: true,
     }),
@@ -27,6 +28,7 @@ export default defineConfig({
     },
   },
   server: {
+    // host: true,
     watch: {
       ignored: ['**/storage/framework/views/**'],
     },

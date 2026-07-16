@@ -53,7 +53,6 @@ class VerifyC45Decisions extends Command
 
       $rows[] = [
         $app->id,
-        $app->full_name,
         $app->ai_score . '%',
         $app->test_score,
         $app->c45_decision ?? 'Belum ada',
@@ -67,7 +66,7 @@ class VerifyC45Decisions extends Command
     // Tampilkan 15 sampel teratas
     $this->info("Menampilkan sampel pelamar (maksimal 15 data):");
     $this->table(
-      ['ID', 'Nama Pelamar', 'Skor AI', 'Skor Ujian', 'DB Decision', 'Predict Decision', 'Confidence', 'Perlu Review?', 'Status Match'],
+      ['ID', 'Skor AI', 'Skor Ujian', 'DB Decision', 'Predict Decision', 'Confidence', 'Perlu Review?', 'Status Match'],
       array_slice($rows, 0, 15)
     );
 

@@ -9,6 +9,8 @@ class CreateJobVacancy extends CreateRecord
 {
   protected static string $resource = JobVacancyResource::class;
 
+  protected static bool $canCreateAnother = false;
+
   protected function mutateFormDataBeforeCreate(array $data): array {
     $data['created_by'] = auth()->id();
     return $data;
@@ -36,7 +38,7 @@ class CreateJobVacancy extends CreateRecord
                   ->label('Lihat')
                   ->button()
                   ->markAsRead()
-                  ->url(JobVacancyResource::getUrl('edit', ['record' => $this->record]), shouldOpenInNewTab: true),
+                  ->url(JobVacancyResource::getUrl('view', ['record' => $this->record]), shouldOpenInNewTab: true),
           ])
           ->sendToDatabase($recipient);
   }

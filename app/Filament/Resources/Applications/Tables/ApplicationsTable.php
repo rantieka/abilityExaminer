@@ -99,7 +99,7 @@ class ApplicationsTable
                   return $state . '/100';
               }
               if ($state === null && $record->status === 'accepted') {
-                  return 'Waiting';
+                  return 'Menunggu';
               }
               return $state; // If null, default('-') will take over
           })
@@ -125,7 +125,7 @@ class ApplicationsTable
         //   })
         //   ->toggleable(),
         TextColumn::make('email_sent_at')
-          ->label('Email Sent At')
+          ->label('Email Dikirim Pada')
           ->dateTime()
           ->sortable()
           ->toggleable(isToggledHiddenByDefault: true),
@@ -195,24 +195,24 @@ class ApplicationsTable
               if ($successCount > 0) {
                 Notification::make()
                   ->success()
-                  ->title('Emails Sent')
-                  ->body("{$successCount} acceptance emails successfully sent" . 
-                        ($skippedCount > 0 ? ", {$skippedCount} skipped (already processed)" : "") . 
-                        ($failCount > 0 ? ", {$failCount} failed" : ""))
+                  ->title('Email Terkirim')
+                  ->body("{$successCount} email undangan berhasil dikirim" . 
+                        ($skippedCount > 0 ? ", {$skippedCount} dilewati (sudah diproses)" : "") . 
+                        ($failCount > 0 ? ", {$failCount} gagal" : ""))
                   ->send();
               } elseif ($skippedCount > 0 && $failCount === 0) {
                   Notification::make()
                     ->warning()
-                    ->title('No Emails Sent')
-                    ->body("All {$skippedCount} selected applications were already processed.")
+                    ->title('Tidak Ada Email Terkirim')
+                    ->body("Semua {$skippedCount} pelamar yang dipilih sudah diproses.")
                     ->send();
               }
 
               if ($failCount > 0 && $successCount === 0) {
                 Notification::make()
                   ->danger()
-                  ->title('Failed to Send Emails')
-                  ->body("All {$failCount} emails failed to send")
+                  ->title('Gagal Mengirim Email')
+                  ->body("Semua {$failCount} email gagal terkirim")
                   ->send();
               }
             }),
@@ -270,24 +270,24 @@ class ApplicationsTable
               if ($successCount > 0) {
                 Notification::make()
                   ->success()
-                  ->title('Emails Sent')
-                  ->body("{$successCount} rejection emails successfully sent" . 
-                        ($skippedCount > 0 ? ", {$skippedCount} skipped (already processed)" : "") . 
-                        ($failCount > 0 ? ", {$failCount} failed" : ""))
+                  ->title('Email Terkirim')
+                  ->body("{$successCount} email penolakan berhasil dikirim" . 
+                        ($skippedCount > 0 ? ", {$skippedCount} dilewati (sudah diproses)" : "") . 
+                        ($failCount > 0 ? ", {$failCount} gagal" : ""))
                   ->send();
               } elseif ($skippedCount > 0 && $failCount === 0) {
                   Notification::make()
                     ->warning()
-                    ->title('No Emails Sent')
-                    ->body("All {$skippedCount} selected applications were already processed.")
+                    ->title('Tidak Ada Email Terkirim')
+                    ->body("Semua {$skippedCount} pelamar yang dipilih sudah diproses.")
                     ->send();
               }
 
               if ($failCount > 0 && $successCount === 0) {
                 Notification::make()
                   ->danger()
-                  ->title('Failed to Send Emails')
-                  ->body("All {$failCount} emails failed to send")
+                  ->title('Gagal Mengirim Email')
+                  ->body("Semua {$failCount} email gagal terkirim")
                   ->send();
               }
             }),

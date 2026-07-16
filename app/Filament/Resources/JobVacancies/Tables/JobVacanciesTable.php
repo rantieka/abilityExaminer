@@ -108,6 +108,7 @@ class JobVacanciesTable
       ->recordActions([
         ViewAction::make()
           ->extraAttributes(['style' => 'text-decoration: none !important']),
+
         Action::make('questions')
           ->label('Bank Soal')
           ->icon('heroicon-o-document-text')

@@ -8,7 +8,9 @@
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Tes Kemampuan - {{ $application->jobVacancy->title }}</h5>
           @if($questions->count() > 0)
-            <div id="timer" class="font-weight-bold" style="font-size: 1.2rem;">
+            <div id="timer" class="font-weight-bold" style="font-size: 1.2rem;"
+                 data-application-id="{{ $application->id }}"
+                 data-duration-minutes="30">
               <span id="time">30:00</span>
             </div>
           @endif
@@ -54,31 +56,5 @@
   </div>
 </div>
 
-<script>
-  // Timer Logic
-  function startTimer(duration, display) {
-    var timer = duration, minutes, seconds;
-    var interval = setInterval(function () {
-      minutes = parseInt(timer / 60, 10);
-      seconds = parseInt(timer % 60, 10);
-
-      minutes = minutes < 10 ? "0" + minutes : minutes;
-      seconds = seconds < 10 ? "0" + seconds : seconds;
-
-      display.textContent = minutes + ":" + seconds;
-
-      if (--timer < 0) {
-        clearInterval(interval);
-        alert("Waktu habis! Jawaban Anda akan dikirim otomatis.");
-        document.getElementById("testForm").submit();
-      }
-    }, 1000);
-  }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    var thirtyMinutes = 60 * 30,
-      display = document.querySelector('#time');
-    startTimer(thirtyMinutes, display);
-  });
-</script>
+<script src="{{ asset('js/exam-timer.js') }}"></script>
 @endsection

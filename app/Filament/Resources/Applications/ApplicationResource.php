@@ -325,7 +325,7 @@ class ApplicationResource extends Resource
                         
                         \Filament\Forms\Components\Placeholder::make('missing_questions_warning')
                           ->hiddenLabel()
-                          ->content(new \Illuminate\Support\HtmlString('<span class="text-warning-600 font-medium">⚠️ Warning: No exam questions available for this job vacancy. Test token cannot be generated.</span>'))
+                          ->content(new \Illuminate\Support\HtmlString('<span class="text-warning-600 font-medium">⚠️ Peringatan: Tidak ada soal ujian yang tersedia untuk lowongan kerja ini. Token ujian tidak dapat dibuat.</span>'))
                           ->visible(function ($record) {
                               $jobVacancy = $record?->jobVacancy;
                               return $jobVacancy && 
@@ -334,12 +334,12 @@ class ApplicationResource extends Resource
                           })
                           ->hintActions([
                               \Filament\Actions\Action::make('remind_supervisor_fix')
-                                ->label('Remind Supervisor')
+                                ->label('Ingatkan Supervisor')
                                 ->icon('heroicon-o-bell-alert')
                                 ->color('warning')
-                                ->requiresConfirmation() // button() dihapus karena tidak disupport di hint actions
-                                ->modalHeading('Remind Supervisor')
-                                ->modalDescription(fn ($record) => "Send a notification to the supervisor ({$record->jobVacancy->createdBy->name}) to create test questions for this Job Vacancy?")
+                                ->requiresConfirmation()
+                                ->modalHeading('Ingatkan Supervisor')
+                                ->modalDescription(fn ($record) => "Kirim notifikasi ke supervisor ({$record->jobVacancy->createdBy->name}) untuk membuat soal ujian untuk lowongan ini?")
                                 ->modalSubmitActionLabel('Kirim Pengingat')
                                 ->modalCancelActionLabel('Batal')
                                 ->action(function ($record) {
@@ -348,11 +348,11 @@ class ApplicationResource extends Resource
                                   if ($recipient) {
                                     \Filament\Notifications\Notification::make()
                                       ->warning()
-                                      ->title('Action Required: Missing Test Questions')
-                                      ->body("HR is trying to generate a test token for '{$record->jobVacancy->title}' but no test questions are available. Please create them immediately.")
+                                      ->title('Tindakan Diperlukan: Soal Ujian Belum Tersedia')
+                                      ->body("HRD mencoba membuat token ujian untuk '{$record->jobVacancy->title}' tetapi belum ada soal ujian yang tersedia. Silakan segera buat soal ujian tersebut.")
                                       ->actions([
                                         \Filament\Actions\Action::make('create_questions')
-                                          ->label('Create Questions')
+                                          ->label('Buat Soal Ujian')
                                           ->button()
                                           ->url(\App\Filament\Resources\Questions\QuestionResource::getUrl('index', ['job_id' => $record->jobVacancy->id])),
                                       ])
@@ -440,11 +440,11 @@ class ApplicationResource extends Resource
                               try {
                                 \Filament\Notifications\Notification::make()
                                   ->info()
-                                  ->title('Candidate Recommended for Review')
-                                  ->body("HRD has recommended candidate '{$record->full_name}' for position '{$record->jobVacancy->title}'. Please review and make the final decision.")
+                                  ->title('Kandidat Direkomendasikan untuk Ditinjau')
+                                  ->body("HRD telah merekomendasikan kandidat '{$record->full_name}' untuk posisi '{$record->jobVacancy->title}'. Silakan tinjau dan ambil keputusan akhir.")
                                   ->actions([
                                     \Filament\Actions\Action::make('view_candidate')
-                                      ->label('Review Candidate')
+                                      ->label('Tinjau Kandidat')
                                       ->button()
                                       ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record->id])),
                                   ])

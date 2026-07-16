@@ -91,4 +91,28 @@ document.addEventListener('DOMContentLoaded', function () {
       console.error("Local storage error:", e);
     }
   }
+
+  // Security Mechanisms
+  // 1. Disable Right Click & Copy/Cut Actions
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('copy', e => e.preventDefault());
+  document.addEventListener('cut', e => e.preventDefault());
+
+  // 2. Detect Tab Switching (Page Visibility)
+  // if (form) {
+  //   let tabSwitchCount = 0;
+  //   const maxTabSwitches = 3;
+
+  //   document.addEventListener('visibilitychange', function () {
+  //     if (document.hidden) {
+  //       tabSwitchCount++;
+  //       if (tabSwitchCount >= maxTabSwitches) {
+  //         alert("Warning: You have left the exam page too many times. Your exam is being submitted automatically now.");
+  //         form.submit();
+  //       } else {
+  //         alert(`Warning: Please do not leave the exam page. If you leave the page again, your exam will be automatically submitted. (${maxTabSwitches - tabSwitchCount} attempt(s) remaining)`);
+  //       }
+  //     }
+  //   });
+  // }
 });

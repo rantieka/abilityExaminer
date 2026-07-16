@@ -20,6 +20,10 @@
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
     #bg-canvas {
       position: fixed;

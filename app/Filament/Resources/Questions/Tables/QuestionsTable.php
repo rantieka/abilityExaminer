@@ -83,6 +83,7 @@ class QuestionsTable
           ->sortable(),
         ToggleColumn::make('is_active')
           ->label('Status')
+          ->disabled(fn () => !auth()->user()->hasRole(['spv', 'super_admin']))
           ->afterStateUpdated(function ($state) {
             Notification::make()
               ->title($state ? 'Pertanyaan Diaktifkan' : 'Pertanyaan Dinonaktifkan')
@@ -115,7 +116,7 @@ class QuestionsTable
           ->label('Buat Pertanyaan Ujian')
           ->icon('heroicon-o-sparkles')
           ->color('warning')
-          ->visible(true)
+          ->visible(fn () => auth()->user()->hasRole(['spv', 'super_admin']))
           ->requiresConfirmation()
           ->modalHeading('Buat Pertanyaan Ujian?')
           ->modalDescription('Sistem akan membuat pertanyaan ujian (Pengetahuan & Teknis) secara otomatis menggunakan AI. Hasilnya akan ditambahkan ke Lowongan Pekerjaan ini.')
@@ -147,7 +148,7 @@ class QuestionsTable
           ->label('Impor dari Bank Soal')
           ->icon('heroicon-o-circle-stack')
           ->color('success')
-          ->visible(true)
+          ->visible(fn () => auth()->user()->hasRole(['spv', 'super_admin']))
           ->requiresConfirmation()
           ->modalHeading('Impor dari Bank Soal?')
           ->modalDescription('Sistem akan menyalin pertanyaan yang relevan dari bank soal lokal ke Lowongan Pekerjaan ini.')
@@ -207,8 +208,8 @@ class QuestionsTable
           }),
       ])
       ->recordActions([
-        EditAction::make(),
-        DeleteAction::make(),
+        EditAction::make()->visible(fn () => auth()->user()->hasRole(['spv', 'super_admin'])),
+        DeleteAction::make()->visible(fn () => auth()->user()->hasRole(['spv', 'super_admin'])),
       ])
       ->toolbarActions([
         BulkActionGroup::make([
@@ -217,7 +218,7 @@ class QuestionsTable
             ->icon('heroicon-o-check-circle')
             ->action(fn (Collection $records) => $records->each->update(['is_active' => true])),
           DeleteBulkAction::make(),
-        ]),
+        ])->visible(fn () => auth()->user()->hasRole(['spv', 'super_admin'])),
       ]);
   }
 }

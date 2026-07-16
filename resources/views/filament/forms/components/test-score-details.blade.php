@@ -29,9 +29,28 @@
         return ['correct' => $correct, 'total' => $total, 'percentage' => $total > 0 ? round(($correct/$total)*100) : 0];
       };
       
-      // Calculate stats using merged answers
-      $p1Stats = $calculate($part1Questions, $allAnswers);
-      $p2Stats = $calculate($part2Questions, $allAnswers);
+      $details = $record->test_details ?? [];
+
+      // Calculate stats using database if available (historically frozen), otherwise fall back to dynamic calculation
+      if (isset($details['part1'])) {
+        $p1Stats = [
+          'correct' => $details['part1']['correct'],
+          'total' => $details['part1']['total'],
+          'percentage' => $details['part1']['total'] > 0 ? round(($details['part1']['correct'] / $details['part1']['total']) * 100) : 0
+        ];
+      } else {
+        $p1Stats = $calculate($part1Questions, $allAnswers);
+      }
+
+      if (isset($details['part2'])) {
+        $p2Stats = [
+          'correct' => $details['part2']['correct'],
+          'total' => $details['part2']['total'],
+          'percentage' => $details['part2']['total'] > 0 ? round(($details['part2']['correct'] / $details['part2']['total']) * 100) : 0
+        ];
+      } else {
+        $p2Stats = $calculate($part2Questions, $allAnswers);
+      }
 
       // Load C4.5 decision from database (Database-first optimization)
       $c45Decision = $record->c45_decision;

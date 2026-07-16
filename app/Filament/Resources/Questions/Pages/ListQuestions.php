@@ -22,7 +22,8 @@ class ListQuestions extends ListRecords
   protected function getHeaderActions(): array
   {
     return [
-      CreateAction::make()->label('Tambah Pertanyaan'),
+      CreateAction::make()->label('Tambah Pertanyaan')
+        ->visible(fn () => auth()->user()->hasRole(['spv', 'super_admin'])),
     ];
   }
 

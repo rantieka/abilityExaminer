@@ -50,7 +50,7 @@ class QuestionsRelationManager extends RelationManager
             'warning' => 'technical'
           ]),
         TextColumn::make('correct_answer'),
-        ToggleColumn::make('is_active')->label('Active'),
+        ToggleColumn::make('is_active')->label('Aktif'),
       ])
       ->filters([
         //
@@ -59,7 +59,7 @@ class QuestionsRelationManager extends RelationManager
         CreateAction::make(),
         // Tombol Generate Soal Background
         Action::make('generate')
-          ->label('Generate Exam Questions')
+          ->label('Buat Pertanyaan Ujian')
           ->icon('heroicon-o-cloud-arrow-down')
           ->color('primary')
           ->action(fn($livewire) => $this->dispatchGeneration($livewire->ownerRecord)),
@@ -70,7 +70,7 @@ class QuestionsRelationManager extends RelationManager
       ])
       ->bulkActions([
         BulkAction::make('approve_all')
-          ->label('Approve Selected')
+          ->label('Setujui yang Dipilih')
           ->icon('heroicon-o-check-circle')
           ->action(fn (Collection $records) => $records->each->update(['is_active' => true])),
         DeleteBulkAction::make(),
@@ -82,8 +82,8 @@ class QuestionsRelationManager extends RelationManager
       GenerateExamQuestions::dispatch($job, auth()->id());
 
       Notification::make()
-        ->title('Generation Started')
-        ->body('Request to generate questions (Knowledge & Technical) is being processed in the background. Please wait.')
+        ->title('Proses Dimulai')
+        ->body('Permintaan untuk membuat soal (Pengetahuan & Teknis) sedang diproses di latar belakang. Silakan tunggu.')
         ->success()
         ->send();
     }

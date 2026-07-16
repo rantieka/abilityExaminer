@@ -12,7 +12,11 @@
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+      return;
+    }
+
     @if(session('success'))
       Toastify({
         text: "{{ session('success') }}",

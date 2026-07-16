@@ -124,38 +124,6 @@
         <div>
           <h4 style="font-size: 1rem; font-weight: 700; color: #111827; margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
             {{ $record->full_name }}
-            
-            @if($c45Confidence !== null)
-              @if($c45Confidence >= 90)
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 700; background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;">
-                  <svg style="width: 0.875rem; height: 0.875rem; color: #16a34a;" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Akurasi Sangat Tinggi
-                </span>
-              @elseif($c45Confidence >= 80)
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 700; background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
-                  <svg style="width: 0.875rem; height: 0.875rem; color: #3b82f6;" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Akurasi Tinggi
-                </span>
-              @elseif($c45Confidence >= 70)
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 700; background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a;">
-                  <svg style="width: 0.875rem; height: 0.875rem; color: #d97706;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                  </svg>
-                  Akurasi Sedang
-                </span>
-              @else
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 700; background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca;">
-                  <svg style="width: 0.875rem; height: 0.875rem; color: #ef4444;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                  </svg>
-                  Akurasi Rendah
-                </span>
-              @endif
-            @endif
           </h4>
           <p style="font-size: 0.75rem; color: #6b7280; margin: 0.15rem 0 0 0;">{{ $record->jobVacancy?->title ?? 'N/A' }}</p>
         </div>
@@ -165,7 +133,7 @@
         @if($c45Decision !== null)
           <span style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; background-color: {{ $c45Decision === 'ACCEPTED' ? '#d1fae5' : '#fee2e2' }}; color: {{ $c45Decision === 'ACCEPTED' ? '#065f46' : '#991b1b' }}; border: 1px solid {{ $c45Decision === 'ACCEPTED' ? '#a7f3d0' : '#fecaca' }};">
             <span style="width: 0.4rem; height: 0.4rem; border-radius: 9999px; background-color: {{ $c45Decision === 'ACCEPTED' ? '#10b981' : '#ef4444' }};"></span>
-            Rekomendasi: {{ $c45Decision === 'ACCEPTED' ? 'DITERIMA' : 'DITOLAK' }}
+            {{ $c45Decision === 'ACCEPTED' ? 'Direkomendasikan' : 'Tidak Direkomendasikan' }}
           </span>
         @else
           <span style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1.15rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; background-color: #fee2e2; color: #991b1b; border: 1px dashed #fecaca;">

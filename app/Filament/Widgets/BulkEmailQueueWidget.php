@@ -28,7 +28,6 @@ class BulkEmailQueueWidget extends BaseWidget
       ->query(
         Application::query()
           ->whereIn('status', ['pending', 'reviewed'])
-          ->where('ai_score', '>=', 50)
           ->latest()
           ->limit(5)
       )
@@ -49,49 +48,22 @@ class BulkEmailQueueWidget extends BaseWidget
           }),
         TextColumn::make('ai_score')
           ->label('Skor CV')
-          ->formatStateUsing(fn ($state) => $state . '%')
+          ->formatStateUsing(fn ($state) => $state !== null ? $state . '%' : 'Memindai...')
           ->badge()
-          ->color(fn ($state) => $state >= 80 ? 'success' : 'warning'),
+          ->color(fn ($state) => match(true) {
+              $state === null => 'gray',
+              $state >= 80 => 'success',
+              default => 'warning',
+          }),
       ])
       ->actions([
-        Action::make('invite')
-          ->label('Kirim Undangan')
-          ->button()
-          ->color('success')
-          ->icon('heroicon-m-paper-airplane')
-          ->requiresConfirmation()
-          ->modalHeading('Kirim Undangan Ujian')
-          ->modalDescription(fn ($record) => "Kirim email undangan ujian online ke {$record->full_name}?")
-          ->modalSubmitActionLabel('Kirim Undangan')
-          ->modalCancelActionLabel('Batal')
-          ->action(function (Application $record) {
-            try {
-              $test_token = \Illuminate\Support\Str::random(64);
-              $token_expires_at = now()->addDays(7);
-              
-              $record->update([
-                'status' => 'accepted',
-                'email_sent_at' => now(),
-                'email_type' => 'accepted',
-                'test_token' => $test_token,
-                'token_expires_at' => $token_expires_at,
-              ]);
-
-              Mail::to($record->email)->send(new ApplicationAccepted($record));
-
-              Notification::make()
-                ->success()
-                ->title('Email Terkirim')
-                ->body("Undangan tes berhasil dikirim ke {$record->full_name}.")
-                ->send();
-            } catch (\Exception $e) {
-              Notification::make()
-                ->danger()
-                ->title('Gagal Mengirim Email')
-                ->body($e->getMessage())
-                ->send();
-            }
-          }),
+        Action::make('view')
+          ->label('Lihat')
+          ->icon('heroicon-o-eye')
+          ->color('gray')
+          ->url(fn (Application $record): string =>
+            \App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record])
+          ),
       ])
       ->paginated(false);
   }

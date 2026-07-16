@@ -82,6 +82,13 @@ class CareerController extends Controller
           ->body("{$application->full_name} melamar posisi {$job->title}.")
           ->icon('heroicon-o-document-text')
           ->success()
+          ->actions([
+              \Filament\Actions\Action::make('view_application')
+                  ->label('Lihat')
+                  ->button()
+                  ->markAsRead()
+                  ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $application->id])),
+          ])
           ->sendToDatabase($admins);
 
       return redirect()->route('career.index')->with('success', 'Application submitted successfully!');

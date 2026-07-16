@@ -3,11 +3,14 @@
 namespace App\Filament\Resources\Questions\Pages;
 
 use App\Filament\Resources\Questions\QuestionResource;
-use Filament\Resources\Pages\CreateRecord;
+use Filament\Resources\Pages\ViewRecord;
 
-class CreateQuestion extends CreateRecord
+class ViewQuestion extends ViewRecord
 {
   protected static string $resource = QuestionResource::class;
 
-  protected static bool $canCreateAnother = false;
+  protected function getHeaderActions(): array
+  {
+    return [];
+  }
 }

@@ -207,6 +207,11 @@ class TestController extends Controller
       'bonus'     => ['earned' => 0, 'possible' => 0, 'percentage' => 0],
     ];
 
+    $part1Correct = 0;
+    $part1Total = 0;
+    $part2Correct = 0;
+    $part2Total = 0;
+
     foreach ($questions as $question) {
       // Determine weight based on difficulty
       $weight = 5; // Default medium
@@ -215,6 +220,13 @@ class TestController extends Controller
 
       $totalPossiblePoints += $weight;
       
+      $isPart1 = ($question->section === 'knowledge');
+      if ($isPart1) {
+        $part1Total++;
+      } else {
+        $part2Total++;
+      }
+
       $category = $question->skill_category ?? 'required';
       if (isset($breakdown[$category])) {
           $breakdown[$category]['possible'] += $weight;
@@ -231,6 +243,11 @@ class TestController extends Controller
         if (isset($breakdown[$category])) {
             $breakdown[$category]['earned'] += $weight;
         }
+        if ($isPart1) {
+          $part1Correct++;
+        } else {
+          $part2Correct++;
+        }
       }
     }
 
@@ -238,6 +255,9 @@ class TestController extends Controller
     foreach ($breakdown as $key => $data) {
         $breakdown[$key]['percentage'] = $data['possible'] > 0 ? round(($data['earned'] / $data['possible']) * 100) : 0;
     }
+
+    $breakdown['part1'] = ['correct' => $part1Correct, 'total' => $part1Total];
+    $breakdown['part2'] = ['correct' => $part2Correct, 'total' => $part2Total];
 
     $score = $totalPossiblePoints > 0 ? round(($earnedPoints / $totalPossiblePoints) * 100) : 0;
 

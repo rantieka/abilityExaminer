@@ -141,7 +141,10 @@ class JobVacancyForm
                       ->required(),
               ])
               ->createOptionUsing(function (array $data): string {
-                  return $data['name'];
+                return $data['name'];
+              })
+              ->createOptionAction(function ($action) {
+                return $action->extraModalFooterActions([]);
               })
               ->helperText(new \Illuminate\Support\HtmlString('<small style="color: #dc3545;">* <i>Gunakan nama teknologi standar agar akurasi pemindaian AI maksimal</i></small>'))
               ->validationMessages(['in' => 'Keahlian wajib yang dipilih tidak valid.'])
@@ -188,6 +191,9 @@ class JobVacancyForm
               ->createOptionUsing(function (array $data): string {
                   return $data['name'];
               })
+              ->createOptionAction(function ($action) {
+                  return $action->extraModalFooterActions([]);
+              })
 
               ->validationMessages(['in' => 'Keahlian yang diutamakan yang dipilih tidak valid.'])
               ->options(function ($get, $record) {
@@ -233,6 +239,9 @@ class JobVacancyForm
               ->createOptionUsing(function (array $data): string {
                   return $data['name'];
               })
+              ->createOptionAction(function ($action) {
+                  return $action->extraModalFooterActions([]);
+              })
 
               ->validationMessages(['in' => 'Keahlian tambahan yang dipilih tidak valid.'])
               ->options(function ($get, $record) {
@@ -272,7 +281,7 @@ class JobVacancyForm
               'rejected' => 'Ditolak',
           ])
           ->default(fn () => Auth::user()->hasRole(['hr', 'super_admin']) ? 'approved' : 'pending')
-          ->disabled(fn () => Auth::user()->hasRole('spv'))
+          ->disabled(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\EditRecord || Auth::user()->hasRole('spv'))
           ->dehydrated()
           ->required()
           ->visible(fn() => Auth::user()->hasRole(['hr', 'super_admin', 'spv'])),

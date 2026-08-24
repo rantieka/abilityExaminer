@@ -114,7 +114,7 @@ class ManageSettings extends Page implements HasForms
                   ->numeric()
                   ->required()
                   ->readOnly()
-                  ->dehydrated(),
+                  ->dehydrated(),  // set to dehydrated to save to settings
               ]),
           ]),
 
@@ -159,7 +159,7 @@ class ManageSettings extends Page implements HasForms
 
   public function save(): void
   {
-    $state = $this->form->getState();
+    $state = $this->form->getState();  // Get the form state
 
     if (!empty($state['weka_file'])) {
       $path = $state['weka_file'];
@@ -172,7 +172,7 @@ class ManageSettings extends Page implements HasForms
       try {
         $actualPath = is_array($path) ? reset($path) : $path;
         if (\Illuminate\Support\Facades\Storage::disk('public')->exists($actualPath)) {
-          $content = \Illuminate\Support\Facades\Storage::disk('public')->get($actualPath);
+          $content = \Illuminate\Support\Facades\Storage::disk('public')->get($actualPath);  // Read the file content
           
           $aiMatch = [];
           $testMatch = [];
@@ -204,12 +204,13 @@ class ManageSettings extends Page implements HasForms
           $state['c45_ai_threshold'] = (string) $aiMatch[1];
           $state['c45_test_threshold'] = (string) $testMatch[1];
           
+          // Calculate confidence levels for each leaf node based on the matches
           $calcConfidence = function ($match, $default) {
             if (empty($match)) return $default;
             $total = (float) $match[1];
             $errors = isset($match[2]) ? (float) $match[2] : 0.0;
             if ($total <= 0) return $default;
-            return (string) round((1 - ($errors / $total)) * 100, 1);
+            return (string) round((1 - ($errors / $total)) * 100, 1);  // Return confidence percentage
           };
           
           $state['c45_leaf1_confidence'] = $calcConfidence($leaf1Match, '88.2');
@@ -223,6 +224,7 @@ class ManageSettings extends Page implements HasForms
             (float) $state['c45_leaf3_confidence']
           );
 
+          // save additional metadata to settings for reference
           Setting::set('c45_weka_accuracy', isset($accuracyMatch[1]) ? $accuracyMatch[1] : '86');
           Setting::set('c45_weka_kappa', isset($kappaMatch[1]) ? $kappaMatch[1] : '0.7009');
           Setting::set('c45_weka_file_name', basename($path));
@@ -245,6 +247,7 @@ class ManageSettings extends Page implements HasForms
       }
     }
 
+    // Save all settings to the database
     foreach ($state as $key => $value) {
       Setting::set($key, $value);
     }

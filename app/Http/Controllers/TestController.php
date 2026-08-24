@@ -198,8 +198,8 @@ class TestController extends Controller
     // Merge both parts (use + based union to preserve numeric keys)
     $allAnswers = $part1Answers + $part2Answers;
     
-    $totalPossiblePoints = 0;
-    $earnedPoints = 0;
+    $totalPossiblePoints = 0; //total possible points for the test
+    $earnedPoints = 0; //total earned points for the test
 
     $breakdown = [
       'required'  => ['earned' => 0, 'possible' => 0, 'percentage' => 0],
@@ -260,6 +260,8 @@ class TestController extends Controller
     $breakdown['part2'] = ['correct' => $part2Correct, 'total' => $part2Total];
 
     $score = $totalPossiblePoints > 0 ? round(($earnedPoints / $totalPossiblePoints) * 100) : 0;
+
+    # Log::info("score: " . $score);
 
     // Fetch live C4.5 prediction on test completion via PHP local C45Predictor (Weka J48 86% Accuracy)
     $c45Decision = \App\Services\C45Predictor::predict(

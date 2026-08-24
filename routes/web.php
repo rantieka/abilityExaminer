@@ -5,6 +5,9 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\CareerController;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
+Route::get('/portal', function () {
+    return view('portal');
+})->name('portal');
 
 Route::get('/test-bootstrap', function () {
   return view('test-bootstrap');

@@ -383,8 +383,8 @@ class ApplicationResource extends Resource
               \Filament\Schemas\Components\Tabs\Tab::make('Seleksi & Persetujuan')
                 ->icon('heroicon-o-check-badge')
                 ->schema([
-                  \Filament\Schemas\Components\Section::make('Rekomendasi Keputusan')
-                    ->description('Rekomendasi prediktif berdasarkan skor kandidat')
+                  \Filament\Schemas\Components\Section::make('Rekomendasi Keputusan Model C4.5')
+                    ->description('Rekomendasi seleksi berdasarkan skor kandidat')
                     ->schema([
                       \Filament\Forms\Components\ViewField::make('c45_selection_summary')
                         ->view('filament.forms.components.c45-selection-summary'),
@@ -489,6 +489,26 @@ class ApplicationResource extends Resource
                               'rejection_reason' => $data['notes'],
                             ]);
 
+                            // Send notification to Supervisor (Job Vacancy creator)
+                            $recipient = $record->jobVacancy?->createdBy;
+                            if ($recipient) {
+                              try {
+                                \Filament\Notifications\Notification::make()
+                                  ->danger()
+                                  ->title('Kandidat Ditolak oleh HRD')
+                                  ->body("Kandidat '{$record->full_name}' untuk posisi '{$record->jobVacancy->title}' telah ditolak oleh HRD dan tidak dilanjutkan ke tahap berikutnya.")
+                                  ->actions([
+                                    \Filament\Actions\Action::make('view_candidate')
+                                      ->label('Lihat Detail')
+                                      ->button()
+                                      ->url(\App\Filament\Resources\Applications\ApplicationResource::getUrl('view', ['record' => $record->id])),
+                                  ])
+                                  ->sendToDatabase($recipient);
+                              } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error("Failed to notify supervisor of rejection: " . $e->getMessage());
+                              }
+                            }
+
                             // Send rejection email immediately
                             try {
                               \Illuminate\Support\Facades\Mail::to($record->email)
@@ -514,8 +534,8 @@ class ApplicationResource extends Resource
                     ])
                     ->columns(2),
 
-                  \Filament\Schemas\Components\Section::make('Persetujuan Akhir Supervisor')
-                    ->description('Persetujuan Teknis / Manajemen')
+                  \Filament\Schemas\Components\Section::make('Persetujuan Supervisor')
+                    ->description('Persetujuan Teknis')
                     ->visible(fn ($record) => $record?->hrd_decision === 'recommended')
                     ->schema([
                       \Filament\Forms\Components\Placeholder::make('supervisor_decision_summary')

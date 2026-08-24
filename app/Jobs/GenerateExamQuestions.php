@@ -160,7 +160,7 @@ class GenerateExamQuestions
           if ($user) {
               \Filament\Notifications\Notification::make()
                   ->title('Gagal Membuat Soal')
-                  ->body('AI gagal memproduksi soal. Error: ' . $e->getMessage())
+                  ->body('AI belum bisa melakukan generate soal, coba sesaat lagi atau lain hal.')
                   ->danger()
                   ->sendToDatabase($user);
           }

@@ -2,27 +2,27 @@
 <nav class="navbar navbar-expand-lg shadow-sm fixed-top bg-white" id="">
   <div class="container">
     <div class="d-flex justify-content-between w-100 align-items-center">
-      <a class="navbar-brand" href="/">
-        <img src="{{ asset('images/nineod-logo.png') }}" alt="Logo" class="new-logo" width="65" height="65" style="object-fit: contain;">
+      <a class="navbar-brand fw-bold fs-4 text-dark text-decoration-none" style="letter-spacing: -0.5px; font-family: 'Poppins', sans-serif;" href="/">
+        Ability Examiner
       </a>
       <ul class="navbar-nav d-none d-lg-flex">
         <li class="navbar-item px-4">
           <a href="{{ Request::is('/') ? '#home' : url('/') }}" class="nav-link navbar-link px-0">Home</a>
         </li>
         <li class="navbar-item px-4">
-          <a href="{{ Request::is('/') ? '#about' : url('/#about') }}" class="nav-link navbar-link px-0">About</a>
-        </li>
-        <!-- <li class="navbar-item px-4">
-          <a href="#products" class="nav-link navbar-link px-0">Products</a>
-        </li> -->
-        <li class="navbar-item px-4">
-          <a href="{{ Request::is('/') ? '#projects' : url('/#projects') }}" class="nav-link navbar-link px-0">Projects</a>
+          <a href="{{ Request::is('/') ? '#about' : url('/#about') }}" class="nav-link navbar-link px-0">Tentang</a>
         </li>
         <li class="navbar-item px-4">
-          <a href="{{ route('career.index') }}" class="nav-link navbar-link px-0 active">Careers</a>
+          <a href="{{ Request::is('/') ? '#services' : url('/#services') }}" class="nav-link navbar-link px-0">Fitur</a>
         </li>
         <li class="navbar-item px-4">
-          <a href="{{ Request::is('/') ? '#contact' : url('/#contact') }}" class="nav-link navbar-link px-0">Contact</a>
+          <a href="{{ Request::is('/') ? '#metrics' : url('/#metrics') }}" class="nav-link navbar-link px-0">Metrik</a>
+        </li>
+        <li class="navbar-item px-4">
+          <a href="{{ route('career.index') }}" class="nav-link navbar-link px-0">Karir</a>
+        </li>
+        <li class="navbar-item px-4">
+          <a href="{{ Request::is('/') ? '#contact' : url('/#contact') }}" class="nav-link navbar-link px-0">Kontak</a>
         </li>
       </ul>
       <div class="navbar-button d-flex align-items-center d-lg-none">
@@ -47,14 +47,21 @@
         <a href="{{ Request::is('/') ? '#home' : url('/') }}" class="nav-link navbar-link">Home</a>
       </li>
       <li class="navbar-item py-3">
-        <a href="{{ Request::is('/') ? '#about' : url('/#about') }}" class="nav-link navbar-link">About</a>
+        <a href="{{ Request::is('/') ? '#about' : url('/#about') }}" class="nav-link navbar-link">Tentang</a>
       </li>
-      <!-- <li class="navbar-item py-3">
-        <a href="#projects" class="nav-link navbar-link">Projects</a>
-      </li> -->
       <li class="navbar-item py-3">
-        <a href="{{ Request::is('/') ? '#contact' : url('/#contact') }}" class="nav-link navbar-link">Contact</a>
+        <a href="{{ Request::is('/') ? '#services' : url('/#services') }}" class="nav-link navbar-link">Fitur</a>
+      </li>
+      <li class="navbar-item py-3">
+        <a href="{{ Request::is('/') ? '#metrics' : url('/#metrics') }}" class="nav-link navbar-link">Metrik</a>
+      </li>
+      <li class="navbar-item py-3">
+        <a href="{{ route('career.index') }}" class="nav-link navbar-link">Karir</a>
+      </li>
+      <li class="navbar-item py-3">
+        <a href="{{ Request::is('/') ? '#contact' : url('/#contact') }}" class="nav-link navbar-link">Kontak</a>
       </li>
     </ul>
   </div>
 </div>
+

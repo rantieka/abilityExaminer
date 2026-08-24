@@ -173,7 +173,7 @@ class ApplicationsTable
                 try {
                   // Generate Test Token and Expiration
                   $test_token = \Illuminate\Support\Str::random(64);
-                  $token_expires_at = now()->addDays(7);
+                  $token_expires_at = now()->addDays(7); // Token valid for 7 days
                   
                   $record->update([
                     'status' => 'accepted',

@@ -12,27 +12,43 @@ Built with **Laravel 12**, **Filament PHP**, and **Tailwind CSS**.
 
 ## Installation Guide
 
-### 1. Clone the Repository
+### 1. Clone the Repository (or Extract Zip)
 
+If you are cloning the repository:
 ```bash
 git clone https://github.com/rantiekaa/abilityExaminer.git
 cd abilityExaminer
 ```
+If you downloaded the project as a ZIP file, extract it and open the extracted folder in your terminal.
 
 ### 2. Install Dependencies & Setup
 
+#### Option A: Quick Setup (Recommended)
 We have a convenient setup script that handles:
 - Composer install
-- Environment (.env) creation
+- Environment (`.env`) creation
 - Key generation
 - Database migration
-- NPM install & build assets
+- NPM install & asset compilation (`npm run build`)
 
 ```bash
 composer run setup
 ```
+*Note: Make sure your database server is running. If it fails on the migration step, configure your database credentials in `.env` and run `php artisan migrate` manually.*
 
-**Note:** Ensure your database configuration in `.env` is correct before running migrations (if setup fails on migration step).
+#### Option B: Manual Setup
+If you want to configure your database before running migrations, or if you prefer running steps manually:
+```bash
+# 1. Copy environment template
+cp .env.example .env
+
+# 2. Configure your database details in .env, then run:
+composer install
+php artisan key:generate
+npm install
+npm run build
+php artisan migrate
+```
 
 ### 3. Filament Admin Setup & Permissions
 

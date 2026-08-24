@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\JobVacancy;
 use App\Models\Application;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Jobs\ProcessCvScreening;
+use Illuminate\Support\Str;
 
 class CareerController extends Controller
 {
@@ -56,8 +58,19 @@ class CareerController extends Controller
       // Upload CV
       $cvPath = $request->file('cv')->store('applications/cvs', 'public');
       
+      // Find or create User by email
+      $user = User::firstOrCreate(
+        ['email' => $validated['email']],
+        [
+          'name' => $validated['full_name'],
+          'password' => bcrypt(Str::random(16)),
+          'email_verified_at' => now(),
+        ]
+      );
+      
       $application = Application::create([
         'job_vacancy_id' => $job->id,
+        'user_id' => $user->id,
         'full_name' => $validated['full_name'],
         'email' => $validated['email'],
         'phone' => $validated['phone'],

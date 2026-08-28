@@ -226,7 +226,7 @@
       </div>
       <div class="col-lg-6">
         <div class="banner-content-img position-relative" data-aos="fade-left" data-aos-duration="2000">
-          <!-- Beautiful Interactive Mockup Instead of Nineod Image -->
+          <!-- Beautiful Interactive Mockup -->
           <div class="hero-card shadow">
             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
               <div class="d-flex align-items-center gap-2">

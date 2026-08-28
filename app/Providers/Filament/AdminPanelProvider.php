@@ -27,7 +27,7 @@ class AdminPanelProvider extends PanelProvider
       ->default()
       ->id('admin')
       ->path('admin')
-      ->brandName('Nineod')
+      ->brandName(config('app.name'))
       ->renderHook(
           'panels::head.end',
           fn (): string => '
